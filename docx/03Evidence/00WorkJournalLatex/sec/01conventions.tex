@@ -1,0 +1,55 @@
+% ============================================================
+% sec/01conventions.tex - how to read and how to write this journal
+% ============================================================
+\section{Purpose and Conventions}
+\label{sec:conventions}
+
+\subsection{Purpose}
+This journal records the development of the project across its three
+stages: what was decided, why, what blocked progress, and what evidence
+backs each claim. It is not the paper and it is not the sprint plan. The
+paper reports results; the sprint plan states intent; this document
+records what actually happened.
+
+\subsection{Team and Repository}
+\begin{table}[H]
+  \centering
+  \caption{Team members and primary responsibilities.}
+  \label{tab:team}
+  \begin{tabularx}{\textwidth}{@{}l P{3.2cm} Y@{}}
+    \toprule
+    \textbf{Member} & \textbf{Review axis} & \textbf{Primary responsibility}\\
+    \midrule
+    \docAuthorA & Axis B --- techniques   & \todo{responsibility}\\
+    \docAuthorB & Axis A --- problem      & \todo{responsibility}\\
+    \docAuthorC & Axis C --- dataset      & \todo{responsibility}\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\noindent Repository: \code{\docRepo}. Branching and commit conventions
+live in \code{CodeControl.md}; the sprint backlog lives in
+\code{SprintPlanning.md}.
+
+\subsection{How Entries Are Written}
+Every entry opens with a dated header naming the owner and the branch the
+work happened on. Inside an entry, three callouts carry the weight:
+
+\decision{The choice that was made.}{Why it was made, with evidence.}{The
+alternatives considered and the reason each was dropped.}
+
+\blocker{What stopped progress.}{What it delayed and by how much.}{How it
+was resolved, or the condition that will resolve it.}
+
+\milestone{What was achieved.}{Where the proof lives: commit, log,
+figure, screenshot.}
+
+\notebox[Writing rule]{Write entries the day the work happens. An entry
+written a week later loses the reasoning, which is the only part of this
+document that cannot be reconstructed from the repository history.}
+
+\subsection{Traceability}
+Every decision recorded here that affects a technical choice must appear,
+in condensed form, in the corresponding section of the paper. Every
+milestone must point at a committed artifact. AI tool usage is annotated
+inline and consolidated in \code{AI\_USAGE.md}.

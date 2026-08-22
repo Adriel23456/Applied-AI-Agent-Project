@@ -1,0 +1,75 @@
+% ============================================================
+% WorkJournal.tex - main file
+% Build: latexmk -pdf WorkJournal.tex
+% ============================================================
+\documentclass[12pt,a4paper]{article}
+
+% ---------- Document metadata (edit only this block) ----------
+\newcommand{\docInstitute}{Costa Rica Institute of Technology}
+\newcommand{\docSchool}{Escuela de Ingenier\'ia en Computaci\'on}
+\newcommand{\docCourse}{Artificial Intelligence}
+\newcommand{\docCode}{IC-6200}
+\newcommand{\docTitle}{Applied AI Agent Project --- Work Journal}
+\newcommand{\docSubtitle}{Development log across Stages 1, 2 and 3}
+\newcommand{\docKicker}{Semester Project}
+\newcommand{\docTagline}{Decisions, blockers, agreements and milestones}
+\newcommand{\docKeywords}{Work journal \textbullet\ Sprint log \textbullet\ Technical decisions \textbullet\ Traceability}
+
+\newcommand{\docAuthorA}{Adriel S. Chaves Salazar}
+\newcommand{\docIDA}{2021031465}
+\newcommand{\docAuthorB}{Daniel Duarte Cordero}
+\newcommand{\docIDB}{[TO BE COMPLETED]}
+\newcommand{\docAuthorC}{Sebasti\'an Hern\'andez Bonilla}
+\newcommand{\docIDC}{[TO BE COMPLETED]}
+\newcommand{\docAuthors}{\docAuthorA, \docAuthorB, \docAuthorC}
+
+\newcommand{\docProfessor}{Kenneth Roberto Obando Rodr\'iguez}
+\newcommand{\docSemester}{II Semester, 2026}
+\newcommand{\docPlace}{Cartago, Costa Rica}
+\newcommand{\docShortTitle}{Work Journal}
+\newcommand{\docRepo}{Applied-AI-Agent-Project}
+
+\input{preamble}
+
+\begin{document}
+\pagenumbering{roman}
+
+\safeinput{sec/00cover}
+
+\newpage
+{
+  \hypersetup{linkcolor=black}
+  \tableofcontents
+  %\listoffigures
+  %\listoftables
+  %\lstlistoflistings
+  \newpage
+}
+
+\pagenumbering{arabic}
+\justifying
+
+% ---------- Body: one file per stage ----------
+\safeinput{sec/01conventions}
+\safeinput{sec/02stage1}
+\safeinput{sec/03stage2}
+\safeinput{sec/04stage3}
+
+% ---------- Appendices ----------
+\appendix
+\safeinput{sec/90meetings}
+
+% ---------- Acronyms and glossary ----------
+%\newpage
+%\printglossary[type=\acronymtype,title={List of Acronyms}]
+%\printglossary[title={Glossary}]
+
+% ---------- Bibliography ----------
+%\IfFileExists{sec/99references.bib}{%
+%  \newpage
+%  \phantomsection
+%  \addcontentsline{toc}{section}{References}
+%  \bibliographystyle{apalike}
+%  \bibliography{sec/99references}}{}
+
+\end{document}

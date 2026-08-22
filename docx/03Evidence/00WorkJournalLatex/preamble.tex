@@ -1,0 +1,273 @@
+% ============================================================
+% preamble.tex - shared setup (no \documentclass here)
+% ============================================================
+
+% ---------- Language and fonts ----------
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage[english=american]{csquotes}
+\usepackage{microtype}
+
+% ---------- Math ----------
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{siunitx}
+\sisetup{per-mode=symbol,range-units=single}
+
+% ---------- Colors ----------
+\usepackage{xcolor}
+\definecolor{tecnavy}{RGB}{31,56,100}
+\definecolor{tecsteel}{RGB}{46,85,150}
+\definecolor{teclight}{RGB}{214,227,243}
+\definecolor{tecrule}{RGB}{155,184,216}
+\definecolor{boxbg}{RGB}{242,246,252}
+\definecolor{labelgray}{RGB}{120,120,120}
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codekw}{RGB}{0,0,180}
+\definecolor{codecmt}{RGB}{0,120,60}
+\definecolor{codestr}{RGB}{170,55,55}
+\definecolor{okgreen}{RGB}{22,120,70}
+\definecolor{blockred}{RGB}{170,45,45}
+\definecolor{decisionamber}{RGB}{176,120,20}
+
+% ---------- Graphics, TikZ, plots ----------
+\usepackage{graphicx}
+\graphicspath{{img/}{figures/}{./}}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit,
+                backgrounds,patterns,decorations.pathreplacing,babel}
+
+% ---------- Floats and tables ----------
+\usepackage{float}
+\usepackage{rotating}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{longtable}
+\usepackage[justification=centering]{caption}
+\usepackage{subcaption}
+\usepackage{tabularx}
+\usepackage{xltabular}
+\usepackage{adjustbox}
+\usepackage{enumitem}
+
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{5pt}
+\setlist[itemize]{leftmargin=*,noitemsep,topsep=2pt}
+\setlist[enumerate]{leftmargin=*,noitemsep,topsep=2pt}
+
+% Continuation labels for tables that split across pages
+\newcommand{\contnext}[1]{%
+  \multicolumn{#1}{r@{}}{\footnotesize\itshape Continued on next page}\\}
+\newcommand{\contprev}[1]{%
+  \multicolumn{#1}{@{}l}{\footnotesize\itshape
+    Table \thetable{} -- continued from previous page}\\}
+
+% ---------- Theorem environments ----------
+\theoremstyle{definition}
+\newtheorem{definitionx}{Definition}[section]
+\newtheorem{examplex}{Example}[section]
+\theoremstyle{plain}
+\newtheorem{theoremx}{Theorem}[section]
+\newtheorem{lemmax}{Lemma}[section]
+\theoremstyle{remark}
+\newtheorem*{remarkx}{Remark}
+
+% ---------- Listings ----------
+\usepackage{listings}
+\lstdefinestyle{code}{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecmt}\itshape,
+  stringstyle=\color{codestr},
+  backgroundcolor=\color{codebg},
+  numbers=left,
+  numberstyle=\tiny\color{labelgray},
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{tecrule},
+  breaklines=true,
+  breakatwhitespace=false,
+  postbreak=\mbox{\textcolor{tecsteel}{$\hookrightarrow$}\space},
+  showspaces=false,
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b,
+  columns=flexible,
+  upquote=true
+}
+\lstset{style=code}
+
+% ---------- Page layout ----------
+\usepackage[a4paper,margin=1in,headheight=15pt]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{ragged2e}
+\usepackage{tocloft}
+\renewcommand{\cfttoctitlefont}{\hfill\Large\bfseries}
+\renewcommand{\cftaftertoctitle}{\hfill}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\textsc{\docCode}}
+\fancyhead[R]{\footnotesize\docShortTitle}
+\fancyfoot[C]{\footnotesize Page \thepage\ of \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% ---------- Citations, links, glossaries ----------
+\usepackage[authoryear,round]{natbib}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=tecnavy,
+  citecolor=tecsteel,
+  urlcolor=tecsteel,
+  bookmarksnumbered=true,
+  pdftitle={\docTitle},
+  pdfauthor={\docAuthors},
+  pdfsubject={\docCourse}
+}
+\usepackage[acronym,nopostdot,nogroupskip,toc]{glossaries}
+
+% Acronyms
+\newacronym{tec}{TEC}{Costa Rica Institute of Technology}
+\newacronym{ai}{AI}{artificial intelligence}
+\newacronym{ml}{ML}{machine learning}
+\newacronym{dl}{DL}{deep learning}
+\newacronym{rl}{RL}{reinforcement learning}
+\newacronym{mdp}{MDP}{Markov decision process}
+\newacronym{eda}{EDA}{exploratory data analysis}
+\newacronym{llm}{LLM}{large language model}
+\newacronym{rag}{RAG}{retrieval-augmented generation}
+\newacronym{pr}{PR}{pull request}
+\newacronym{ci}{CI}{continuous integration}
+
+% Glossary terms
+\newglossaryentry{baseline}{
+  name={baseline},
+  description={A reference result the project must match or exceed;
+               either implemented internally or taken from published
+               literature}
+}
+\newglossaryentry{leakage}{
+  name={data leakage},
+  description={Any path by which information from the evaluation set
+               influences training or model selection}
+}
+\newglossaryentry{track}{
+  name={track},
+  description={The technical line chosen for the project: classical
+               machine learning, deep learning, or reinforcement
+               learning}
+}
+\usepackage{cleveref}
+
+% ---------- Numbering per section ----------
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+\AtBeginDocument{\counterwithin{lstlisting}{section}}
+
+% ---------- Safe input / graphics / listings ----------
+\newcommand{\missingfilebox}[1]{%
+  \par\medskip\noindent
+  \fcolorbox{red!60!black}{red!5}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
+      \centering\ttfamily\small MISSING FILE: \detokenize{#1}}}%
+  \par\medskip}
+
+\newcommand{\missingimagebox}[1]{%
+  \begingroup
+  \setlength{\fboxsep}{0pt}%
+  \fcolorbox{tecrule}{boxbg}{%
+    \parbox[c][2.8cm][c]{6cm}{\centering\ttfamily\scriptsize
+      IMAGE NOT FOUND\\[3pt]\detokenize{#1}}}%
+  \endgroup}
+
+\newcommand{\safeinput}[1]{%
+  \IfFileExists{#1.tex}{\input{#1}}{%
+    \PackageWarning{tecdoc}{Missing section file #1.tex}%
+    \missingfilebox{#1.tex}}}
+
+\newcommand{\safeimage}[2][width=0.75\linewidth]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \IfFileExists{img/#2}{\includegraphics[#1]{img/#2}}{%
+      \IfFileExists{figures/#2}{\includegraphics[#1]{figures/#2}}{%
+        \PackageWarning{tecdoc}{Missing image #2}%
+        \missingimagebox{#2}}}}}
+
+\newcommand{\safelisting}[2][]{%
+  \IfFileExists{#2}{\lstinputlisting[#1]{#2}}{%
+    \PackageWarning{tecdoc}{Missing code file #2}%
+    \missingfilebox{#2}}}
+
+% ---------- Callout box ----------
+\newcommand{\notebox}[2][Note]{%
+  \par\medskip\noindent
+  \fcolorbox{tecrule}{boxbg}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
+      \vspace{2pt}\textbf{\color{tecnavy}#1.}\ #2\vspace{2pt}}}%
+  \par\medskip}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TO BE COMPLETED: #1]}}}
+
+% ---------- Work journal macros ----------
+% \jentry{date}{title}{owner(s)}{branch}
+\newcommand{\jentry}[4]{%
+  \par\medskip
+  \noindent\colorbox{tecnavy}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep}{%
+      \vspace{2pt}\color{white}\bfseries #1 \; \textbullet\; #2\vspace{2pt}}}%
+  \par\nopagebreak\vspace{2pt}
+  \noindent{\footnotesize\color{labelgray}
+    Owner: #3 \quad\textbullet\quad Branch: \code{#4}}
+  \par\vspace{4pt}}
+
+% \decision{what}{why}{alternatives discarded}
+\newcommand{\decision}[3]{%
+  \par\medskip\noindent
+  \fcolorbox{decisionamber}{boxbg}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
+      \vspace{3pt}
+      \textbf{\color{decisionamber}Decision.}\ #1\par\vspace{2pt}
+      \textbf{Rationale.}\ #2\par\vspace{2pt}
+      \textbf{Discarded.}\ #3\vspace{3pt}}}%
+  \par\medskip}
+
+% \blocker{what}{impact}{resolution or trigger}
+\newcommand{\blocker}[3]{%
+  \par\medskip\noindent
+  \fcolorbox{blockred}{red!3}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
+      \vspace{3pt}
+      \textbf{\color{blockred}Blocker.}\ #1\par\vspace{2pt}
+      \textbf{Impact.}\ #2\par\vspace{2pt}
+      \textbf{Resolution.}\ #3\vspace{3pt}}}%
+  \par\medskip}
+
+% \milestone{what}{evidence}
+\newcommand{\milestone}[2]{%
+  \par\medskip\noindent
+  \fcolorbox{okgreen}{green!3}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
+      \vspace{3pt}
+      \textbf{\color{okgreen}Milestone.}\ #1\par\vspace{2pt}
+      \textbf{Evidence.}\ #2\vspace{3pt}}}%
+  \par\medskip}
+
+\newcommand{\aiuse}[3]{%
+  \par\smallskip\noindent
+  {\footnotesize\color{labelgray}\textit{AI usage:}}\ {\footnotesize
+   tool: #1 \textbullet\ purpose: #2 \textbullet\ verified: #3}\par\smallskip}
