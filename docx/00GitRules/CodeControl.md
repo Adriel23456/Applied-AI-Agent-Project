@@ -73,9 +73,9 @@ master  ← tagged v1.0.0-stage1
 ### Stage branches
 
 ```
-stage1
-stage2
-stage3
+Stage1
+Stage2
+Stage3
 ```
 
 ### Issue branches
