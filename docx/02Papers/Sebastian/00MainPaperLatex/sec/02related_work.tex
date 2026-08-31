@@ -1,0 +1,90 @@
+% ============================================================
+% sec/02related_work.tex
+% Core section of Stage 1. Three mandatory axes + comparative
+% table + literature baseline + explicit gap identification.
+% Minimum 21 peer-reviewed references (7 per member).
+% ============================================================
+\section{Related Work}
+\label{sec:related}
+
+\todo{One short paragraph stating the review methodology: databases
+queried, search strings, inclusion and exclusion criteria, time window,
+and how many works were retained out of how many screened.}
+
+\subsection{Axis A: The Problem Domain}
+\label{subsec:axisa}
+\emph{How has this problem been addressed in the literature? Which
+approaches dominate? What is considered solved and what remains open?}
+
+\todo{3--5 paragraphs synthesizing at least 7 peer-reviewed works.
+Group by approach family, not one paragraph per paper.}
+
+\todo{Closing paragraph: which approaches dominate, what is settled,
+what is still open.}
+
+\subsection{Axis B: Techniques of the Selected Track}
+\label{subsec:axisb}
+\emph{What is the current state of the methods we intend to use? What
+are their strengths, limits, and the assumptions under which they work?}
+
+\todo{3--5 paragraphs synthesizing at least 7 peer-reviewed works on the
+technique family of the chosen track.}
+
+\todo{Closing paragraph: the technical justification of the track,
+supported by literature and not by preference. State explicitly which
+alternative track or technique family was discarded and why.}
+
+\subsection{Axis C: Dataset / Environment}
+\label{subsec:axisc}
+\emph{Which works have used it? Which metrics do they report and under
+which protocol? What is the best published result? Which known problems
+does it have?}
+
+\todo{3--5 paragraphs synthesizing at least 7 peer-reviewed works that
+use the selected dataset or environment.}
+
+\todo{Documented known problems: bias, leakage, size, representativeness.
+For an RL environment: version differences, reward scaling, and
+non-comparable evaluation protocols.}
+
+\subsection{Comparative Analysis}
+\label{subsec:comparative}
+\safeinput{tab/comparative_table}
+
+\todo{2--3 paragraphs reading the table: which trends are visible,
+which comparisons are unfair and why, which limitation recurs across
+works.}
+
+\subsection{Literature Baseline}
+\label{subsec:litbaseline}
+\todo{State the best published result on the selected dataset or
+environment under the selected metric, with its reference. If a direct
+comparison is impossible, state a defensible range instead.}
+
+\begin{quote}
+\textbf{Target:} \todo{The number this work aims to match or exceed,
+with its metric and its source.}
+\end{quote}
+
+\noindent\textbf{Protocol differences that block a fair comparison.}
+\begin{itemize}
+  \item \todo{Different train/test split}
+  \item \todo{Different metric or metric variant}
+  \item \todo{Different data subset or environment version}
+  \item \todo{Different amount of training budget or compute}
+\end{itemize}
+
+\subsection{Identified Gaps}
+\label{subsec:gaps}
+\textbf{Gaps found in the literature.}
+\begin{enumerate}
+  \item \todo{Gap 1}
+  \item \todo{Gap 2}
+  \item \todo{Gap 3}
+\end{enumerate}
+
+\noindent\textbf{Gaps this work addresses.} \todo{Which of the above,
+and how.}
+
+\noindent\textbf{Gaps out of scope.} \todo{Which ones remain unaddressed
+and why they exceed the scope of this project.}

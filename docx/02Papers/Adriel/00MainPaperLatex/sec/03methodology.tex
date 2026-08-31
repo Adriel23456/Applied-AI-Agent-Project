@@ -1,0 +1,109 @@
+% ============================================================
+% sec/03methodology.tex
+% Required: problem formalization, pipeline, experimental protocol
+% (splits, validation, metrics + justification), baseline plan,
+% risks with mitigation.
+% ============================================================
+\section{Proposed Methodology}
+\label{sec:methodology}
+
+\subsection{Problem Formalization}
+\label{subsec:formalization}
+\todo{Mathematical formulation. Define the input space, the output
+space, the objective function, and the constraints. For Track C, point
+to the MDP in Section~\ref{sec:trackanalysis} and state the optimization
+objective here.}
+
+\begin{equation}
+\label{eq:objective}
+\todo{objective function}
+\end{equation}
+
+\subsection{Proposed Pipeline}
+\label{subsec:pipeline}
+\todo{End-to-end description: data ingestion, preprocessing, model,
+training loop, evaluation, and the interface the Stage 3 agent will
+consume.}
+
+\begin{figure}[!t]
+  \centering
+  \safeimage[width=\columnwidth]{pipeline.png}
+  \caption{Proposed pipeline. \todo{caption}}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{Experimental Protocol}
+\label{subsec:protocol}
+
+\subsubsection{Data Partitioning}
+\todo{Train / validation / test split with exact proportions. State
+whether the split is random, stratified, temporal or by group, and
+justify the choice against the alternatives.}
+
+\subsubsection{Validation Strategy}
+\todo{Holdout, k-fold, nested CV, or episodic evaluation over N seeds.
+Justify. State how hyperparameters are selected without touching test.}
+
+\subsubsection{Metrics}
+\begin{table}[!t]
+\centering
+\caption{Evaluation metrics and their justification.}
+\label{tab:metrics}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}l Y@{}}
+\toprule
+\textbf{Metric} & \textbf{Why this metric, and what it beats}\\
+\midrule
+\todo{primary}   & \todo{justification}\\
+\todo{secondary} & \todo{justification}\\
+\todo{secondary} & \todo{justification}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Data Leakage Prevention}
+\todo{Name every leakage vector considered (target leakage, test set
+touched during tuning, temporal leakage, group leakage across splits)
+and the concrete measure taken against each one.}
+
+\subsection{Baseline Plan}
+\label{subsec:baselines}
+\begin{enumerate}
+  \item \textbf{Trivial baseline.} \todo{e.g. majority class, random
+        policy, rule-based controller.}
+  \item \textbf{Competitive classical baseline.} \todo{The strongest
+        non-deep or non-RL method reasonably applicable.}
+  \item \textbf{Literature baseline.} The published target declared in
+        Section~\ref{subsec:litbaseline}.
+\end{enumerate}
+
+\subsection{Reproducibility Contract}
+\label{subsec:reproducibility}
+\todo{Fixed seeds and where they live, saved configuration files, run
+logging, hardware used, dependency pinning, and the exact command that
+reproduces each reported number.}
+
+\subsection{Risks and Mitigation}
+\label{subsec:risks}
+\begin{table}[!t]
+\centering
+\caption{Identified risks and their mitigation.}
+\label{tab:risks}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{2.0cm} c Y@{}}
+\toprule
+\textbf{Risk} & \textbf{Impact} & \textbf{Mitigation / trigger}\\
+\midrule
+\todo{risk} & \todo{H/M/L} & \todo{mitigation}\\
+\todo{risk} & \todo{H/M/L} & \todo{mitigation}\\
+\todo{risk} & \todo{H/M/L} & \todo{mitigation}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Planned Agent Integration}
+\label{subsec:agent}
+\todo{How the trained model will be consumed by an intelligent agent in
+Stage 3: LLM with tool calling, RAG system, multi-agent architecture, or
+an RL agent operating in its environment. State the interface and how the
+consumption will be verified.}

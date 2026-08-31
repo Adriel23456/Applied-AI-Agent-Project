@@ -1,0 +1,84 @@
+% ============================================================
+% sec/00cover.tex - cover page
+% ============================================================
+\thispagestyle{empty}
+\begingroup
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[tecnavy]
+    (current page.north west) rectangle
+    ([yshift=-5.6cm] current page.north east);
+  \fill[tecsteel]
+    ([yshift=-5.6cm] current page.north west) rectangle
+    ([yshift=-5.8cm] current page.north east);
+  \node[anchor=north, inner sep=0pt]
+    at ([yshift=-0.7cm] current page.north)
+    {\safeimage[width=1.1in]{TUlogo.png}};
+  \node[anchor=center]
+    at ([yshift=-4.3cm] current page.north)
+    {\parbox{0.80\textwidth}{\centering
+      {\large\bfseries\color{white} \docInstitute}\\[4pt]
+      {\small\color{white!80!tecnavy} \docSchool}\\[3pt]
+      {\footnotesize\color{white!65!tecnavy}
+        \docCourse\ \textbullet\ \docCode}}};
+\end{tikzpicture}
+
+\vspace*{2.6cm}
+\begin{center}
+  {\large\bfseries \docKicker}
+\end{center}
+
+\vspace{0.1cm}
+\begin{center}
+  \colorbox{teclight}{%
+    \parbox{0.60\textwidth}{\centering\vspace{5pt}
+      {\footnotesize\color{tecsteel} \docSubtitle}%
+    \vspace{5pt}}}\\[0.70cm]
+  {\LARGE\bfseries\color{tecnavy} \docTitle}\\[0.30cm]
+  {\large\itshape \docTagline}\\[0.50cm]
+  {\color{tecrule}\rule{0.5\textwidth}{0.4pt}}\\[0.50cm]
+  {\normalsize \docKeywords}
+\end{center}
+
+\vfill
+
+\noindent
+\fcolorbox{tecrule}{boxbg}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule}{%
+    \vspace{0.35cm}
+    \centering
+    {\footnotesize\color{labelgray} PROFESSOR}\\[0.35cm]
+    {\small\bfseries \docProfessor}
+    \vspace{0.35cm}}}
+
+\vspace{0.6cm}
+
+\noindent
+\fcolorbox{tecrule}{boxbg}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule}{%
+    \vspace{0.35cm}
+    \centering
+    {\footnotesize\color{labelgray} TEAM}\\[0.35cm]
+    \begin{tabular}{@{\hspace{0.06\textwidth}}%
+                    p{0.70\textwidth}%
+                    @{\hfill}%
+                    r%
+                    @{\hspace{0.06\textwidth}}}
+      {\small\bfseries \docAuthorA} & {\footnotesize\color{labelgray} \docIDA}\\[3pt]
+      {\small\bfseries \docAuthorB} & {\footnotesize\color{labelgray} \docIDB}\\[3pt]
+      {\small\bfseries \docAuthorC} & {\footnotesize\color{labelgray} \docIDC}
+    \end{tabular}
+    \vspace{0.30cm}}}
+
+\vspace{0.5cm}
+{\color{tecsteel}\noindent\rule{\textwidth}{0.8pt}}
+
+\vspace{-0.5cm}
+\begin{center}
+  {\footnotesize\color{labelgray} \docSemester\ \textbullet\ \docPlace}
+\end{center}
+
+\endgroup
+\newpage

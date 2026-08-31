@@ -1,0 +1,94 @@
+% ============================================================
+% sec/04track_analysis.tex
+% Keep ONLY the subsection matching the approved track.
+% Delete the other two before submission.
+% ============================================================
+\section{Technical Analysis of the Selected Track}
+\label{sec:trackanalysis}
+
+\todo{One sentence naming the approved track and the date of approval.}
+
+% ------------------------------------------------------------
+% TRACK A --- Classical machine learning (tabular)
+% ------------------------------------------------------------
+\subsection{Exploratory Data Analysis}
+\label{subsec:eda}
+\todo{Number of records, number of features, target distribution,
+temporal coverage.}
+
+\subsubsection{Data Dictionary}
+\begin{table}[!t]
+\centering
+\caption{Data dictionary.}
+\label{tab:datadict}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{1.8cm} P{1.4cm} Y@{}}
+\toprule
+\textbf{Variable} & \textbf{Type} & \textbf{Meaning / range / missing \%}\\
+\midrule
+\todo{var} & \todo{type} & \todo{description}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Data Quality and Imputation}
+\todo{Missing value pattern and the justified imputation strategy.}
+
+\subsubsection{Outlier Detection}
+\todo{Method, threshold, and what is done with the detected outliers.}
+
+\subsubsection{Class Imbalance}
+\todo{Ratio, and the strategy chosen with its justification.}
+
+% ------------------------------------------------------------
+% TRACK B --- Deep learning (NLP / vision)
+% ------------------------------------------------------------
+\subsection{Corpus / Image Set Analysis}
+\label{subsec:corpus}
+\todo{Size, class distribution, sequence length or resolution
+distribution, documented biases of the source.}
+
+\subsubsection{Preprocessing and Tokenization}
+\todo{Pipeline and justification.}
+
+\subsubsection{Data Augmentation}
+\todo{Transformations, why each one is valid for this domain, and which
+were discarded as label-destroying.}
+
+\subsubsection{Hardware and Memory Considerations}
+\todo{Model size, batch size, precision, expected GPU memory, and
+estimated training time on Google Colab Pro.}
+
+% ------------------------------------------------------------
+% TRACK C --- Reinforcement learning
+% ------------------------------------------------------------
+\subsection{MDP Formalization}
+\label{subsec:mdp}
+The task is modeled as a Markov decision process
+$\mathcal{M} = \langle \mathcal{S}, \mathcal{A}, P, R, \gamma \rangle$.
+
+\subsubsection{\texorpdfstring{State Space $\mathcal{S}$}{State Space S}}
+\todo{Exact variables, ranges, normalization, and whether the
+environment is fully or partially observable.}
+
+\subsubsection{\texorpdfstring{Action Space $\mathcal{A}$}{Action Space A}}
+\todo{Discrete or continuous, dimensionality, bounds.}
+
+\subsubsection{\texorpdfstring{Transition Dynamics $P(s'\mid s,a)$}{Transition Dynamics}}
+\todo{Simulator, its version, stochasticity sources, timestep duration,
+and episode termination conditions.}
+
+\subsubsection{\texorpdfstring{Reward Function $R(s,a,s')$}{Reward Function}}
+\begin{equation}
+\label{eq:reward}
+R(s,a,s') = \todo{reward expression}
+\end{equation}
+\todo{Justify every term and every weight. State which reward designs
+were discarded and which degenerate behavior each one would induce.}
+
+\subsubsection{\texorpdfstring{Discount Factor $\gamma$}{Discount Factor}}
+\todo{Value and justification with respect to the effective horizon.}
+
+\subsubsection{Environment Verification}
+\todo{Smoke test executed, random-policy return, and confirmation that
+the environment runs on Google Colab Pro.}
