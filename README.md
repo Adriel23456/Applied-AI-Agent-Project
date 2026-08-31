@@ -25,7 +25,7 @@ An applied AI solution built under research methodology, consumed by an intellig
 | Member | ID | Review axis |
 |---|---|---|
 | Adriel S. Chaves Salazar | 2021031465 | Axis B — techniques of the selected track |
-| Daniel Duarte Cordero | [TO BE COMPLETED] | Axis A — problem domain |
+| Daniel Duarte Cordero | 2022012866 | Axis A — problem domain |
 | Sebastián Hernández Bonilla | [TO BE COMPLETED] | Axis C — dataset / environment |
 
 **Professor:** Kenneth Roberto Obando Rodríguez
