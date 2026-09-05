@@ -1,119 +1,243 @@
 % ============================================================
 % sec/05analisis_tecnico.tex — TRACK A
 %
-% DEBE CONTENER, sin excepción:
-%   - Análisis exploratorio PROFUNDO
-%   - Diccionario de datos
-%   - Calidad y estrategias de imputación JUSTIFICADAS
-%   - Detección de valores atípicos
-%   - Desbalance de clases
-%   - Prevención EXPLÍCITA de data leakage
+% OBLIGATORIO: análisis exploratorio profundo, diccionario de
+% datos, calidad y estrategias de imputación justificadas,
+% detección de valores atípicos, desbalance de clases, y
+% prevención explícita de fuga de información.
 %
-% El data leakage confirmado cuesta -15 puntos y corrección
-% obligatoria. Es el riesgo que puede invalidar todo el trabajo.
+% ESTADO: el contenido cuantitativo procede de la auditoría del
+% conjunto de datos (Eje C). Este archivo establece la
+% estructura y las justificaciones que dependen del Eje B.
 % ============================================================
 \section{Análisis Técnico del Track}
 \label{sec:analisistecnico}
 
-\pc{Una oración nombrando el track aprobado y la fecha de aprobación.}
+El \textit{track} aprobado corresponde al aprendizaje automático clásico
+sobre datos tabulares. \pc{Fecha de aprobación.}
+
+\subsection{Origen y composición del conjunto de datos}
+\label{subsec:origen}
+
+\pc{Descripción del conjunto: procedencia, periodo cubierto, número de
+episodios, número de observaciones resultantes, y criterio de selección
+aplicado por la fuente. Corresponde al Eje C.}
+
+\noindent\textbf{Sesgo de selección.} \pc{Precisar el criterio de selección
+de repeticiones aplicado por la fuente.} Saravanan y Guzdial observan que
+el conjunto de estrategias dominantes refleja el comportamiento de la
+mayoría de la base de jugadores, y orientan deliberadamente su agente a
+aproximar un nivel promedio por esa razón
+\cite{saravanan_metadiscovery_2024}. En la medida en que el conjunto
+empleado aquí privilegie la franja superior de clasificación, la población
+observada no corresponde a la población general.
+
+\razon{Este sesgo debe declararse en el análisis técnico y recogerse en las
+consideraciones éticas. Determina a qué población pueden extrapolarse los
+resultados.}
 
 \subsection{Análisis exploratorio}
 \label{subsec:eda}
-\pc{Número de registros, número de características, distribución del
-target, cobertura temporal, y la estructura de agrupamiento de los
-datos. Distinguir lo MEDIDO de lo PROPUESTO: nada propuesto debe
-leerse como resultado.}
+
+\pc{Número de registros y de características, distribución del objetivo,
+cobertura temporal, distribución de la longitud de los episodios, y
+estructura de agrupamiento. Corresponde a la auditoría del Eje C.}
+
+\razon{Este apartado debe distinguir de forma inequívoca entre lo medido y
+lo propuesto. Ninguna cifra procedente del diseño puede presentarse con la
+forma de un resultado observado.}
 
 \subsection{Diccionario de datos}
 \label{subsec:diccionario}
+
 \begin{table}[!t]
 \centering
 \caption{Diccionario de datos (extracto).}
 \label{tab:diccionario}
 \footnotesize
-\begin{tabularx}{\columnwidth}{@{}P{1.7cm} P{1.2cm} P{1.6cm} Y@{}}
+\begin{tabularx}{\columnwidth}{@{}P{1.6cm} P{1.1cm} P{1.5cm} Y@{}}
 \toprule
 \textbf{Variable} & \textbf{Tipo} & \textbf{Origen} &
-\textbf{Significado / rango / riesgo}\\
+\textbf{Significado y observaciones}\\
 \midrule
 \pc{var} & \pc{tipo} & \pc{origen} & \pc{descripción}\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\pc{Si el diccionario completo no cabe, incluir un extracto
-representativo y remitir al repositorio para la versión íntegra.}
+\pc{Diccionario completo o extracto representativo, con remisión al
+repositorio para la versión íntegra.}
+
+\noindent\textbf{Características derivadas por diferencia.} El diccionario
+incorpora variables construidas como diferencia entre el valor
+correspondiente al jugador de referencia y el de su oponente. Hodge
+\textit{et al.} adoptan la misma construcción, calculando para cada métrica
+el valor de cada bando y su diferencia \cite{hodge_winprediction_2021}.
+Xenopoulos \textit{et al.} organizan igualmente su representación en
+información global e información agregada por bando
+\cite{xenopoulos_winprob_2022}.
+
+\decidir{Hodge \textit{et al.} incorporan además, para cada característica,
+el cambio respecto del instante inmediatamente anterior
+\cite{hodge_winprediction_2021}. El diccionario actual no contempla
+variables de esa naturaleza, que permitirían representar la variación
+reciente del estado y no únicamente su valor. Su incorporación debe
+evaluarse antes de materializar la tabla, verificando que la información
+del instante anterior sea efectivamente anterior al instante de la
+predicción y no constituya, por tanto, una fuga.}
 
 \subsection{Calidad de los datos}
 \label{subsec:calidad}
-\pc{Qué se verificó y con qué resultado: duplicados, consistencia de
-esquema, rangos imposibles, consistencia lógica entre campos,
-cardinalidad de las categóricas.}
 
-\subsection{Datos faltantes e imputación}
+\pc{Verificaciones realizadas y su resultado: duplicados, consistencia de
+esquema, rangos admisibles, consistencia lógica entre campos, y
+cardinalidad de las variables categóricas. Corresponde a la auditoría del
+Eje C.}
+
+\subsection{Datos faltantes y estrategia de imputación}
 \label{subsec:imputacion}
 
-\pc{Distinguir los mecanismos de ausencia. Tratarlos igual sería un
-error, y la estrategia debe justificarse con literatura, no con
-costumbre.}
+Se distinguen dos mecanismos de ausencia, con tratamientos distintos.
 
-\noindent\textbf{Ausencia estructural.} \pc{Campos ausentes porque el
-dominio los define así. No son datos faltantes en sentido estadístico
-y no se imputan: se codifican semánticamente. Justificar con
-referencia.}
+\noindent\textbf{Ausencia estructural.} Corresponde a campos ausentes
+porque las reglas del juego determinan que no exista un valor en ese
+estado. No constituyen datos faltantes en sentido estadístico y no se
+imputan: se codifican de forma que la ausencia sea representable por el
+modelo.
 
-\noindent\textbf{Ausencia inesperada.} \pc{Campos requeridos ausentes
-por corrupción o error de procesamiento. Procedimiento: medir la
-frecuencia, decidir según su magnitud, y documentar el criterio.}
+\noindent\textbf{Ausencia inesperada.} Corresponde a campos que deberían
+tener valor y no lo tienen. \pc{Procedimiento de medición de su frecuencia
+y criterio de decisión.}
 
-\noindent\textbf{Estrategia adoptada.} \pc{Qué se hace con cada
-mecanismo y por qué. Ninguna variable se imputa automáticamente sin
-estudiar antes el mecanismo de ausencia.}
+\pc{Referencia arbitrada que sustente la distinción entre mecanismos de
+ausencia. Corresponde al bundle de Daniel.}
+
+\razon{La estrategia de imputación es una de las decisiones que el
+enunciado exige justificar en el análisis técnico. La distinción entre
+ambos mecanismos es correcta, pero requiere respaldo bibliográfico: sin él
+constituye una decisión sin justificación técnica.}
+
+Borisov \textit{et al.} señalan que los algoritmos modernos basados en
+árboles manejan internamente los valores faltantes y los rangos extremos,
+buscando aproximaciones y puntos de corte apropiados
+\cite{borisov_tabular_2024}. Esta propiedad reduce la dependencia del
+resultado respecto de la estrategia de imputación adoptada.
 
 \subsection{Valores atípicos}
 \label{subsec:atipicos}
-\pc{Método de detección, umbral, y qué se hace con lo detectado. Un
-valor extremo puede ser un atípico VÁLIDO y no un error: solo se
-elimina lo demostradamente corrupto, y la regla de exclusión se declara
-antes de mirar el conjunto de prueba.}
+
+\pc{Método de detección, umbral empleado, y tratamiento de las
+observaciones detectadas.}
+
+\razon{El criterio de exclusión debe declararse antes de examinar el
+conjunto de prueba. Un valor extremo puede corresponder a una observación
+válida y no a un error de registro; únicamente se excluye aquello
+demostrablemente corrupto.}
 
 \subsection{Desbalance de clases}
 \label{subsec:desbalance}
-\pc{Proporción medida sobre la representación final, no sobre una
-aproximación. Estrategia elegida y su justificación con literatura.
-Si la salida del modelo es una probabilidad, discutir el efecto de la
-corrección sobre la calibración antes de aplicarla.}
 
-\subsection{Prevención explícita de data leakage}
+\pc{Proporción medida sobre la representación tabular definitiva.}
+
+\pc{Referencia arbitrada sobre el efecto de la corrección del desbalance
+sobre las probabilidades predichas. Corresponde al bundle de Daniel.}
+
+Silva Filho \textit{et al.} señalan que el desbalance de clases afecta las
+probabilidades predichas y, en consecuencia, la calibración del modelo
+\cite{silvafilho_calibration_2023}. Dado que la salida de este trabajo es
+una probabilidad y no una etiqueta, cualquier procedimiento de corrección
+del desbalance debe evaluarse por su efecto sobre la calibración y no
+únicamente sobre las métricas de ordenamiento.
+
+\razon{Este vínculo debe explicitarse. La decisión sobre el desbalance y la
+decisión sobre la calibración no son independientes, y tratarlas por
+separado ocultaría la interacción.}
+
+\subsection{Prevención explícita de fuga de información}
 \label{subsec:leakage}
 
-\pc{Este es el riesgo metodológico propio del Track A y tiene un
-criterio dedicado en la rúbrica.}
+Este apartado constituye el riesgo metodológico propio del \textit{track}
+seleccionado.
 
-\subsubsection{Lista negra de información prohibida}
-\pc{Enumerar todo campo que no puede entrar al vector de
-características, y por qué en el momento real de la decisión esa
-información no existiría todavía.}
+\subsubsection{Información excluida del vector de características}
 
-\subsubsection{Taxonomía de riesgo}
+\pc{Enumeración de los campos excluidos y la razón de su exclusión en cada
+caso.}
+
+El criterio general es que el vector de características contenga
+exclusivamente información disponible para un jugador en el instante de la
+decisión. Xenopoulos \textit{et al.} enfrentan una restricción análoga
+---aunque de origen distinto--- al limitar sus características a las
+accesibles durante la transmisión en vivo, y reconocen que ello reduce el
+conjunto disponible respecto de los trabajos que operan sobre repeticiones
+completas \cite{xenopoulos_winprob_2022}. Hodge \textit{et al.} describen
+la misma restricción, señalando que el flujo en vivo provee únicamente un
+subconjunto de las características presentes en los archivos de repetición
+\cite{hodge_winprediction_2021}.
+
+\razon{Ambos precedentes son de origen técnico y el nuestro de origen
+metodológico, pero el principio coincide: el modelo solo puede emplear
+información que existiría en el momento real de la predicción. Citarlos
+sitúa la restricción como práctica establecida.}
+
+\subsubsection{Vectores de riesgo y su mitigación}
+
 \begin{table}[!t]
 \centering
-\caption{Vectores de fuga: riesgo, evidencia y mitigación.}
+\caption{Vectores de fuga identificados y su mitigación.}
 \label{tab:leakage}
 \footnotesize
-\begin{tabularx}{\columnwidth}{@{}P{1.9cm} Y P{2.2cm}@{}}
+\begin{tabularx}{\columnwidth}{@{}P{1.8cm} Y P{2.0cm}@{}}
 \toprule
-\textbf{Tipo} & \textbf{Riesgo y evidencia medida} &
+\textbf{Tipo} & \textbf{Descripción del riesgo} &
 \textbf{Mitigación}\\
 \midrule
-\pc{tipo} & \pc{riesgo + evidencia} & \pc{mitigación}\\
-\pc{tipo} & \pc{riesgo + evidencia} & \pc{mitigación}\\
-\pc{tipo} & \pc{riesgo + evidencia} & \pc{mitigación}\\
+Por episodio & Observaciones consecutivas de un mismo episodio difieren
+mínimamente entre sí & Partición agrupada por episodio\\[2pt]
+Temporal & Empleo de información posterior para predecir eventos
+anteriores & Corte cronológico en el protocolo B\\[2pt]
+Por agente & Identidad del agente disponible en entrenamiento y prueba &
+\pc{mitigación}\\[2pt]
+Por configuración de mazo & Memorización de qué configuraciones vencen &
+Protocolo C\\[2pt]
+Por información oculta & Inclusión de información no disponible para el
+jugador & Exclusión explícita de los campos correspondientes\\[2pt]
+Por metadatos & Identificadores u otros campos correlacionados con el
+desenlace & Exclusión explícita\\[2pt]
+Por preprocesamiento & Estimadores de transformación ajustados sobre la
+tabla completa & Ajuste restringido al subconjunto de entrenamiento\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
+\pc{Incorporar a la tabla la evidencia medida correspondiente a cada
+vector. La cuantificación del riesgo de fuga por episodio bajo partición
+aleatoria procede de la auditoría del Eje C.}
+
+\razon{Figueiredo y Mendes cuantifican la contaminación entre subconjuntos
+antes de entrenar modelo alguno \cite{figueiredo_leakage_2024}. Acompañar
+cada vector con evidencia medida sobre este conjunto de datos, y no
+únicamente con la descripción del riesgo, es lo que distingue una
+prevención verificada de una precaución declarada.}
+
 \subsubsection{Verificación automática}
-\pc{Qué prueba automática falla si un campo prohibido entra al modelo
-o si una unidad independiente aparece en dos particiones. Una política
-sin prueba que la verifique es una intención, no una mitigación.}
+
+\pc{Descripción de las pruebas automáticas que fallan ante la presencia de
+un campo prohibido en el vector de características o ante la aparición de
+un mismo episodio en dos subconjuntos.}
+
+\razon{Una política de prevención sin una prueba que la verifique
+constituye una intención y no una mitigación. La verificación automática es
+lo que permite afirmar que la prevención se cumple y no solo que se
+pretende.}
+
+\decidir{Figueiredo y Mendes comparan explícitamente el desempeño obtenido
+bajo distintas estrategias de partición, lo que permite cuantificar la
+inflación atribuible a la fuga \cite{figueiredo_leakage_2024}. Un
+procedimiento equivalente sobre este conjunto de datos ---ejecutar el
+modelo de referencia bajo partición aleatoria y bajo partición agrupada, y
+reportar la diferencia--- convertiría la prevención de fuga en un resultado
+medido. Su incorporación debe decidirse en la Etapa 2, y en caso de
+adoptarse debe declararse de forma inequívoca que la partición aleatoria se
+emplea únicamente como demostración del sesgo y no para reportar
+resultados.}

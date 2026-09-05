@@ -1,35 +1,92 @@
 % ============================================================
 % tab/tabla_comparativa.tex
 %
-% COLUMNAS OBLIGATORIAS. No sustituir, no reordenar, no añadir.
-% Se usa table* porque con siete columnas no cabe en una sola
-% columna del formato IEEE.
+% COLUMNAS OBLIGATORIAS: referencia, año, técnica, dataset o
+% entorno, métrica principal, resultado reportado, limitación.
 %
-% Cada fila sale de los campos 4 a 7 de la plantilla de extracción:
-% unidad de análisis, protocolo, métrica y resultado reportado.
+% AJUSTE DE ANCHOS
+%   Referencia y Año: anchos fijos, porque su contenido es corto
+%   y predecible. Las cinco restantes son columnas X con peso,
+%   de modo que el espacio sobrante se reparte en proporción y
+%   la tabla se adapta si cambia el ancho de página.
+%   Los pesos suman 5, que es el número de columnas W.
 %
-% NO incluir aquí referencias puramente metodológicas (calibración,
-% leakage genérico, imputación): no resuelven una tarea comparable
-% sobre un dataset y obligarían a inventar valores. Esas viven en
-% el texto.
+%   NO usar 'l' en la primera columna: no permite salto de línea
+%   y cualquier marcador largo desborda la tabla.
 % ============================================================
 \begin{table*}[!t]
 \centering
 \caption{Resumen comparativo de trabajos relacionados.}
 \label{tab:comparativa}
+\begin{threeparttable}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{@{}l c P{2.4cm} P{2.4cm} P{2.0cm} P{1.8cm} Y@{}}
+\begin{tabularx}{\textwidth}{@{}
+    P{1.3cm}                        % Referencia
+    >{\centering\arraybackslash}p{0.7cm} % Año
+    W{0.95}                         % Técnica
+    W{1.00}                         % Dataset / entorno
+    W{0.85}                         % Métrica principal
+    W{0.75}                         % Resultado reportado
+    W{1.45}                         % Limitación identificada
+  @{}}
 \toprule
 \textbf{Referencia} & \textbf{Año} & \textbf{Técnica} &
 \textbf{Dataset / entorno} & \textbf{Métrica principal} &
 \textbf{Resultado reportado} & \textbf{Limitación identificada}\\
 \midrule
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
+
+\cite{hodge_winprediction_2021} & 2021 &
+Regresión logística, bosques aleatorios y potenciación del gradiente &
+DotA 2: 5\,744 repeticiones mixtas y 186 profesionales &
+Exactitud &
+\pct &
+Los conjuntos de la literatura no son comparables entre sí; el flujo en
+vivo provee un subconjunto de las características de las repeticiones
+\\
+\addlinespace[3pt]
+
+\cite{xenopoulos_winprob_2022} & 2022 &
+Máquinas de potenciación explicables (modelo aditivo generalizado) &
+CSGO: tres entornos de habilidad &
+Pérdida logarítmica y error de calibración esperado &
+\pct &
+Un solo juego; el modelo interpretable podría ser superado; no es posible
+identificar a los jugadores que incurren en trampa
+\\
+\addlinespace[3pt]
+
+\cite{saravanan_metadiscovery_2024} & 2024 &
+Agente de refuerzo y agente heurístico, con constructor de equipos &
+Pok\'emon Showdown: cuatro escenarios de prohibición &
+Solapamiento, distancia de edición y correlación de rangos &
+\pct &
+La correlación de rangos resulta débil y no significativa: el conjunto
+descubierto difiere del real pese al solapamiento
+\\
+\addlinespace[3pt]
+
+\pct & \pct & \pct & \pct & \pct & \pct & \pct \\
+\addlinespace[3pt]
+
+\pct & \pct & \pct & \pct & \pct & \pct & \pct \\
+\addlinespace[3pt]
+
+\pct & \pct & \pct & \pct & \pct & \pct & \pct \\
+\addlinespace[3pt]
+
+\pct & \pct & \pct & \pct & \pct & \pct & \pct \\
+
 \bottomrule
 \end{tabularx}
+\begin{tablenotes}[flushleft]
+\footnotesize
+\item \textit{Nota.} Los conjuntos de datos empleados difieren en tamaño,
+composición, juego y versión, por lo que la comparación directa de los
+resultados reportados requiere cautela. Las referencias de carácter
+metodológico incluidas en la revisión no figuran en esta tabla, dado que
+no resuelven una tarea de predicción sobre un conjunto de datos
+comparable.
+\end{tablenotes}
+\end{threeparttable}
 \end{table*}

@@ -1,124 +1,425 @@
 % ============================================================
 % sec/04metodologia.tex
 %
-% DEBE CONTENER:
-%   - Formalización del problema (formulación matemática si aplica)
-%   - Pipeline previsto
-%   - Protocolo experimental: particiones, validación, métricas
-%     Y SU JUSTIFICACIÓN
-%   - Plan de baselines
-%   - Riesgos identificados con su mitigación
+% OBLIGATORIO: formalización con formulación matemática,
+% pipeline previsto, protocolo experimental con particiones,
+% validación y métricas justificadas, plan de baselines, y
+% riesgos con su mitigación.
 %
-% Cada decisión sin justificación técnica cuesta -5 puntos,
-% hasta un máximo de -15.
+% Cada decisión sin justificación técnica se penaliza.
 % ============================================================
 \section{Metodología Propuesta}
 \label{sec:metodologia}
 
 \subsection{Formalización del problema}
 \label{subsec:formalizacion}
-\pc{Tipo de problema. Definir el espacio de entrada, el espacio de
-salida, la función objetivo y las restricciones.}
 
+El problema se formula como clasificación binaria probabilística sobre
+datos tabulares. Sea $\mathcal{E}$ el conjunto de episodios disponibles,
+donde cada episodio $e \in \mathcal{E}$ corresponde a una partida completa
+entre dos agentes. Cada episodio produce una secuencia de estados
+observables $\{s_{e,1}, s_{e,2}, \dots, s_{e,T_e}\}$, donde $T_e$ denota la
+cantidad de estados registrados en el episodio $e$, y un desenlace
+$y_e \in \{0,1\}$ que indica si el jugador de referencia resultó vencedor.
+
+Cada estado se transforma en un vector de características
+$\mathbf{x}_{e,t} = \phi(s_{e,t}) \in \mathbb{R}^d$ mediante una función de
+extracción $\phi$ restringida a la información disponible en el instante
+$t$. La etiqueta asociada a toda observación del episodio $e$ es el mismo
+valor $y_e$.
+
+El objetivo es estimar
 \begin{equation}
 \label{eq:objetivo}
-\pc{formulación}
+\hat{p}(\mathbf{x}) \approx \Pr\!\left(Y = 1 \mid \mathbf{X} = \mathbf{x}\right),
 \end{equation}
+donde la probabilidad se toma sobre la aleatoriedad del juego posterior al
+instante observado: el orden restante del mazo, la información oculta del
+oponente y las decisiones futuras de ambos agentes.
 
-\noindent\textbf{Definición del target.} \pc{Cómo se deriva la
-etiqueta, y qué casos se excluyen y por qué.}
+\razon{La ecuación debe explicitar sobre qué se toma la probabilidad. Es lo
+que distingue este problema de uno determinista, y es la respuesta al
+criterio de exclusión que Grinsztajn \textit{et al.} aplican a los conjuntos
+de juegos en los cuales el objetivo se deduce de los datos
+\cite{grinsztajn_trees_2022}.}
 
-\noindent\textbf{Unidad de observación.} \pc{Qué es una fila.}
+\subsubsection{Unidad de observación y unidad independiente}
 
-\noindent\textbf{Unidad independiente.} \pc{Cuál es la unidad
-estadísticamente independiente. Si difiere de la unidad de observación,
-ESA distinción gobierna todas las particiones e intervalos de confianza
-de este trabajo.}
+Esta distinción gobierna la totalidad del diseño experimental y se declara
+de forma explícita:
+
+\begin{itemize}
+  \item \textbf{Unidad de observación:} el estado $\mathbf{x}_{e,t}$. Es la
+        fila de la tabla y la entrada del modelo.
+  \item \textbf{Unidad estadísticamente independiente:} el episodio $e$. El
+        desenlace se sortea una única vez por episodio, y todas las
+        observaciones de un mismo episodio comparten ese sorteo.
+\end{itemize}
+
+En consecuencia, el número de observaciones excede en más de dos órdenes de
+magnitud el número de sorteos independientes del desenlace. Brill
+\textit{et al.} demuestran que, bajo esta estructura, el tamaño de muestra
+efectivo resulta una fracción del nominal, y que la precisión del estimador
+decrece conforme aumenta el número de observaciones por unidad manteniendo
+constante el total de filas \cite{brill_winprob_2026}.
+
+\razon{Toda mención del tamaño del conjunto de datos en este documento debe
+expresar ambas cifras: el número de observaciones y el número de episodios.
+Reportar únicamente el conteo de filas transmitiría una noción inexacta de
+la cantidad de evidencia disponible, precisamente el error que Brill
+\textit{et al.} identifican \cite{brill_winprob_2026}.}
+
+\subsubsection{Definición del objetivo}
+
+\pc{Descripción de cómo se deriva la etiqueta a partir de la información
+del episodio, y qué episodios se excluyen por no admitir una derivación
+inequívoca. Corresponde a la auditoría del conjunto de datos, Eje C.}
+
+\subsection{Alcance del uso de las observaciones}
+\label{subsec:alcanceobs}
+
+Se conserva la totalidad de las observaciones por episodio, sin
+submuestreo. Brill \textit{et al.} reportan que retener todas las
+observaciones de una unidad resulta preferible a conservar una sola, dado
+que el conjunto completo aporta información sobre la estructura del espacio
+de covariables, pese a la dependencia entre las etiquetas
+\cite{brill_winprob_2026}.
+
+\razon{Esta decisión debe justificarse de forma explícita porque la
+alternativa ---retener un estado por episodio para obtener observaciones
+independientes--- resulta intuitivamente atractiva y es peor. Sin la cita,
+la decisión parecería una omisión en lugar de una elección informada.}
 
 \subsection{Pipeline previsto}
 \label{subsec:pipeline}
-\pc{Descripción de extremo a extremo: ingesta, preprocesamiento,
-construcción de características, modelo, evaluación, y la interfaz que
-consumirá el agente de la Etapa 3.}
 
+El procedimiento se organiza en seis etapas:
+
+\begin{enumerate}
+  \item \textbf{Ingesta.} Lectura de las repeticiones en su formato
+        original.
+  \item \textbf{Extracción de estados.} Recorrido de cada episodio y
+        obtención de los estados observables, junto con el desenlace.
+  \item \textbf{Construcción de características.} Aplicación de $\phi$
+        sobre cada estado, restringida a la información disponible en el
+        instante correspondiente.
+  \item \textbf{Materialización.} Escritura de la tabla resultante en
+        formato columnar, ejecutada una sola vez.
+  \item \textbf{Partición.} División agrupada por episodio en los
+        subconjuntos descritos en la Sección~\ref{subsec:protocolo}.
+  \item \textbf{Entrenamiento y evaluación.} Ajuste de los modelos de
+        referencia y medición bajo los tres protocolos de generalización.
+\end{enumerate}
+
+Xenopoulos \textit{et al.} describen un procedimiento análogo, en el cual
+las repeticiones se procesan mediante un analizador sintáctico que produce
+estados del juego a intervalos regulares, y dichos estados constituyen la
+entrada de los modelos \cite{xenopoulos_winprob_2022}. Hodge \textit{et al.}
+emplean igualmente un analizador sobre repeticiones para producir vectores
+de estado por instante \cite{hodge_winprediction_2021}.
+
+\razon{Citar ambos precedentes evita que el procedimiento parezca una
+construcción improvisada. La estructura repetición--analizador--tabla es la
+práctica establecida del dominio.}
+
+% ============================================================
+% Figura: pipeline propuesto.
+% Dibujada con TikZ: no requiere archivo externo.
+% Las seis etapas corresponden a la enumeración de esta sección.
+% ============================================================
 \begin{figure}[!t]
-  \centering
-  \safeimage[width=\columnwidth]{pipeline.png}
-  \caption{Pipeline propuesto. \pc{leyenda}}
-  \label{fig:pipeline}
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  etapa/.style={
+    draw=tecrule, fill=boxbg, thick, rounded corners=2pt,
+    text width=5.4cm, align=center, inner sep=4pt, minimum height=7mm},
+  hito/.style={
+    draw=tecnavy, fill=tecnavy!8, thick, rounded corners=2pt,
+    text width=5.4cm, align=center, inner sep=4pt, minimum height=7mm},
+  flecha/.style={-{Stealth[length=4pt]}, draw=tecsteel, thick},
+  nota/.style={font=\tiny\itshape, text=labelgray, align=left,
+               text width=1.9cm},
+  fase/.style={font=\tiny\bfseries, text=tecnavy, rotate=90,
+               align=center}
+]
+
+\node[etapa] (e1) {1. Ingesta de repeticiones};
+\node[etapa, below=3.5mm of e1] (e2) {2. Extracción de estados y desenlace};
+\node[etapa, below=3.5mm of e2] (e3) {3. Construcción de características $\phi$};
+\node[hito,  below=3.5mm of e3] (e4) {4. Materialización de la tabla};
+\node[hito,  below=3.5mm of e4] (e5) {5. Partición agrupada por episodio};
+\node[etapa, below=3.5mm of e5] (e6) {6. Entrenamiento y evaluación};
+
+\draw[flecha] (e1) -- (e2);
+\draw[flecha] (e2) -- (e3);
+\draw[flecha] (e3) -- (e4);
+\draw[flecha] (e4) -- (e5);
+\draw[flecha] (e5) -- (e6);
+
+\node[nota, right=2.5mm of e3] {solo información disponible en el instante $t$};
+\node[nota, right=2.5mm of e4] {ejecutada una sola vez};
+\node[nota, right=2.5mm of e5] {ningún episodio en dos subconjuntos};
+\node[nota, right=2.5mm of e6] {protocolos A, B y C};
+
+\begin{scope}[on background layer]
+  \node[draw=tecrule, dashed, rounded corners=3pt, inner sep=3pt,
+        fit=(e1)(e4)] (faseA) {};
+  \node[draw=tecrule, dashed, rounded corners=3pt, inner sep=3pt,
+        fit=(e5)(e6)] (faseB) {};
+\end{scope}
+
+\node[fase, left=1mm of faseA] {Construcción\\del conjunto};
+\node[fase, left=1mm of faseB] {Experimentación};
+
+\end{tikzpicture}
+\caption{Pipeline propuesto. Las etapas 1 a 4 se ejecutan una sola vez y
+producen la representación tabular; las etapas 5 y 6 operan sobre ella. La
+partición de la etapa 5 asigna episodios completos a un único subconjunto,
+condición que se verifica de forma automática.}
+\label{fig:pipeline}
 \end{figure}
 
 \subsection{Protocolo experimental}
 \label{subsec:protocolo}
 
-\subsubsection{Particiones}
-\pc{Proporciones exactas. Declarar si la partición es aleatoria,
-estratificada, temporal o agrupada, y JUSTIFICARLA frente a las
-alternativas descartadas.}
+\subsubsection{Partición agrupada por episodio}
 
-\subsubsection{Estrategia de validación}
-\pc{Holdout, k-fold, validación cruzada agrupada o anidada. Declarar
-cómo se seleccionan los hiperparámetros sin tocar el conjunto de
-prueba, y cuántas veces se toca ese conjunto.}
+Toda partición se realiza asignando episodios completos a un único
+subconjunto. Ninguna observación de un episodio puede figurar en dos
+subconjuntos distintos.
 
-\subsubsection{Métricas y su justificación}
+Esta decisión responde a dos evidencias convergentes. Brill \textit{et al.}
+muestran que la dependencia entre observaciones que comparten desenlace
+incrementa el sesgo y la varianza del estimador
+\cite{brill_winprob_2026}. Figueiredo y Mendes cuantifican el efecto sobre
+las métricas reportadas: la partición aleatoria sobre observaciones
+altamente correlacionadas infla el desempeño medido respecto de una
+partición que asigna agrupaciones completas
+\cite{figueiredo_leakage_2024}.
+
+\razon{Se citan las dos referencias y no una, porque miden efectos
+distintos: Brill sobre las propiedades del estimador, Figueiredo sobre la
+cifra que se publica. Presentar solo una dejaría el argumento a medias.}
+
+Una ventaja de este conjunto de datos respecto de los escenarios estudiados
+por Figueiredo y Mendes es que la agrupación no requiere inferencia: el
+identificador de episodio la determina de forma exacta. En su trabajo, la
+contribución central consiste precisamente en un procedimiento para inferir
+agrupaciones que no vienen dadas \cite{figueiredo_leakage_2024}.
+
+\subsubsection{Tres protocolos de generalización}
+
 \begin{table}[!t]
 \centering
-\caption{Métricas de evaluación y su justificación.}
-\label{tab:metricas}
+\caption{Protocolos de evaluación y pregunta que responde cada uno.}
+\label{tab:protocolos}
 \footnotesize
-\begin{tabularx}{\columnwidth}{@{}P{2.2cm} Y@{}}
+\begin{tabularx}{\columnwidth}{@{}P{1.5cm} P{2.3cm} Y@{}}
 \toprule
-\textbf{Métrica} & \textbf{Por qué esta y qué alternativa desplaza}\\
+\textbf{Protocolo} & \textbf{Criterio de partición} &
+\textbf{Pregunta que responde}\\
 \midrule
-\pc{principal}  & \pc{justificación}\\
-\pc{secundaria} & \pc{justificación}\\
-\pc{secundaria} & \pc{justificación}\\
+A & Episodios disjuntos, asignación aleatoria &
+¿Generaliza a partidas no observadas?\\
+B & Episodios disjuntos, corte temporal &
+¿Se conserva el desempeño sobre periodos posteriores?\\
+C & Episodios disjuntos, mazos disjuntos &
+¿Aprendió a leer el estado o memorizó qué configuraciones vencen?\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\pc{Un párrafo explicando por qué la métrica principal es la principal,
-y qué queda sin capturar que obliga a reportar las secundarias.}
+El protocolo B responde a la evidencia de que la población de estrategias
+de una comunidad competitiva evoluciona. Saravanan y Guzdial caracterizan
+dicho conjunto de estrategias dominantes y documentan que cambia de forma
+continua \cite{saravanan_metadiscovery_2024}. Hodge \textit{et al.}
+identifican como limitación del trabajo previo que los datos se recolecten
+a lo largo de periodos que atraviesan cambios significativos del juego, y
+adoptan una partición ordenada cronológicamente con el fin de no emplear
+datos posteriores para predecir eventos anteriores
+\cite{hodge_winprediction_2021}.
 
-\subsection{Plan de baselines}
-\label{subsec:planbaselines}
+\razon{El protocolo temporal debe justificarse con literatura del dominio de
+juegos y no únicamente con referencias metodológicas de otros campos. Hodge
+\textit{et al.} y Saravanan y Guzdial cumplen esa función.}
 
-\pc{Cada nivel se justifica por lo que el anterior no logró explicar,
-no por moda. La ausencia de baselines cuesta -10 puntos aunque el
-modelo principal funcione.}
+\pc{El protocolo C requiere el análisis de concentración de configuraciones
+de mazo, correspondiente al Eje C, para establecer su viabilidad y el
+criterio de separación.}
+
+\subsubsection{Conjunto de calibración}
+
+El procedimiento de recalibración descrito en la
+Sección~\ref{subsec:planbaselines} requiere un subconjunto de datos no
+empleado en el ajuste del modelo. Silva Filho \textit{et al.} establecen
+que la recalibración debe ajustarse sobre datos no vistos durante el
+entrenamiento \cite{silvafilho_calibration_2023}. Niculescu-Mizil y Caruana
+detallan la consecuencia de incumplirlo: si el modelo separa perfectamente
+el conjunto sobre el cual se calibra, la transformación aprendida degenera
+\cite{niculescumizil_probabilities_2005}.
+
+\decidir{El diseño requiere resolver de qué subconjunto procederán los
+datos de calibración. Las dos alternativas son: una cuarta partición
+independiente, obtenida dividiendo el conjunto de entrenamiento y agrupando
+por episodio; o una validación cruzada agrupada por identificador de
+episodio. La primera resulta más sencilla de auditar; la segunda aprovecha
+la totalidad de los datos, pero exige verificar que el procedimiento de
+validación cruzada respete la agrupación, dado que las implementaciones
+habituales asumen independencia entre observaciones. La decisión debe
+tomarse antes de ejecutar cualquier entrenamiento, puesto que modificar las
+particiones a mitad del proceso invalidaría los resultados previos.}
+
+\subsubsection{Métricas y su justificación}
 
 \begin{table}[!t]
 \centering
-\caption{Escalera de baselines.}
+\caption{Métricas de evaluación y componente que mide cada una.}
+\label{tab:metricas}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{2.1cm} P{1.9cm} Y@{}}
+\toprule
+\textbf{Métrica} & \textbf{Componente} &
+\textbf{Justificación}\\
+\midrule
+Área bajo la curva ROC & Refinamiento &
+Mide exclusivamente el ordenamiento. Es invariante ante transformaciones
+monótonas de las probabilidades\\
+Error de calibración & Calibración &
+Mide la correspondencia entre probabilidades predichas y frecuencias
+observadas\\
+Pérdida logarítmica & Ambos &
+Regla de puntuación propia. Penaliza severamente la confianza equivocada\\
+Puntaje de Brier & Ambos &
+Regla de puntuación propia acotada, con penalización cuadrática\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La adopción simultánea de estas cuatro métricas se fundamenta en la
+descomposición que Silva Filho \textit{et al.} exponen: las reglas de
+puntuación propias se separan en un componente de calibración y uno de
+refinamiento \cite{silvafilho_calibration_2023}. Ninguna métrica
+individual distingue entre las dos formas en que un estimador puede
+fallar, de modo que reportar únicamente una impediría determinar si un
+desempeño deficiente obedece a incapacidad de separar las clases o a
+probabilidades que no reflejan las frecuencias reales.
+
+La exactitud se descarta como métrica principal. Niculescu-Mizil y Caruana
+señalan que, cuando se requieren probabilidades bien calibradas, ni la
+exactitud ni el área bajo la curva resultan suficientes
+\cite{niculescumizil_probabilities_2005}.
+
+\razon{La justificación de las métricas es uno de los puntos que el
+enunciado señala como decisión clave. Debe apoyarse en la descomposición
+formal y no en la enumeración de métricas habituales.}
+
+\noindent\textbf{Construcción de las curvas de calibración.} Silva Filho
+\textit{et al.} advierten que los estimadores del error de calibración
+basados en discretización dependen del número y la construcción de los
+intervalos empleados \cite{silvafilho_calibration_2023}. Dimitriadis
+\textit{et al.} proponen un procedimiento que produce diagramas
+reproducibles junto con una medida numérica de descalibración
+\cite{dimitriadis_reliability_2021}.
+
+\decidir{Queda por verificar la disponibilidad de una implementación del
+procedimiento de Dimitriadis \textit{et al.} en el entorno de trabajo. En
+caso de no estar disponible, se emplea el error de calibración esperado con
+discretización, declarando la limitación correspondiente.}
+
+\subsubsection{Intervalos de confianza}
+
+Los intervalos de confianza se construyen mediante remuestreo sobre
+episodios y no sobre observaciones individuales. Brill \textit{et al.}
+reportan que el remuestreo que ignora la estructura de agrupamiento alcanza
+una cobertura marcadamente inferior a la nominal, y que incluso el
+remuestreo que respeta dicha estructura permanece por debajo del nivel
+declarado \cite{brill_winprob_2026}.
+
+\razon{Debe declararse que los intervalos constituyen una cota optimista de
+la incertidumbre real. Presentarlos como intervalos de cobertura nominal
+válida contradiría la evidencia de la referencia que fundamenta el método.}
+
+\subsection{Plan de modelos de referencia}
+\label{subsec:planbaselines}
+
+\begin{table}[!t]
+\centering
+\caption{Escalera de modelos de referencia.}
 \label{tab:baselines}
 \footnotesize
 \begin{tabularx}{\columnwidth}{@{}c P{2.4cm} Y@{}}
 \toprule
 \textbf{Nivel} & \textbf{Modelo} & \textbf{Pregunta que responde}\\
 \midrule
-B0 & \pc{trivial}       & \pc{¿cuál es el piso?}\\
-B1 & \pc{heurística}    & \pc{¿hace falta ML?}\\
-B2 & \pc{lineal}        & \pc{¿la relación es lineal?}\\
-B3 & \pc{no lineal}     & \pc{¿hay interacciones?}\\
-B4 & \pc{ensamble}      & \pc{¿cuánto compra la complejidad?}\\
+B0 & Predictor de clase mayoritaria & ¿Cuál es el piso absoluto?\\
+B1 & Heurística de dominio & ¿Se requiere aprendizaje automático?\\
+B2 & Regresión logística & ¿La relación es lineal?\\
+B3 & Bosques aleatorios & ¿Existen interacciones no lineales?\\
+B4 & Potenciación del gradiente & ¿Cuánto aporta la complejidad adicional?\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\noindent\textbf{Tercera referencia.} El baseline de literatura
-declarado en la Sección~\ref{sec:baseline} se arrastra como referencia
-externa junto a los baselines internos anteriores.
+La inclusión de los niveles B2 a B4 se fundamenta en la evidencia de que
+los conjuntos de árboles constituyen el estado del arte sobre datos
+tabulares \cite{borisov_tabular_2024, grinsztajn_trees_2022}.
+
+El nivel B1 merece atención particular. Hodge \textit{et al.} reportan que
+un modelo construido sobre una única característica alcanza un desempeño
+cercano al obtenido con el conjunto completo de características
+\cite{hodge_winprediction_2021}. Un resultado análogo en este trabajo
+constituiría un hallazgo y no un fracaso.
+
+\razon{Declarar de antemano que un buen desempeño de la heurística sería un
+resultado válido evita que, ante ese escenario, se busque justificar la
+complejidad del modelo con argumentos posteriores a los datos.}
+
+\noindent\textbf{Recalibración.} El procedimiento no aplica recalibración de
+forma uniforme. Niculescu-Mizil y Caruana reportan que los métodos de
+máximo margen presentan distorsión sistemática, mientras que la regresión
+logística y los conjuntos por agregación resultan bien calibrados sin
+corrección, y que recalibrar estos últimos puede deteriorarlos
+\cite{niculescumizil_probabilities_2005}. En consecuencia, el
+procedimiento mide la calibración de cada modelo antes de decidir si
+aplicar corrección, y reporta ambas mediciones.
+
+\razon{Los mismos autores reportan que el ordenamiento de los modelos según
+la calidad de sus probabilidades difiere antes y después de la
+recalibración \cite{niculescumizil_probabilities_2005}. Reportar una sola
+de las dos mediciones ofrecería una comparación incompleta.}
+
+\decidir{La elección del método de recalibración permanece abierta.
+Niculescu-Mizil y Caruana establecen un criterio basado en el tamaño del
+conjunto de calibración \cite{niculescumizil_probabilities_2005}, mientras
+que Ojeda \textit{et al.} evalúan sistemáticamente los métodos disponibles
+atendiendo, entre otros aspectos, a la generalización hacia poblaciones
+externas \cite{ojeda_calibrating_2023}. Dado que el protocolo B de este
+trabajo constituye un escenario de transferencia a una población distinta,
+corresponde determinar cuál de las dos recomendaciones aplica.}
 
 \subsection{Contrato de reproducibilidad}
 \label{subsec:reproducibilidad}
-\pc{Semillas fijas y dónde viven, configuraciones guardadas, registro
-de ejecuciones, hardware, dependencias declaradas, y el comando exacto
-que reproduce cada número reportado. Un tercero tiene que poder
-reproducir los resultados sin preguntarnos nada.}
+
+\pc{Semillas fijas y su ubicación, configuraciones almacenadas, registro de
+ejecuciones, entorno de cómputo, versiones de dependencias, y el comando
+exacto que reproduce cada valor reportado.}
+
+Se adopta además la práctica de repetir cada experimento sobre múltiples
+semillas y reportar la dispersión resultante. Grinsztajn \textit{et al.}
+repiten su procedimiento de búsqueda variando el orden de las evaluaciones
+para separar el efecto del método de la variabilidad del procedimiento
+\cite{grinsztajn_trees_2022}. Figueiredo y Mendes ejecutan múltiples ciclos
+de entrenamiento por cada estrategia de partición
+\cite{figueiredo_leakage_2024}. Brill \textit{et al.} generan múltiples
+conjuntos de entrenamiento por configuración \cite{brill_winprob_2026}.
+
+\razon{Los tres precedentes se citan juntos porque establecen la repetición
+como práctica del campo y no como precaución particular de este trabajo.}
 
 \subsection{Riesgos y mitigación}
 \label{subsec:riesgos}
+
 \begin{table}[!t]
 \centering
 \caption{Riesgos identificados y su mitigación.}
@@ -126,12 +427,46 @@ reproducir los resultados sin preguntarnos nada.}
 \footnotesize
 \begin{tabularx}{\columnwidth}{@{}P{2.0cm} c Y@{}}
 \toprule
-\textbf{Riesgo} & \textbf{Impacto} & \textbf{Mitigación / disparador}\\
+\textbf{Riesgo} & \textbf{Impacto} & \textbf{Mitigación}\\
 \midrule
-\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
-\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
-\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
-\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
+Fuga por partición aleatoria & Alto &
+Partición agrupada por episodio con verificación automática\\[2pt]
+Fuga por preprocesamiento & Alto &
+Estimadores de transformación ajustados exclusivamente sobre el
+subconjunto de entrenamiento\\[2pt]
+Confusión entre deriva temporal y cambio de versión & Medio &
+Declaración explícita de la limitación; reporte por versión cuando el
+volumen lo permita\\[2pt]
+Memorización de configuraciones de mazo & Medio &
+Protocolo C con separación por configuración\\[2pt]
+Sesgo del estimador en turnos tempranos & Medio &
+Reporte del soporte por ventana de turno junto a las métricas\\[2pt]
+Descalibración del modelo seleccionado & Medio &
+Medición previa y recalibración condicional\\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+El riesgo de fuga por preprocesamiento merece mención explícita. Figueiredo
+y Mendes señalan que, además de la fuga derivada de la similitud entre
+observaciones, existen fuentes asociadas a la optimización de
+hiperparámetros, la normalización de datos y el aumento de datos
+\cite{figueiredo_leakage_2024}.
+
+\razon{Esta fuente de fuga debe figurar en el registro de riesgos porque no
+se detecta mediante inspección del código: un estimador de normalización
+ajustado sobre la tabla completa antes de particionar produce un pipeline
+funcional cuyos resultados están contaminados.}
+
+\noindent\textbf{Expectativa sobre el efecto del protocolo.} Se anticipa
+que la partición agrupada produzca métricas inferiores y mayor dispersión
+entre ejecuciones que una partición aleatoria. Figueiredo y Mendes
+documentan este comportamiento: las estrategias de menor fuga presentan
+mayores pérdidas de entrenamiento y mayor varianza entre corridas
+\cite{figueiredo_leakage_2024}. Dicho comportamiento corresponde al
+funcionamiento correcto del protocolo y no a un defecto de su
+calibración.
+
+\razon{Esta declaración debe redactarse antes de disponer de resultados.
+Ante métricas inferiores a las esperadas, la expectativa documentada
+previamente protege la decisión de mantener el protocolo.}

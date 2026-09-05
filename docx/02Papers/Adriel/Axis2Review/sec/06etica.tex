@@ -1,43 +1,106 @@
 % ============================================================
 % sec/06etica.tex
 %
-% DEBE CONTENER: los riesgos identificados y CÓMO se piensan
-% mitigar. El momento de detectarlos es ANTES de entrenar.
-%
-% En la Etapa 3 se retoma el tema, con foco en el despliegue
-% del agente.
+% OBLIGATORIO: riesgos identificados y forma prevista de
+% mitigarlos. La detección corresponde al momento previo al
+% entrenamiento.
 % ============================================================
 \section{Consideraciones Éticas Preliminares}
 \label{sec:etica}
 
-\subsection{Sensibilidad de los datos}
+\subsection{Naturaleza de los datos}
 \label{subsec:sensibilidad}
-\pc{¿Contienen datos personales, sensibles o protegidos? ¿Bajo qué
-licencia se publicaron y qué permite esa licencia? Si no hay datos
-personales, decirlo explícitamente en vez de omitir el apartado.}
 
-\subsection{Riesgo de sesgo}
+El conjunto de datos empleado procede de partidas entre agentes
+automáticos, no entre personas. \pc{Confirmar que no contiene datos
+personales identificables, y precisar la licencia bajo la cual fue
+publicado y los usos que dicha licencia permite.}
+
+\razon{La ausencia de datos personales debe declararse de forma explícita
+en lugar de omitir el apartado. Una sección de ética que no se pronuncia
+sobre la naturaleza de los datos deja abierta la pregunta.}
+
+\subsection{Sesgo de la muestra}
 \label{subsec:sesgo}
-\pc{Qué poblaciones, condiciones o regímenes están sub-representados
-en la muestra, y qué falla podría causar eso aguas abajo. Declarar si
-la muestra es o no aleatoria respecto del universo que el problema
-sugiere.}
+
+\pc{Criterio de selección aplicado por la fuente al publicar las
+repeticiones.} En la medida en que dicho criterio privilegie a los agentes
+mejor clasificados, la muestra no representa la población general de
+participantes.
+
+Saravanan y Guzdial orientan deliberadamente su agente a aproximar un nivel
+de habilidad promedio, argumentando que el conjunto de estrategias
+dominantes constituye una medida de popularidad determinada mayoritariamente
+por jugadores de habilidad media \cite{saravanan_metadiscovery_2024}. Un
+conjunto de datos restringido a la franja superior de clasificación observa,
+en consecuencia, una población distinta de aquella que determina el
+comportamiento agregado del juego.
+
+Xenopoulos \textit{et al.} aportan evidencia sobre las consecuencias: la
+importancia relativa de las características del estado difiere entre
+poblaciones de distinto nivel de habilidad, y un modelo entrenado sobre una
+de ellas no necesariamente se extiende a otra sin pérdida de desempeño
+\cite{xenopoulos_winprob_2022}.
 
 \subsection{Límites de generalización declarados}
 \label{subsec:limitesgeneralizacion}
-\pc{A qué población NO debe extrapolarse el modelo. Este apartado
-existe para que nadie use el resultado fuera del alcance en el que fue
-validado.}
 
-\subsection{Mitigación prevista antes de entrenar}
-\label{subsec:mitigacionetica}
+Los resultados de este trabajo no deben extrapolarse a:
+
 \begin{itemize}
-  \item \pc{Mitigación 1}
-  \item \pc{Mitigación 2}
-  \item \pc{Mitigación 3}
+  \item Partidas entre personas. El conjunto procede de agentes
+        automáticos, cuyo comportamiento no se asume equivalente al humano.
+  \item Poblaciones de agentes de nivel de clasificación distinto del
+        observado.
+  \item Periodos posteriores a los cubiertos por el conjunto de datos, más
+        allá de lo que el protocolo B permita evaluar.
+  \item Versiones del juego o del simulador distintas de las presentes en
+        los datos.
 \end{itemize}
 
-\subsection{Diferido a la Etapa 3}
+\razon{Este apartado existe para impedir que los resultados se empleen fuera
+del ámbito en el cual fueron validados. Su omisión trasladaría al lector la
+responsabilidad de inferir los límites.}
+
+\subsection{Riesgos de calidad no aislables}
+\label{subsec:calidadnoaislable}
+
+\pc{Descripción de las anomalías detectadas en la auditoría que no admiten
+aislamiento completo: episodios interrumpidos, comportamientos degenerados
+de los agentes, o duraciones anómalas.}
+
+Xenopoulos \textit{et al.} reconocen una limitación análoga al señalar que
+no les resulta posible identificar a los jugadores que incurren en trampa,
+más frecuentes en una de las poblaciones estudiadas
+\cite{xenopoulos_winprob_2022}.
+
+\razon{Declarar las anomalías que se sabe que existen pero no se pueden
+aislar por completo es preferible a presentar el conjunto de datos como
+libre de contaminación. El precedente citado establece que esta declaración
+es práctica aceptada en el dominio.}
+
+\subsection{Mitigación prevista antes del entrenamiento}
+\label{subsec:mitigacionetica}
+
+\begin{itemize}
+  \item Declaración explícita de la población observada y de los límites de
+        extrapolación, incorporada al artículo y a la documentación del
+        repositorio.
+  \item Evaluación bajo el protocolo B, que mide de forma directa la
+        degradación del desempeño ante un cambio de la población observada.
+  \item Reporte separado de la calidad de la calibración, dado que su
+        deterioro bajo cambio de población puede ser considerablemente
+        mayor que el de la capacidad de discriminación
+        \cite{xenopoulos_winprob_2022}.
+\end{itemize}
+
+\razon{Las tres mitigaciones son verificables en el propio artículo. Una
+mitigación cuya ejecución no puede comprobarse no constituye una
+mitigación.}
+
+\subsection{Aspectos diferidos}
 \label{subsec:diferido}
+
 La ética del despliegue, los escenarios de uso indebido y los riesgos
-operativos del agente inteligente se abordan en la etapa final.
+operativos asociados a la integración del modelo en un agente inteligente
+se abordan en la etapa final del proyecto.
