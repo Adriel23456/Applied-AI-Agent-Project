@@ -1,12 +1,24 @@
 % ============================================================
-% preamble.tex - IEEEtran-compatible shared setup
-% Do NOT add: geometry, fancyhdr, setspace, tocloft, natbib,
-% caption, subcaption, cleveref. IEEEtran handles those itself.
+% preamble.tex — configuración compartida, compatible con IEEEtran
+%
+% NO agregar: geometry, fancyhdr, setspace, tocloft, natbib,
+% caption, subcaption, cleveref. IEEEtran los maneja internamente.
 % ============================================================
 
+% ---------- Idioma ----------
+% es-tabla     -> "Tabla" en vez de "Cuadro"
+% es-noquoting -> evita que babel haga activo el carácter " (rompe listings)
+% es-nodecimaldot -> respeta el punto decimal si se usa siunitx
 \usepackage[T1]{fontenc}
-\usepackage[english]{babel}
+\usepackage[spanish,es-tabla,es-noquoting,es-nodecimaldot]{babel}
 \usepackage{microtype}
+
+% ---------- Encabezados de IEEEtran en español ----------
+\renewcommand{\abstractname}{Resumen}
+\renewcommand{\IEEEkeywordsname}{Palabras clave}
+\renewcommand{\refname}{Referencias}
+\renewcommand{\figurename}{Fig.}
+\renewcommand{\tablename}{TABLA}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -51,13 +63,12 @@
 \setlist[enumerate]{leftmargin=*,noitemsep,topsep=2pt}
 
 \theoremstyle{definition}
-\newtheorem{definitionx}{Definition}
-\newtheorem{examplex}{Example}
+\newtheorem{definicion}{Definición}
+\newtheorem{ejemplo}{Ejemplo}
 \theoremstyle{plain}
-\newtheorem{theoremx}{Theorem}
-\newtheorem{propositionx}{Proposition}
+\newtheorem{proposicion}{Proposición}
 \theoremstyle{remark}
-\newtheorem*{remarkx}{Remark}
+\newtheorem*{observacion}{Observación}
 
 \usepackage{listings}
 \lstdefinestyle{code}{
@@ -83,38 +94,44 @@
 
 \usepackage[hidelinks]{hyperref}
 
-\newcommand{\missingfilebox}[1]{%
+% ---------- Entrada segura de archivos, imágenes y código ----------
+\newcommand{\cajaarchivofaltante}[1]{%
   \par\medskip\noindent
   \fcolorbox{red!60!black}{red!5}{%
     \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
-      \centering\ttfamily\scriptsize MISSING FILE: \detokenize{#1}}}%
+      \centering\ttfamily\scriptsize ARCHIVO FALTANTE: \detokenize{#1}}}%
   \par\medskip}
 
-\newcommand{\missingimagebox}[1]{%
+\newcommand{\cajaimagenfaltante}[1]{%
   \begingroup\setlength{\fboxsep}{0pt}%
   \fcolorbox{tecrule}{boxbg}{%
     \parbox[c][2.4cm][c]{0.9\linewidth}{\centering\ttfamily\scriptsize
-      IMAGE NOT FOUND\\[3pt]\detokenize{#1}}}%
+      IMAGEN NO ENCONTRADA\\[3pt]\detokenize{#1}}}%
   \endgroup}
 
 \newcommand{\safeinput}[1]{%
   \IfFileExists{#1.tex}{\input{#1}}{%
-    \PackageWarning{tecpaper}{Missing section file #1.tex}%
-    \missingfilebox{#1.tex}}}
+    \PackageWarning{tecpaper}{Falta el archivo de sección #1.tex}%
+    \cajaarchivofaltante{#1.tex}}}
 
 \newcommand{\safeimage}[2][width=\columnwidth]{%
   \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
     \IfFileExists{img/#2}{\includegraphics[#1]{img/#2}}{%
-      \PackageWarning{tecpaper}{Missing image #2}%
-      \missingimagebox{#2}}}}
-
-\newcommand{\safelisting}[2][]{%
-  \IfFileExists{#2}{\lstinputlisting[#1]{#2}}{%
-    \PackageWarning{tecpaper}{Missing code file #2}%
-    \missingfilebox{#2}}}
+      \PackageWarning{tecpaper}{Falta la imagen #2}%
+      \cajaimagenfaltante{#2}}}}
 
 \newcommand{\code}[1]{\texttt{#1}}
 
-\newcommand{\todo}[1]{%
-  \texorpdfstring{\textcolor{red}{\textbf{[TO BE COMPLETED: #1]}}}%
-                 {[TO BE COMPLETED: #1]}}
+% ---------- Marcador de pendiente ----------
+% \pc = "por completar". Se imprime en rojo para que ningún hueco
+% pase inadvertido. ANTES DE ENTREGAR, redefinirlo como vacío:
+%   \newcommand{\pc}[1]{}
+% y recompilar: todo lo que desaparezca nunca se escribió.
+\newcommand{\pc}[1]{%
+  \texorpdfstring{\textcolor{red}{\textbf{[POR COMPLETAR: #1]}}}%
+                 {[POR COMPLETAR: #1]}}
+
+% Numeración de páginas — no es el comportamiento por defecto de
+% IEEEtran conference. Se activa porque este documento se entrega
+% como trabajo de curso, no como sumisión a una conferencia real.
+\pagestyle{plain}
