@@ -1,52 +1,59 @@
 % ============================================================
-% sec/03baseline_literatura.tex
-%
-% DEBE SALIR DEL EJE C. Un NÚMERO OBJETIVO con su fuente.
-%
-% DEBE CONTENER:
-%   - El mejor resultado publicado con la métrica elegida,
-%     o un rango razonable si la comparación directa no es posible
-%   - Declaración EXPLÍCITA de qué se busca igualar o superar
-%   - Las diferencias de protocolo que impiden una comparación justa
-%
-% Si el dataset carece de literatura previa, el requisito se
-% sustituye por datasets análogos del mismo dominio, justificando
-% por qué son o no comparables.
-%
-% Este número se arrastra a la Etapa 2 como tercera referencia,
-% junto a los baselines internos.
+% VERSIÓN INDIVIDUAL — DANIEL DUARTE CORDERO
+% Baseline análogo: AAIA'17 Hearthstone.
 % ============================================================
 \section{Baseline de Literatura}
 \label{sec:baseline}
 
 \subsection{Origen del baseline}
 \label{subsec:origenbaseline}
-\pc{De qué trabajo sale el número, sobre qué datos, con qué métrica y
-bajo qué protocolo. Si es un dataset análogo y no el propio, decirlo
-aquí sin rodeos.}
+El dataset propio carece de un resultado arbitrado previo directamente
+comparable. Se adopta como referencia análoga el AAIA'17 Data Mining
+Challenge sobre Hearthstone, cuya tarea consistía en estimar la
+probabilidad de victoria a partir de estados intra-partida y cuya
+métrica de competencia era AUC \cite{janusz_hearthstone_2017}. El
+artículo resumen reporta un baseline oficial de 0.7846 AUC y un mejor
+resultado final de 0.8019 AUC. La solución ganadora utilizó un ensamble
+de redes neuronales, pero ese detalle no convierte el valor en un
+benchmark equivalente para Pokémon TCG.
 
 \subsection{Número objetivo}
 \label{subsec:objetivobaseline}
 \begin{quote}
-\textbf{Objetivo declarado:} \pc{Valor + métrica + fuente. Si la
-comparación directa no es posible, declarar un rango razonable y
-explicar por qué es un rango y no un número.}
+\textbf{Objetivo declarado:} rango de referencia AUC 0.7846--0.8019 en
+el análogo de Hearthstone \cite{janusz_hearthstone_2017}. No se declara
+como umbral obligatorio a superar, sino como orden de magnitud externo
+para una tarea de predicción de victoria desde estado.
 \end{quote}
 
 \subsection{Comparabilidad del protocolo}
 \label{subsec:comparabilidad}
-\pc{Un párrafo declarando el estatus de la comparación: equivalente,
-parcialmente comparable, o solo indicativa del orden de magnitud.}
+La comparación es \textbf{parcialmente comparable}. Coinciden la
+naturaleza binaria del desenlace, el uso de información intra-partida y
+la evaluación mediante AUC, pero no coinciden el juego, las reglas, la
+representación del estado ni la población que genera las partidas. El
+valor de Hearthstone sirve para contextualizar el desempeño, no para
+afirmar superioridad directa.
 
 \noindent\textbf{Diferencias que impiden una comparación justa.}
 \begin{itemize}
-  \item \pc{Partición distinta}
-  \item \pc{Métrica o variante de métrica distinta}
-  \item \pc{Subconjunto de datos distinto}
-  \item \pc{Población, dominio o reglas distintas}
+  \item La partición y el mecanismo de generación de ejemplos del reto
+  de Hearthstone no son equivalentes a nuestro split agrupado por
+  \texttt{episode\_id} ni al protocolo temporal.
+  \item Aunque ambos reportan AUC, nuestro estudio añade log loss,
+  Brier score y calibración, por lo que la evaluación no se reduce a
+  la misma métrica.
+  \item Los estados, cartas, recursos, reglas y representación de
+  Hearthstone son distintos de los snapshots observables de Pokémon
+  TCG.
+  \item La población de bots, mazos y distribución competitiva difiere
+  de los agentes artificiales y mazos de la competencia Pokémon TCG.
 \end{itemize}
 
-\noindent\textbf{Qué significa entonces el número.} \pc{Declarar si es
-una cifra a batir o solo una referencia del orden de magnitud de lo que
-se considera un buen resultado en esta tarea. Presentarlo como
-benchmark equivalente cuando no lo es sería una atribución incorrecta.}
+\noindent\textbf{Qué significa entonces el número.} El intervalo
+0.7846--0.8019 se usa como referencia externa del nivel de
+discriminación alcanzado en una tarea análoga. No es una cifra que el
+proyecto deba ``batir'' para considerarse válido: un resultado inferior
+puede ser metodológicamente sólido si se obtiene bajo un protocolo más
+estricto, y uno superior no probaría automáticamente mejor desempeño
+por las diferencias anteriores.

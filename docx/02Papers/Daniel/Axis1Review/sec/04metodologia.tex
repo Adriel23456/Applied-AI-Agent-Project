@@ -1,50 +1,75 @@
 % ============================================================
-% sec/04metodologia.tex
-%
-% DEBE CONTENER:
-%   - Formalización del problema (formulación matemática si aplica)
-%   - Pipeline previsto
-%   - Protocolo experimental: particiones, validación, métricas
-%     Y SU JUSTIFICACIÓN
-%   - Plan de baselines
-%   - Riesgos identificados con su mitigación
-%
-% Cada decisión sin justificación técnica cuesta -5 puntos,
-% hasta un máximo de -15.
+% VERSIÓN INDIVIDUAL — DANIEL DUARTE CORDERO
+% Basada en la propuesta auditada del equipo + literatura asignada.
 % ============================================================
 \section{Metodología Propuesta}
 \label{sec:metodologia}
 
 \subsection{Formalización del problema}
 \label{subsec:formalizacion}
-\pc{Tipo de problema. Definir el espacio de entrada, el espacio de
-salida, la función objetivo y las restricciones.}
+El problema se formula como clasificación binaria probabilística sobre
+datos tabulares. Sea $x_t\in\mathcal{X}$ el vector de características
+construido exclusivamente con información observable hasta el instante
+$t$, y sea $y\in\{0,1\}$ el resultado final desde la perspectiva del
+jugador al que corresponde la fila. Se aprende una función
+$f_\theta:\mathcal{X}\rightarrow[0,1]$ que aproxime la probabilidad
+condicional de victoria.
 
 \begin{equation}
 \label{eq:objetivo}
-\pc{formulación}
+  f_\theta(x_t) \approx P(y=1\mid x_t),
+  \qquad
+  \theta^{*}=\arg\min_{\theta}\sum_{i\in\mathcal{D}_{\mathrm{train}}}
+  \ell\!\left(y_i,f_\theta(x_i)\right),
 \end{equation}
 
-\noindent\textbf{Definición del target.} \pc{Cómo se deriva la
-etiqueta, y qué casos se excluyen y por qué.}
+donde $\ell$ es una función de pérdida probabilística apropiada para el
+modelo y toda selección de hiperparámetros se realiza sin utilizar el
+conjunto de prueba.
 
-\noindent\textbf{Unidad de observación.} \pc{Qué es una fila.}
+\noindent\textbf{Definición del target.} La etiqueta se deriva de
+\texttt{rewards} a nivel de episodio: $y=1$ si gana el jugador desde
+cuya perspectiva se construye el snapshot y $y=0$ si pierde. La
+auditoría resolvió el resultado en 99.86\% de los episodios. Los 33
+empates se excluyen inicialmente del target binario. Los 73 finales por
+\texttt{TIMEOUT}, \texttt{ERROR} o \texttt{INVALID} se excluyen del
+entrenamiento principal y se reservan para análisis de sensibilidad,
+porque el desenlace no procede de la dinámica normal del juego.
 
-\noindent\textbf{Unidad independiente.} \pc{Cuál es la unidad
-estadísticamente independiente. Si difiere de la unidad de observación,
-ESA distinción gobierna todas las particiones e intervalos de confianza
-de este trabajo.}
+\noindent\textbf{Unidad de observación.} Una fila corresponde a un
+snapshot fresco del asiento activo, proyectado a una perspectiva común
+\emph{self}/\emph{opp}. La observación congelada del asiento inactivo no
+se duplica como fila adicional.
+
+\noindent\textbf{Unidad independiente.} La unidad estadísticamente
+independiente es el episodio. Los 52,085 episodios auditados generan
+más de siete millones de filas, pero ningún episodio puede aparecer en
+más de una partición. Esta distinción gobierna splits, validación e
+intervalos de confianza.
 
 \subsection{Pipeline previsto}
 \label{subsec:pipeline}
-\pc{Descripción de extremo a extremo: ingesta, preprocesamiento,
-construcción de características, modelo, evaluación, y la interfaz que
-consumirá el agente de la Etapa 3.}
+El pipeline ingiere los replays JSON, valida la firma de esquema y
+\texttt{schema\_version}, selecciona los estados frescos del asiento
+activo y normaliza la perspectiva mediante \texttt{yourIndex}. Luego
+construye características de progreso, recursos, tablero, energía,
+estados especiales y diferenciales entre ambos jugadores. Las columnas
+\texttt{episode\_id}, fecha y turno se conservan para agrupación,
+estratificación y análisis, pero no entran al vector predictivo. La
+tabla materializada se divide por episodio antes de ajustar cualquier
+transformación. Sobre train se ajustan preprocesamiento y modelos; la
+validación selecciona hiperparámetros y el test queda intacto hasta la
+evaluación final. En Etapa 3, el mismo extractor convertirá un estado
+actual en features y entregará $P(\mathrm{win}\mid\mathrm{state})$ al
+agente como evaluador de posiciones.
 
 \begin{figure}[!t]
   \centering
   \safeimage[width=\columnwidth]{pipeline.png}
-  \caption{Pipeline propuesto. \pc{leyenda}}
+  \caption{Pipeline propuesto: replay JSON $\rightarrow$ validación de
+  esquema $\rightarrow$ snapshots frescos normalizados $\rightarrow$
+  tabla de features $\rightarrow$ particiones por episodio $\rightarrow$
+  modelos y evaluación $\rightarrow$ probabilidad consumida por el agente.}
   \label{fig:pipeline}
 \end{figure}
 
@@ -52,14 +77,30 @@ consumirá el agente de la Etapa 3.}
 \label{subsec:protocolo}
 
 \subsubsection{Particiones}
-\pc{Proporciones exactas. Declarar si la partición es aleatoria,
-estratificada, temporal o agrupada, y JUSTIFICARLA frente a las
-alternativas descartadas.}
+El protocolo principal será 70/15/15 para train, validación y test,
+\textbf{agrupando por \texttt{episode\_id}}. Se descarta el split por
+snapshot porque estados de una misma partida son fuertemente
+correlacionados y su presencia a ambos lados de la partición produciría
+fuga. Como protocolo secundario se usará una partición temporal:
+train con 2026-06-17, 06-18, 06-23 y 06-29; validación con 07-05 y
+07-11; test con 07-25 y 08-04. El día 06-16 se mantiene fuera por ser
+un arranque parcial y 07-17 se reserva por su concentración extrema de
+mazos/agentes, sujeto a revisión posterior al EDA. Un tercer análisis de
+robustez reservará mazos o pares de mazos completos para prueba. El
+objetivo de estos protocolos separados es distinguir nueva partida,
+futuro temporal y composición no vista, una preocupación coherente con
+la evaluación entre parches y equipos observada en literatura
+\cite{chitayat_meta_2023,angliss_vgcbench_2026}.
 
 \subsubsection{Estrategia de validación}
-\pc{Holdout, k-fold, validación cruzada agrupada o anidada. Declarar
-cómo se seleccionan los hiperparámetros sin tocar el conjunto de
-prueba, y cuántas veces se toca ese conjunto.}
+La selección de hiperparámetros se realizará exclusivamente dentro de
+train mediante validación cruzada agrupada por episodio
+(\texttt{GroupKFold}) o una variante equivalente que preserve grupos.
+La partición de validación externa se usa para comparar configuraciones
+y fijar decisiones antes de la prueba final. El test principal se toca
+una sola vez para la evaluación reportada. En el protocolo temporal se
+respeta el orden cronológico y no se reutilizan datos futuros para
+ajustar transformaciones.
 
 \subsubsection{Métricas y su justificación}
 \begin{table}[!t]
@@ -71,22 +112,34 @@ prueba, y cuántas veces se toca ese conjunto.}
 \toprule
 \textbf{Métrica} & \textbf{Por qué esta y qué alternativa desplaza}\\
 \midrule
-\pc{principal}  & \pc{justificación}\\
-\pc{secundaria} & \pc{justificación}\\
-\pc{secundaria} & \pc{justificación}\\
+ROC-AUC & Métrica principal de discriminación, independiente de un
+umbral y directamente comparable con el antecedente de Hearthstone
+\cite{janusz_hearthstone_2017}.\\
+Log loss & Evalúa la calidad de la probabilidad y penaliza con fuerza
+predicciones seguras y equivocadas; complementa lo que AUC no mide.\\
+Brier score + calibración & Mide error cuadrático de probabilidad y se
+acompaña con curvas de fiabilidad; es necesario porque una corrección de
+clases puede preservar discriminación y deteriorar calibración
+\cite{vandenGoorbergh_imbalance_2022}.\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\pc{Un párrafo explicando por qué la métrica principal es la principal,
-y qué queda sin capturar que obliga a reportar las secundarias.}
+ROC-AUC es principal porque conecta con el único antecedente cercano y
+responde si el modelo ordena estados ganadores por encima de perdedores.
+No obstante, una salida destinada a interpretarse como probabilidad no
+puede evaluarse solo por ranking o accuracy. Van den Goorbergh et al.
+muestran que intervenciones de balance pueden dejar el AUROC
+prácticamente sin mejora y, simultáneamente, distorsionar las
+probabilidades \cite{vandenGoorbergh_imbalance_2022}. Por eso se
+reportan log loss, Brier score y curvas de calibración, globalmente y
+por ventana de turno. Los intervalos de confianza se estimarán por
+bootstrap sobre episodios, no sobre snapshots.
 
 \subsection{Plan de baselines}
 \label{subsec:planbaselines}
-
-\pc{Cada nivel se justifica por lo que el anterior no logró explicar,
-no por moda. La ausencia de baselines cuesta -10 puntos aunque el
-modelo principal funcione.}
+Cada nivel añade complejidad solo para responder una pregunta que el
+anterior no puede resolver.
 
 \begin{table}[!t]
 \centering
@@ -97,25 +150,30 @@ modelo principal funcione.}
 \toprule
 \textbf{Nivel} & \textbf{Modelo} & \textbf{Pregunta que responde}\\
 \midrule
-B0 & \pc{trivial}       & \pc{¿cuál es el piso?}\\
-B1 & \pc{heurística}    & \pc{¿hace falta ML?}\\
-B2 & \pc{lineal}        & \pc{¿la relación es lineal?}\\
-B3 & \pc{no lineal}     & \pc{¿hay interacciones?}\\
-B4 & \pc{ensamble}      & \pc{¿cuánto compra la complejidad?}\\
+B0 & \texttt{DummyClassifier} (prior / clase mayoritaria) & ¿Cuál es el piso de rendimiento?\\
+B1 & Heurística simple de recursos o premios, fijada tras EDA & ¿Hace falta ML o basta una regla de dominio?\\
+B2 & Regresión logística regularizada & ¿La relación es esencialmente lineal y ofrece una referencia probabilística interpretable?\\
+B3 & Árbol de decisión / Random Forest & ¿Hay no linealidades e interacciones que B2 no captura?\\
+B4 & Gradient Boosting (familia por fijar) & ¿Cuánto rendimiento adicional compra la complejidad del ensamble?\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\noindent\textbf{Tercera referencia.} El baseline de literatura
-declarado en la Sección~\ref{sec:baseline} se arrastra como referencia
-externa junto a los baselines internos anteriores.
+\noindent\textbf{Tercera referencia.} El rango 0.7846--0.8019 AUC de
+Hearthstone se arrastra como referencia externa parcialmente comparable
+junto con los baselines internos \cite{janusz_hearthstone_2017}.
 
 \subsection{Contrato de reproducibilidad}
 \label{subsec:reproducibilidad}
-\pc{Semillas fijas y dónde viven, configuraciones guardadas, registro
-de ejecuciones, hardware, dependencias declaradas, y el comando exacto
-que reproduce cada número reportado. Un tercero tiene que poder
-reproducir los resultados sin preguntarnos nada.}
+La auditoría ya utiliza la semilla fija \texttt{20260821}. La etapa de
+modelado mantendrá las semillas y configuraciones en archivos
+versionados, fijará dependencias, registrará cada ejecución y su commit,
+y guardará tablas comparables de parámetros y métricas. El repositorio
+documentará hardware y el comando exacto de reproducción de cada
+resultado una vez el pipeline quede implementado. \textbf{\% TODO
+implementación/integración:} insertar aquí los nombres finales de los
+archivos de configuración y comandos reproducibles; no se inventan en
+esta etapa.
 
 \subsection{Riesgos y mitigación}
 \label{subsec:riesgos}
@@ -128,10 +186,10 @@ reproducir los resultados sin preguntarnos nada.}
 \toprule
 \textbf{Riesgo} & \textbf{Impacto} & \textbf{Mitigación / disparador}\\
 \midrule
-\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
-\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
-\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
-\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
+Fuga entre snapshots del mismo episodio & A & Split y CV obligatoriamente agrupados por \texttt{episode\_id}; prueba de intersección vacía.\\
+Uso de información futura/privada & A & Lista negra de \texttt{rewards}, \texttt{visualize}, metadata y campos posteriores al snapshot; test automático de columnas.\\
+Cambio temporal de población/versión & A & Reportar holdout agrupado y temporal por separado; tratar la caída como resultado y no ocultarla.\\
+Memorización de mazos frecuentes & M/A & Holdout por mazo/matchup y ablación de contexto de mazo; interpretar ganancias de ID con cautela.\\
 \bottomrule
 \end{tabularx}
 \end{table}

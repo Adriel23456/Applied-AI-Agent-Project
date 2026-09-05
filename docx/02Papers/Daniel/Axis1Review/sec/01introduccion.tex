@@ -1,78 +1,157 @@
 % ============================================================
-% sec/01introduccion.tex
-%
-% DEBE CONTENER, sin excepción:
-%   1. Contexto y relevancia del problema
-%   2. Pregunta de investigación EXPLÍCITA y refutable
-%   3. Hipótesis de trabajo
-%   4. Objetivos + contribución esperada
-%   5. Estructura del documento
-%
-% La pregunta tiene que poder responderse CON EVIDENCIA al
-% terminar el semestre. Una pregunta que no admite refutación
-% no sirve.
+% VERSIÓN INDIVIDUAL — DANIEL DUARTE CORDERO
+% Se rellenan únicamente afirmaciones sostenidas por la auditoría
+% del proyecto y por las referencias leídas/asignadas a Daniel.
+% Los TODO de integración corresponden a aportes del equipo.
 % ============================================================
 \section{Introducción}
 \label{sec:introduccion}
 
 \subsection{Contexto y relevancia}
 \label{subsec:contexto}
-\pc{2--3 párrafos. Cuál es el dominio del problema, por qué importa
-técnica y prácticamente, y cuál es el costo concreto de no resolverlo.
-Citar literatura del dominio desde aquí, no dejarlo todo para
-Trabajos Relacionados.}
+Los juegos competitivos generan secuencias de estados en las que la
+ventaja cambia conforme avanza la partida. Estimar la probabilidad de
+victoria desde información disponible durante el juego es, por tanto,
+un problema distinto de predecir el ganador únicamente antes del
+inicio. En deportes electrónicos de tipo MOBA, la literatura ya trata
+la predicción de resultado como una aplicación consolidada de
+aprendizaje automático y emplea tanto variables previas a la partida
+como información observada durante ella \cite{kamal_moba_2025}. Un
+ejemplo directo es el trabajo de Tian et al., que realiza predicción en
+tiempo real en \emph{Honor of Kings} a partir de secuencias de estados
+y muestra que la importancia de la alineación, el oro, las bajas y las
+torres cambia con el progreso del encuentro \cite{tian_hero_2022}.
+
+La misma idea de asignar valor a estados intermedios aparece en juegos
+de cartas. Miernik y Kowalski evolucionan funciones de evaluación para
+\emph{Legends of Code and Magic}, aunque su salida es un puntaje
+heurístico optimizado indirectamente por el rendimiento del agente, no
+una probabilidad calibrada de victoria \cite{miernik_evolving_2022}. Más
+cerca de nuestra formulación, el reto AAIA'17 de Hearthstone pidió
+estimar la probabilidad de que un jugador ganara a partir de un estado
+intra-partida y evaluó las soluciones mediante AUC
+\cite{janusz_hearthstone_2017}. En consecuencia, la pregunta general de
+predecir el desenlace desde estados intermedios no se presenta aquí
+como inédita; el interés está en trasladarla rigurosamente al dominio
+de Pokémon TCG y estudiar sus problemas específicos de representación,
+fuga de información y generalización.
+
+La generalización merece atención especial porque los entornos
+competitivos cambian. Chitayat et al. muestran en Dota~2 que
+representaciones ligadas a parámetros de diseño pueden conservar su
+rendimiento al atravesar parches posteriores, mientras que
+representaciones basadas solo en identidad son más frágiles
+\cite{chitayat_meta_2023}. En Pokémon VGC, VGC-Bench separa explícitamente
+el rendimiento sobre equipos vistos de la generalización a equipos no
+vistos y muestra que entrenar con mayor diversidad de composiciones
+mejora esa segunda capacidad \cite{angliss_vgcbench_2026}. Estos
+antecedentes motivan que una evaluación de Pokémon TCG no se limite a
+una partición aleatoria de partidas, sino que también examine cambios
+temporales y composiciones no observadas durante el entrenamiento.
 
 \subsection{Planteamiento del problema}
 \label{subsec:problema}
-\pc{1--2 párrafos. La limitación específica que este trabajo ataca,
-acotada desde el dominio general. Es el embudo entre el contexto
-amplio y la pregunta puntual.}
+El conjunto \emph{PTCG AI Battle Challenge Simulation Episodes} contiene
+replays completos entre agentes artificiales. Una partida produce
+muchos snapshots correlacionados, por lo que la unidad de observación
+no coincide con la unidad estadísticamente independiente. La auditoría
+preliminar del proyecto identificó 52,085 episodios independientes y
+más de siete millones de snapshots útiles. Si estos snapshots se
+particionaran al azar, estados de una misma partida podrían aparecer en
+entrenamiento y prueba, produciendo una estimación artificialmente
+optimista del desempeño. El problema metodológico central es entonces
+estimar $P(\mathrm{win}\mid\mathrm{state})$ usando únicamente la
+información observable hasta el instante de predicción y manteniendo
+intactas las unidades independientes durante la evaluación.
+
+Además, un buen resultado bajo partidas de distribución similar no
+basta para demostrar que el modelo aprendió propiedades transferibles
+del estado. La población auditada cambia en el tiempo en mazos, agentes
+y versión del motor, y los mazos más frecuentes concentran una parte
+importante de las observaciones. Por ello, el estudio debe distinguir
+entre generalización a nuevas partidas, a periodos futuros y a
+composiciones no vistas. Esta separación sigue la preocupación por
+robustez entre parches de Chitayat et al. y por composiciones no vistas
+de VGC-Bench \cite{chitayat_meta_2023,angliss_vgcbench_2026}.
 
 \subsection{Pregunta de investigación}
 \label{subsec:pregunta}
 \begin{quote}
-\textbf{PI:} \pc{Una sola pregunta explícita. Debe poder responderse
-con evidencia experimental al cerrar el semestre y debe admitir
-refutación: tiene que ser posible que la respuesta sea "no".}
+\textbf{PI:} ¿En qué medida las características observables del estado
+de una partida de Pokémon TCG permiten predecir su resultado final
+mediante modelos clásicos de aprendizaje automático, cómo cambia esa
+capacidad predictiva conforme avanza la partida, y cuánto se conserva
+al evaluar sobre partidas, mazos y periodos no vistos en el
+entrenamiento?
 \end{quote}
 
-\noindent\textbf{Por qué es refutable.} \pc{Enunciar la condición
-concreta bajo la cual la respuesta sería negativa.}
+\noindent\textbf{Por qué es refutable.} La respuesta sería negativa o
+quedaría sustancialmente debilitada si el intervalo de confianza del
+ROC-AUC en la ventana temprana incluyera 0.5, si el desempeño no
+mejorara al avanzar la partida, o si la señal desapareciera al evaluar
+en el protocolo temporal o en el holdout de mazos/matchups.
 
-\noindent\textbf{Por qué es medible.} \pc{Qué métrica, sobre qué
-partición, con qué unidad de análisis.}
+\noindent\textbf{Por qué es medible.} La discriminación se medirá con
+ROC-AUC y la calidad de la probabilidad con log loss, Brier score y
+curvas de calibración. Las métricas se reportarán globalmente y por
+ventana de turno. Las particiones y los intervalos de confianza se
+construirán sobre episodios, aunque cada fila del dataset tabular sea un
+snapshot.
 
 \subsection{Hipótesis de trabajo}
 \label{subsec:hipotesis}
 \begin{quote}
-\textbf{H1:} \pc{Enunciado falsable, con dirección.}
+\textbf{H1:} Las características estructuradas del estado contienen
+señal predictiva sobre el resultado desde etapas tempranas
+(ROC-AUC significativamente mayor que 0.5) y esa señal aumenta conforme
+progresa la partida.
 \end{quote}
 \begin{quote}
-\textbf{H2:} \pc{Segunda hipótesis, si aplica.}
+\textbf{H2:} La señal temprana no se explica únicamente por el orden de
+turno ni por la identidad del mazo.
 \end{quote}
 
-\noindent\textbf{Criterios de falsación.} \pc{Qué resultado concreto
-refutaría o debilitaría cada hipótesis. Este apartado es lo que separa
-una hipótesis de una expectativa.}
+\noindent\textbf{Criterios de falsación.} H1 temprana se debilita si el
+intervalo de confianza del AUC temprano incluye 0.5; H1 dinámica se
+debilita si el AUC por ventana no aumenta una vez controlada la
+longitud de partida. H2 se debilita si un baseline compuesto por
+\texttt{is\_first\_player} e identidad de mazo iguala al modelo de estado
+completo. Una caída hasta azar en el protocolo temporal se interpretará
+como falta de generalización, no como un fallo de ejecución.
 
 \subsection{Objetivos}
 \label{subsec:objetivos}
-\textbf{Objetivo general.} \pc{Una sola oración.}
+\textbf{Objetivo general.} Desarrollar y evaluar modelos clásicos de
+aprendizaje automático que estimen la probabilidad de victoria en
+Pokémon TCG a partir de características tabulares derivadas
+exclusivamente del estado observable, y caracterizar cómo evoluciona
+esa capacidad predictiva a lo largo de la partida.
 
 \noindent\textbf{Objetivos específicos.}
 \begin{enumerate}
-  \item \pc{Objetivo 1}
-  \item \pc{Objetivo 2}
-  \item \pc{Objetivo 3}
-  \item \pc{Objetivo 4}
-  \item \pc{Objetivo 5}
+  \item Caracterizar el dataset y su calidad mediante EDA, diccionario
+  de datos, análisis de faltantes, valores atípicos, desbalance y
+  sesgos sobre la representación tabular final.
+  \item Construir un pipeline reproducible desde replay JSON hasta una
+  tabla de snapshots frescos con perspectiva normalizada.
+  \item Diseñar y verificar controles de fuga mediante agrupación por
+  \texttt{episode\_id}, lista negra de campos y pruebas automáticas.
+  \item Comparar una escalera de baselines clásicos bajo protocolos
+  agrupado, temporal y de robustez por mazo/matchup.
+  \item Analizar discriminación, calibración, explicabilidad y
+  generalización globalmente y por ventana de turno.
 \end{enumerate}
 
 \subsection{Contribución esperada}
 \label{subsec:contribucion}
-\pc{Qué gana quien lea este trabajo que hoy no existe: una comparación
-que nadie ha hecho, una formalización, un protocolo reproducible.
-No prometer resultados: prometer aportes.}
+Se espera aportar una formulación reproducible de estimación de
+probabilidad de victoria desde estados intermedios de Pokémon TCG, un
+pipeline tabular con controles explícitos de fuga, y una comparación
+entre modelos clásicos bajo distintos ejes de generalización. El
+trabajo también hará explícita la diferencia entre discriminación y
+calidad probabilística y evaluará si la información útil del estado
+cambia conforme avanza la partida, sin prometer de antemano que exista
+una mejora positiva.
 
 \subsection{Estructura del documento}
 \label{subsec:estructura}

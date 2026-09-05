@@ -1,17 +1,9 @@
 % ============================================================
 % tab/tabla_comparativa.tex
 %
+% Versión individual de Daniel Duarte Cordero.
 % COLUMNAS OBLIGATORIAS. No sustituir, no reordenar, no añadir.
-% Se usa table* porque con siete columnas no cabe en una sola
-% columna del formato IEEE.
-%
-% Cada fila sale de los campos 4 a 7 de la plantilla de extracción:
-% unidad de análisis, protocolo, métrica y resultado reportado.
-%
-% NO incluir aquí referencias puramente metodológicas (calibración,
-% leakage genérico, imputación): no resuelven una tarea comparable
-% sobre un dataset y obligarían a inventar valores. Esas viven en
-% el texto.
+% Papers 6 y 7 no se incluyen: son referencias metodológicas.
 % ============================================================
 \begin{table*}[!t]
 \centering
@@ -25,11 +17,17 @@
 \textbf{Dataset / entorno} & \textbf{Métrica principal} &
 \textbf{Resultado reportado} & \textbf{Limitación identificada}\\
 \midrule
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
-\pc{cita} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{} & \pc{}\\
+Kamal et al. \cite{kamal_moba_2025} & 2025 & Revisión sistemática PRISMA & 35 estudios sobre esports MOBA & Métricas heterogéneas & Sin mejor resultado único; se reportan, entre otros, AUC de 0.97 y accuracy cercana al 93\% & Alta heterogeneidad entre tareas, datasets y protocolos; generalización limitada entre regiones, periodos y poblaciones.\\
+
+Tian et al. \cite{tian_hero_2022} & 2022 & Hero Featured Network (LSTM + características de héroes y combate) & 27,256 partidas de Honor of Kings; 496,342 frames & Accuracy & 81.8\% en el nodo de 7 min en la Tabla III; el abstract reporta 84.7\% & Datos de un solo día y jugadores de alto nivel; el split se describe a nivel de frames sin agrupación por partida explícita; no evalúa calibración.\\
+
+Miernik y Kowalski \cite{miernik_evolving_2022} & 2022 & Evolución de funciones de evaluación lineales y basadas en árboles & Legends of Code and Magic & Win rate & 60.2\% de win rate promedio global para Tree-from-Linear & No estima probabilidades supervisadas; puede existir especialización al oponente usado para evaluar fitness.\\
+
+Angliss et al. \cite{angliss_vgcbench_2026} & 2026 & Behavior Cloning + RL multiagente (SP, FP y DO) & Pokémon VGC; poke-env; más de 700,000 battle logs humanos & Win rate / cross-play & Agente entrenado con 64 equipos vence al entrenado con 1 equipo con win rate de 0.669 sobre 72 equipos OOD & El desempeño disminuye al crecer la diversidad de equipos; la evaluación humana es anecdótica; no es una tarea de estimación de probabilidad.\\
+
+Chitayat et al. \cite{chitayat_meta_2023} & 2023 & Clustered Character Representation con K-Means + redes neuronales & Dota 2; parches 7.27--7.33; 61,254 partidas & AUC & 0.85 en test de parches conocidos, 0.85 en 7.32 y 0.86 en 7.33 & Solo partidas profesionales/premium; predice bajas finales a partir de duración y composición, no probabilidad de victoria desde un estado intermedio rico.\\
+
+Janusz et al. \cite{janusz_hearthstone_2017} & 2017 & Challenge de ML con baseline neuronal y soluciones de ensamble & Hearthstone; estados intermedios de partida & AUC & Baseline oficial 0.7846; mejor solución 0.8019 & Juego, representación, población y protocolo diferentes; la comparación con Pokémon TCG es solo parcialmente comparable.\\
 \bottomrule
 \end{tabularx}
 \end{table*}
