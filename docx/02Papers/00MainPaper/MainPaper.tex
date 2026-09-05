@@ -1,0 +1,115 @@
+% ============================================================
+% MainPaper.tex — Artículo IEEE, Etapa 1 (preliminar)
+% IC-6200 Inteligencia Artificial · II Semestre 2026
+% VERSIÓN INTEGRADA — Ejes A, B y C
+%
+% Build: latexmk -pdf MainPaper.tex
+%
+% ANTES DE ENTREGAR: apagar los marcadores de redacción según se
+% describe en preamble.tex, y recompilar. Todo lo que desaparezca
+% del PDF nunca se escribió.
+% ============================================================
+\documentclass[conference]{IEEEtran}
+
+\input{preamble}
+
+\begin{document}
+
+\title{Estimación de la Probabilidad de Victoria a partir del Estado de
+Juego en el Pok\'emon Trading Card Game: un Estudio de Clasificación
+Tabular con Control Explícito de Fuga de Información\\
+{\footnotesize \textit{Versión preliminar --- Etapa 1: estado del arte y
+diseño propuesto}}}
+
+\author{
+\IEEEauthorblockN{Adriel S. Chaves Salazar}
+\IEEEauthorblockA{\textit{Escuela de Ingenier\'ia en Computaci\'on} \\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Cartago, Costa Rica \\
+2021031465}
+\and
+\IEEEauthorblockN{Daniel Duarte Cordero}
+\IEEEauthorblockA{\textit{Escuela de Ingenier\'ia en Computaci\'on} \\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Cartago, Costa Rica \\
+2022012866}
+\and
+\IEEEauthorblockN{Sebasti\'an Hern\'andez Bonilla}
+\IEEEauthorblockA{\textit{Escuela de Ingenier\'ia en Computaci\'on} \\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Cartago, Costa Rica \\
+2022093651}
+}
+
+\maketitle
+
+% ------------------------------------------------------------
+% RESUMEN PRELIMINAR
+%
+% \razon: el enunciado exige marcarlo explícitamente como
+% preliminar y prohíbe reportar resultados en esta etapa. Las
+% únicas cifras admisibles son propiedades medidas del corpus,
+% no desempeño de modelo.
+% ------------------------------------------------------------
+\begin{abstract}
+\textbf{Resumen preliminar.} Este resumen describe el problema, la
+motivación y el enfoque propuesto. No reporta resultados experimentales,
+puesto que en esta etapa no se ha entrenado ningún modelo.
+
+Evaluar una posición es una competencia central en los juegos de cartas
+competitivos y, sin embargo, en el Pok\'emon Trading Card Game no existe
+trabajo publicado que estime la probabilidad de victoria a partir de un
+estado de juego intermedio y parcialmente observable. El corpus de
+repeticiones del PTCG AI Battle Challenge, publicado recientemente, vuelve
+tratable la pregunta, pero su estructura hace que sea fácil responderla
+mal: una sola partida genera cientos de estados fuertemente
+correlacionados, de modo que una partición aleatoria a nivel de fila
+coloca estados de la misma partida a ambos lados de la división. En una
+auditoría de 52\,085 episodios medimos que tal partición situaría el
+99.995\,\% de los episodios en ambas particiones de forma simultánea.
+
+Este trabajo pregunta, por tanto, cuánta información sobre el desenlace
+contiene un único estado observable, cómo crece esa información conforme
+avanza la partida, y cuánta sobrevive al evaluar sobre partidas, mazos y
+periodos no vistos. Se propone una formulación tabular supervisada, una
+fila por estado fresco del asiento activo, con características derivadas
+exclusivamente de la observación disponible en ese instante; una escalera
+de modelos clásicos que va desde un predictor trivial hasta potenciación
+del gradiente; una lista negra explícita de campos cuyo uso constituiría
+fuga de datos; y particiones agrupadas por episodio en lugar de por fila.
+La evaluación reporta discriminación y calibración por separado, de forma
+global y por ventana de turno, con intervalos de confianza remuestreados
+sobre episodios.
+
+Como referencia externa parcialmente comparable se adopta la tarea análoga
+sobre estados de juego de Hearthstone, cuyo resultado oficial de
+referencia alcanzó un área bajo la curva ROC de 0.7846 y cuya mejor
+solución alcanzó 0.8019; las diferencias de juego, protocolo y población
+de agentes que impiden una comparación estricta se declaran de forma
+explícita.
+\end{abstract}
+
+% ------------------------------------------------------------
+% PALABRAS CLAVE
+%
+% \razon: cuatro a seis términos por los que alguien buscaría
+% este trabajo. Deben cubrir el dominio, la tarea y el riesgo
+% metodológico central.
+% ------------------------------------------------------------
+\begin{IEEEkeywords}
+estimación de probabilidad de victoria, juegos de cartas coleccionables,
+aprendizaje automático tabular, fuga de datos, validación cruzada
+agrupada, calibración de clasificadores
+\end{IEEEkeywords}
+
+\safeinput{sec/01introduccion}
+\safeinput{sec/02trabajos_relacionados}
+\safeinput{sec/03baseline_literatura}
+\safeinput{sec/04metodologia}
+\safeinput{sec/05analisis_tecnico}
+\safeinput{sec/06etica}
+
+\bibliographystyle{IEEEtran}
+\bibliography{sec/99referencias}
+
+\end{document}

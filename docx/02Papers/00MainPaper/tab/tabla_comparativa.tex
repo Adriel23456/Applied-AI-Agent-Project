@@ -1,0 +1,245 @@
+% ============================================================
+% tab/tabla_comparativa.tex — VERSIÓN INTEGRADA, TRES EJES
+%
+% COLUMNAS OBLIGATORIAS. No sustituir, no reordenar, no añadir.
+%
+% CRITERIO DE INCLUSIÓN: trabajos que resuelven una tarea sobre
+% un conjunto de datos o corpus de estudios y reportan una
+% métrica. Las referencias puramente metodológicas del Eje B
+% (Kaufman, Sasse, Silva Filho, Niculescu-Mizil, Ojeda,
+% Dimitriadis, Borisov, Grinsztajn, Brill, Figueiredo, Emmanuel,
+% van den Goorbergh) viven en el texto y no aquí.
+%
+% Se divide en dos partes por volumen. La segunda parte
+% retrocede el contador para conservar un único número de tabla.
+%
+% REGLA DE tabularx: la suma de los pesos de las columnas W debe
+% ser IGUAL al número de columnas W. Aquí hay 5 columnas W y los
+% pesos suman 5.00 (0.95 + 1.00 + 0.70 + 0.95 + 1.40).
+% ============================================================
+
+\begin{table*}[!tp]
+\centering
+\caption{Resumen comparativo de trabajos relacionados. Los valores están
+transcritos de la fuente. Los conjuntos de datos difieren en tamaño,
+composición, juego y versión, por lo que la comparación directa requiere
+cautela.}
+\label{tab:comparativa}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\textwidth}{@{}
+    P{1.9cm}                             % Referencia
+    >{\centering\arraybackslash}p{0.6cm} % Año
+    W{0.95}                              % Técnica
+    W{1.00}                              % Dataset / entorno
+    W{0.70}                              % Métrica principal
+    W{0.95}                              % Resultado reportado
+    W{1.40}                              % Limitación identificada
+  @{}}
+\toprule
+\textbf{Referencia} & \textbf{Año} & \textbf{Técnica} &
+\textbf{Conjunto de datos / entorno} & \textbf{Métrica principal} &
+\textbf{Resultado reportado} & \textbf{Limitación identificada}\\
+\midrule
+
+Janusz et al. \cite{janusz_hearthstone_2017} & 2017 &
+Competencia: ensambles de redes convolucionales, potenciación del gradiente y
+regresión logística; referencia de los organizadores con red de dos capas
+ocultas &
+\emph{Hearthstone}: 3.25\,M de estados de entrenamiento de $\approx$65\,000
+partidas; 750\,000 estados de prueba de $>$180\,000 partidas; 9 mazos en
+entrenamiento frente a 27 en prueba &
+AUC &
+0.7846 la referencia; 0.8019 la mejor solución; brecha $<2\%$.
+Transferencia a estados de agentes de búsqueda: $\approx$0.79 a
+$\approx$0.75 &
+Estados generados por agentes que eligen acciones al azar, población no
+representativa; no se reporta calibración; fuga involuntaria a mitad de
+competencia que obligó a mover 1.25\,M de casos de prueba a entrenamiento
+\\
+\addlinespace[3pt]
+
+Hodge et al. \cite{hodge_winprediction_2021} & 2021 &
+Regresión logística, bosques aleatorios y potenciación del gradiente &
+DotA 2: 5\,744 repeticiones mixtas y 186 profesionales &
+Exactitud &
+\pct &
+Los conjuntos de la literatura no son comparables entre sí; el flujo en vivo
+provee un subconjunto de las características de las repeticiones
+\\
+\addlinespace[3pt]
+
+Guo et al. \cite{guo_temporalshift_2021} & 2021 &
+Revisión sistemática PRISMA de estrategias de mitigación del cambio temporal &
+15 estudios de predicción clínica retenidos de 4\,457 referencias
+examinadas; regresión logística en 13 de 15 &
+Cambio en calibración y en discriminación &
+Deterioro de calibración en 11 de los 11 estudios que la midieron;
+deterioro de discriminación en solo 3 de 12 &
+Dominio clínico, citado por la asimetría medida y por la terminología del
+cambio de distribución; sin metaanálisis; cobertura incompleta de actas de
+congresos
+\\
+\addlinespace[3pt]
+
+Tian et al. \cite{tian_hero_2022} & 2022 &
+Red recurrente con características de alineación y combate &
+Honor of Kings: 27\,256 partidas, 496\,342 marcos &
+Exactitud &
+81.8\,\% en el nodo de 7 min (Tabla III); el resumen reporta 84.7\,\% &
+Datos de un solo día y jugadores de nivel elevado; partición descrita a nivel
+de marcos sin agrupación explícita por partida; no evalúa calibración
+\\
+\addlinespace[3pt]
+
+Miernik y Kowalski \cite{miernik_evolving_2022} & 2022 &
+Evolución de funciones de evaluación lineales y basadas en árboles &
+Legends of Code and Magic &
+Tasa de victoria &
+60.2\,\% promedio global para la variante Tree-from-Linear &
+No estima probabilidades de forma supervisada; posible especialización
+respecto del oponente usado para evaluar
+\\
+\addlinespace[3pt]
+
+Xenopoulos et al. \cite{xenopoulos_winprob_2022} & 2022 &
+Máquinas de potenciación explicables (modelo aditivo generalizado) &
+CSGO: tres entornos de habilidad &
+Pérdida logarítmica y error de calibración esperado &
+\pct &
+Un solo juego; el modelo interpretable podría ser superado; no es posible
+identificar a los jugadores que incurren en trampa
+\\
+\addlinespace[3pt]
+
+Bia\l ecki et al. \cite{bialecki_sc2egset_2023} & 2023 &
+Regresión logística, máquina de vectores de soporte y potenciación del
+gradiente con hiperparámetros próximos a los predeterminados; validación
+cruzada de 5 pliegues &
+SC2EGSet: 55 paquetes de repeticiones de torneos de StarCraft II; 11\,115
+partidas únicas reducidas a 22\,230 muestras promediadas; 17 características
+económicas &
+Exactitud &
+0.9071 con dos jugadores; 0.8924 y 0.8916 los otros dos modelos; 0.8488 con
+un solo jugador &
+Solo jugadores de nivel de torneo, sin análisis entre niveles de habilidad;
+los autores llaman a sus experimentos más ilustrativos que investigativos;
+campos puestos a cero conforme el juego cambió; no se describe agrupación por
+partida para los pliegues
+\\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+
+% ============================================================
+% TABLA COMPARATIVA — PARTE 2 DE 2
+% El contador retrocede para conservar un único número.
+% ============================================================
+\begin{table*}[!tp]
+\addtocounter{table}{-1}
+\centering
+\caption{Resumen comparativo de trabajos relacionados (continuación).}
+\label{tab:comparativa-cont}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\textwidth}{@{}
+    P{1.9cm}
+    >{\centering\arraybackslash}p{0.6cm}
+    W{0.95}
+    W{1.00}
+    W{0.70}
+    W{0.95}
+    W{1.40}
+  @{}}
+\toprule
+\textbf{Referencia} & \textbf{Año} & \textbf{Técnica} &
+\textbf{Conjunto de datos / entorno} & \textbf{Métrica principal} &
+\textbf{Resultado reportado} & \textbf{Limitación identificada}\\
+\midrule
+
+Chitayat et al. \cite{chitayat_meta_2023} & 2023 &
+Representación agrupada de personajes con K-Means y redes neuronales &
+DotA 2: versiones 7.27--7.33, 61\,254 partidas &
+AUC &
+0.85 en versiones conocidas; 0.85 y 0.86 en dos versiones posteriores &
+Solo partidas profesionales; predice conteos finales a partir de duración y
+composición, no probabilidad desde un estado intermedio
+\\
+\addlinespace[3pt]
+
+Bertram et al. \cite{bertram_cardrepresentations_2024} & 2024 &
+Redes siamesas bajo ordenamiento contextual, sobre representaciones
+generalizadas de carta (atributos, metadatos, imágenes) &
+Selección de cartas de Magic: The Gathering; $\approx$100\,M de elecciones en
+14 conjuntos; un conjunto completo reservado &
+Acierto \emph{top-1} &
+67.20\,\% sobre conjuntos vistos frente a 55.44\,\% sobre el no visto; la
+codificación por identidad queda indefinida sobre cartas no vistas &
+La tarea es predecir una elección humana y no un desenlace de partida, por lo
+que solo es análoga en generalización de contenido; las elecciones humanas no
+son consistentes, lo que acota el acierto alcanzable
+\\
+\addlinespace[3pt]
+
+Saravanan y Guzdial \cite{saravanan_metadiscovery_2024} & 2024 &
+Agente de refuerzo y agente heurístico, con constructor de equipos &
+Pok\'emon Showdown: cuatro escenarios de prohibición &
+Solapamiento, distancia de edición y correlación de rangos &
+\pct &
+La correlación de rangos resulta débil y no significativa: el conjunto
+descubierto difiere del real pese al solapamiento
+\\
+\addlinespace[3pt]
+
+Kamal et al. \cite{kamal_moba_2025} & 2025 &
+Revisión sistemática con metodología PRISMA &
+35 estudios sobre deportes electrónicos de arena multijugador &
+Métricas heterogéneas &
+Sin resultado único; se reportan, entre otros, AUC de 0.97 y exactitud
+cercana al 93\,\% &
+Alta heterogeneidad entre tareas, conjuntos y protocolos; generalización
+limitada entre regiones, periodos y poblaciones
+\\
+\addlinespace[3pt]
+
+Karbalaie et al. \cite{karbalaie_participantaware_2026} & 2026 &
+Diez clasificadores bajo cuatro diseños de validación: estratificada de 10
+pliegues, dejando un participante fuera, agrupada de 3 pliegues y anidada &
+623 ensayos de salto de 72 participantes; 624 características reducidas a un
+conjunto fijo de 10 &
+Exactitud y brecha entrenamiento--prueba &
+0.91 bajo estratificada de 10 pliegues frente a 0.66 dejando un participante
+fuera; los modelos lineales difieren $\leq$0.03; la anidada coincide con
+dejar uno fuera dentro de 0.02 &
+Dominio de biomecánica, citado por su argumento estadístico y no como
+resultado del dominio de juegos; una única tarea binaria sobre 72
+participantes; calibración explícitamente fuera de alcance
+\\
+\addlinespace[3pt]
+
+Angliss et al. \cite{angliss_vgcbench_2026} & 2026 &
+Clonación de comportamiento y aprendizaje por refuerzo multiagente &
+Pok\'emon VGC: más de 700\,000 registros de partida humanos; 72
+composiciones fuera de distribución &
+Tasa de victoria y evaluación cruzada &
+0.669 del agente entrenado con 64 composiciones frente al entrenado con una,
+sobre las composiciones no vistas &
+El desempeño disminuye al crecer la diversidad; la evaluación humana es
+anecdótica; no es una tarea de estimación de probabilidad
+\\
+
+\bottomrule
+\end{tabularx}
+\begin{minipage}{\textwidth}
+\vspace{3pt}
+\footnotesize
+\textit{Nota.} Las referencias de carácter puramente metodológico incluidas
+en la revisión ---formalización de la fuga de datos, catálogos de escenarios
+de fuga, revisiones de calibración y de modelos tabulares--- no figuran en
+esta tabla, dado que no resuelven una tarea de predicción sobre un conjunto
+de datos comparable. Sus aportes se discuten en el texto de la
+Sección~\ref{subsec:ejeb}.
+\end{minipage}
+\end{table*}

@@ -1,0 +1,2096 @@
+% ============================================================================
+% AxicCReview.tex --- Articulo IEEE, Etapa 1 (preliminar)
+%
+% VERSION INDIVIDUAL --- Sebastian Hernandez Bonilla, Eje C.
+% Construida sobre los siete trabajos arbitrados asignados a este autor.
+% Es la entrada para la fusion a tres bandas que producira el articulo
+% conjunto de la Etapa 1; no es ese articulo.
+%
+% DOCUMENTO AUTOCONTENIDO. Todo el contenido academico vive en este
+% fichero: preambulo, secciones, tablas y figuras. La unica dependencia
+% externa es la bibliografia.
+%
+% Compilacion:  pdflatex -> bibtex -> pdflatex -> pdflatex
+% Ficheros necesarios: AxicCReview.tex + references.bib
+% ============================================================================
+\documentclass[conference]{IEEEtran}
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+% Conserva el punto como separador decimal, para que las cifras coincidan
+% exactamente con las reportadas por las fuentes citadas y por nuestra
+% auditoria. Si babel-spanish no define la orden, la linea es inocua.
+\providecommand{\decimalpoint}{}
+\decimalpoint
+\usepackage{microtype}
+
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\renewcommand{\arraystretch}{1.15}
+\setlist[itemize]{leftmargin=*,noitemsep,topsep=2pt}
+\setlist[enumerate]{leftmargin=*,noitemsep,topsep=2pt}
+
+
+\usepackage{xcolor}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\pendiente}[1]{%
+  \texorpdfstring{\textcolor{red}{\textbf{[POR COMPLETAR: #1]}}}%
+                 {[POR COMPLETAR: #1]}}
+
+% Rotulo de palabras clave en espanol (IEEEtran lo fija en ingles).
+\providecommand{\IEEEkeywordsname}{Index Terms}
+\renewcommand{\IEEEkeywordsname}{Palabras clave}
+
+\begin{document}
+
+\title{Estimaci\'on de la probabilidad de victoria a partir del estado de
+juego en el \emph{Pok\'emon Trading Card Game}: un estudio tabular con
+control de fuga de datos sobre repeticiones de agentes competitivos\\
+{\footnotesize \textit{Versi\'on preliminar --- Etapa 1: estado del arte y
+dise\~no propuesto. Revisi\'on individual del Eje C (conjunto de datos y
+validaci\'on).}}}
+
+\author{
+\IEEEauthorblockN{Sebasti\'an Hern\'andez Bonilla}
+\IEEEauthorblockA{\textit{Escuela de Ingenier\'ia en Computaci\'on} \\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Cartago, Costa Rica \\
+2022093651}
+}
+
+\maketitle
+
+% ===========================================================================
+% 6.2.1  RESUMEN PRELIMINAR Y PALABRAS CLAVE
+% ===========================================================================
+\begin{abstract}
+\textbf{Resumen preliminar.} Este resumen describe el problema, la
+motivaci\'on y el enfoque propuesto. No reporta resultados experimentales,
+puesto que en esta etapa no se ha entrenado ning\'un modelo.
+Evaluar una posici\'on es una competencia central en los juegos de cartas
+competitivos y, sin embargo, en el \emph{Pok\'emon Trading Card Game}
+(PTCG) no existe trabajo publicado que estime la probabilidad de victoria
+a partir de un estado de juego intermedio y parcialmente observable. El
+corpus de repeticiones del PTCG AI Battle Challenge, publicado
+recientemente, vuelve tratable la pregunta, pero su estructura hace que
+sea f\'acil responderla mal: una sola partida genera miles de estados
+fuertemente correlacionados, de modo que una partici\'on aleatoria a nivel
+de fila coloca estados de la misma partida a ambos lados de la divisi\'on.
+En una auditor\'ia de 52\,085 episodios medimos que tal partici\'on
+situar\'ia el 99.995\% de los episodios en ambas particiones de forma
+simult\'anea. Este trabajo pregunta, por tanto, cu\'anta informaci\'on
+sobre el desenlace contiene un \'unico estado observable, c\'omo crece esa
+informaci\'on conforme avanza la partida y cu\'anta sobrevive al evaluar
+sobre partidas, mazos y periodos no vistos. Proponemos una formulaci\'on
+tabular supervisada, una fila por estado fresco del asiento activo, con
+caracter\'isticas derivadas exclusivamente de la observaci\'on disponible
+en ese instante, con una escalera de modelos cl\'asicos que va desde un
+predictor trivial hasta \emph{gradient boosting}, una lista negra
+expl\'icita de campos cuyo uso constituir\'ia fuga de datos, y particiones
+agrupadas por episodio en lugar de por fila. La evaluaci\'on reporta
+discriminaci\'on y calibraci\'on por separado, de forma global y por
+ventana de turno, con intervalos de confianza remuestreados sobre
+episodios. El \emph{baseline} de literatura es la tarea an\'aloga sobre
+estados de juego de \emph{Hearthstone}, cuyo \emph{baseline} oficial
+alcanz\'o un AUC de 0.7846 y cuya mejor soluci\'on alcanz\'o 0.8019; las
+diferencias de juego, protocolo y poblaci\'on de agentes que impiden una
+comparaci\'on estricta se declaran expl\'icitamente.
+\end{abstract}
+
+\begin{IEEEkeywords}
+estimaci\'on de probabilidad de victoria, juegos de cartas coleccionables,
+aprendizaje autom\'atico tabular, fuga de datos, validaci\'on cruzada
+agrupada, cambio de distribuci\'on
+\end{IEEEkeywords}
+
+% ===========================================================================
+% 6.2.2  INTRODUCCION
+% ===========================================================================
+\section{Introducci\'on}
+\label{sec:introduction}
+
+\subsection{Contexto y relevancia}
+\label{subsec:context}
+
+Estimar la probabilidad de que un jugador gane desde la posici\'on que
+tiene actualmente sobre la mesa es una de las competencias recurrentes de
+los sistemas que juegan. Una funci\'on de evaluaci\'on de estados convierte
+una b\'usqueda intratable en una tratable, y es lo que permite a un agente
+detener una simulaci\'on antes de tiempo y a\'un as\'i devolver un juicio
+con sentido. En los juegos de cartas competitivos esa misma estimaci\'on
+tiene un segundo p\'ublico: analistas, comentaristas y jugadores la leen
+como una afirmaci\'on sobre qu\'e recursos deciden realmente una partida.
+Ambos usos dependen del mismo objeto, una funci\'on que asigna a una
+posici\'on observable una probabilidad de victoria.
+
+Dos propiedades convierten a los juegos de cartas coleccionables (CCG, por
+sus siglas en ingl\'es) en un escenario dif\'icil para esa funci\'on. La
+primera es la informaci\'on imperfecta: un jugador nunca ve la mano del
+rival ni las cartas de premio boca abajo, de modo que el evaluador debe
+trabajar sobre una vista parcial y no sobre el estado verdadero del mundo.
+La segunda es la no estacionariedad. El repertorio de cartas legales, los
+mazos que los jugadores efectivamente llevan y la poblaci\'on de
+adversarios cambian con el tiempo, y un modelo ajustado a un metajuego no
+tiene por qu\'e sobrevivir al siguiente. Bertram \textit{et al.} lo
+muestran de forma concreta para \emph{Magic: The Gathering}: un modelo
+cuya representaci\'on de carta es una codificaci\'on \emph{one-hot}
+alcanza un 67.80\% de acierto \emph{top-1} sobre el conjunto de cartas
+con el que fue entrenado y queda simplemente indefinido sobre cartas que
+nunca ha visto, mientras que una representaci\'on generalizada conserva un
+$68.00\%$ dentro de la distribuci\'on y a\'un alcanza un $42.87\%$
+sobre conjuntos no vistos~\cite{bertram_cardrepresentations_2024}.
+
+El problema de la evaluaci\'on ya se ha planteado antes en esta familia de
+juegos. El AAIA'17 Data Mining Challenge pidi\'o a los participantes
+predecir el ganador de una partida de \emph{Hearthstone} a partir de un
+\'unico estado de juego, y report\'o un \emph{baseline} oficial de 0.7846
+de AUC frente a una mejor soluci\'on de
+0.8019~\cite{janusz_hearthstone_2017}. Para \emph{StarCraft II}, el
+descriptor de datos SC2EGSet acompa\~na su corpus de repeticiones con
+experimentos de predicci\'on de victoria sobre indicadores econ\'omicos
+agregados, y alcanza un acierto de 0.9071 cuando dispone de las
+caracter\'isticas de ambos jugadores~\cite{bialecki_sc2egset_2023}. El
+\emph{Pok\'emon Trading Card Game} (PTCG) carece de un estudio publicado
+comparable, pese a que su estructura de recursos, cartas de premio,
+asignaci\'on de energ\'ia, banca, l\'ineas de evoluci\'on, difiere de la
+de ambos juegos de maneras que deber\'ian cambiar qu\'e caracter\'isticas
+transportan informaci\'on.
+
+Esa brecha se ha vuelto abordable recientemente. El PTCG AI Battle
+Challenge publica a diario repeticiones JSON de partidas completas entre
+agentes que compiten entre s\'i~\cite{ptcg_dataset_2026}. El corpus es
+grande y, para esta tarea, estructuralmente traicionero. Nuestra
+auditor\'ia de diez publicaciones diarias, que cubren 52\,085 episodios,
+encontr\'o que esos episodios producen 7\,038\,378 instant\'aneas de
+estado utilizables: aproximadamente 135 filas correlacionadas por cada
+partida independiente. Datos con esta forma premian el protocolo
+equivocado. Karbalaie \textit{et al.} midieron el efecto directamente en un
+conjunto cl\'inico de medidas repetidas, donde un clasificador
+\emph{extra trees} obtuvo 0.91 de acierto bajo validaci\'on cruzada
+estratificada de diez pliegues y 0.66 bajo validaci\'on dejando un
+participante fuera, una inflaci\'on de 0.25 producida enteramente por la
+regla de partici\'on~\cite{karbalaie_participantaware_2026}. El costo de
+ignorar la estructura no es, por tanto, un sesgo marginal: es la diferencia
+entre un resultado y un artefacto.
+
+\subsection{Planteamiento del problema}
+\label{subsec:problem}
+
+Este trabajo ataca una limitaci\'on espec\'ifica: para el \emph{Pok\'emon
+TCG} no existe evidencia sobre cu\'anta informaci\'on contiene un \'unico
+estado observable acerca del desenlace, sobre c\'omo se acumula esa
+informaci\'on a lo largo de la partida, ni sobre cu\'anta se transfiere a
+partidas, mazos y periodos temporales que no se vieron durante el
+entrenamiento. La literatura que responder\'ia esas preguntas para juegos
+adyacentes responde solo una parte. Janusz \textit{et al.} reportan
+discriminaci\'on pero no calibraci\'on~\cite{janusz_hearthstone_2017};
+Bia\l ecki \textit{et al.} reportan acierto y describen sus propios
+experimentos como ``m\'as ilustrativos que
+investigativos''~\cite{bialecki_sc2egset_2023}; y ninguno reporta
+rendimiento bajo un cambio de distribuci\'on declarado.
+
+El problema es tambi\'en metodol\'ogico. Puesto que el corpus fue
+recolectado por un tercero y publicado en medio de una competencia en
+curso, no controlamos su procedencia, que es precisamente la situaci\'on
+que Kaufman \textit{et al.} identifican como el caso m\'as dif\'icil para
+el control de la fuga de datos~\cite{kaufman_leakage_2011}. Establecer que
+una cifra reportada significa lo que aparenta significar forma parte, por
+tanto, del problema de investigaci\'on y no de sus preliminares.
+
+\subsection{Pregunta de investigaci\'on}
+\label{subsec:rq}
+\begin{quote}
+\textbf{PI:} \textit{\textquestiondown En qu\'e medida las caracter\'isticas observables
+del estado de una partida de \emph{Pok\'emon TCG} permiten predecir su
+resultado final mediante modelos cl\'asicos de aprendizaje autom\'atico;
+c\'omo cambia esa capacidad predictiva conforme avanza la partida; y
+cu\'anta se conserva al evaluar sobre episodios, mazos y periodos
+temporales ausentes del entrenamiento?}
+\end{quote}
+
+\noindent La pregunta admite refutaci\'on, es medible y puede responderse
+dentro del semestre. Es refutable porque el modelo puede no superar a un
+predictor trivial en los turnos tempranos; es medible mediante ROC-AUC y
+\emph{log loss} calculados por ventana de turno sobre particiones
+agrupadas por episodio; y es respondible porque los datos ya est\'an
+descargados y auditados, y definir el protocolo no requiere entrenar
+ning\'un modelo.
+
+\subsection{Hip\'otesis de trabajo}
+\label{subsec:hypothesis}
+\begin{quote}
+\textbf{H1:} Las caracter\'isticas estructuradas del estado observable
+contienen se\~nal predictiva sobre el desenlace desde etapas tempranas de
+la partida, ROC-AUC significativamente superior a $0.5$ en la ventana de
+turnos temprana, y esa se\~nal aumenta conforme la partida progresa.
+
+\textbf{H2:} La se\~nal temprana no se explica \'unicamente por el orden de
+turno ni por la identidad del mazo.
+
+\textbf{H3:} Bajo el protocolo temporal, la calibraci\'on se degrada antes
+y en mayor medida que la discriminaci\'on.
+\end{quote}
+
+\noindent H3 es una predicci\'on importada de un campo vecino, no una
+conjetura. Guo \textit{et al.} revisaron quince estudios cl\'inicos sobre
+cambio temporal del conjunto de datos y encontraron que los once estudios
+que midieron calibraci\'on reportaron deterioro de la calibraci\'on,
+mientras que solo tres de los doce que midieron discriminaci\'on
+reportaron deterioro de la
+discriminaci\'on~\cite{guo_temporalshift_2021}. Si esa asimetr\'ia se
+sostiene en un dominio de juegos es una pregunta emp\'irica abierta, y
+enunciarla como hip\'otesis la vuelve falsable aqu\'i.
+
+Cada hip\'otesis tiene un criterio de refutaci\'on declarado. H1 se debilita
+si el intervalo de confianza del AUC de la ventana temprana incluye $0.5$,
+y su componente din\'amico queda refutado si el AUC por ventana no crece
+una vez controlada la duraci\'on de la partida. H2 queda refutada si un
+modelo restringido al orden de turno y a la identidad del mazo iguala al
+conjunto completo de caracter\'isticas, lo que indicar\'ia un artefacto de
+emparejamiento y no se\~nal del estado de juego. H3 queda refutada si el
+\emph{Brier score} y las curvas de fiabilidad no se degradan m\'as
+r\'apido que el AUC bajo la partici\'on temporal. No se fija de antemano
+ning\'un umbral num\'erico de mejora: sin resultado emp\'irico previo sobre
+este corpus, cualquier n\'umero de ese tipo ser\'ia inventado.
+
+\subsection{Objetivos}
+\label{subsec:objectives}
+\textbf{Objetivo general.} Desarrollar y evaluar modelos cl\'asicos de
+aprendizaje autom\'atico que estimen la probabilidad de victoria en
+partidas de \emph{Pok\'emon TCG} a partir de caracter\'isticas tabulares
+derivadas exclusivamente del estado observable, y caracterizar c\'omo
+evoluciona esa capacidad predictiva a lo largo de la partida y ante
+cambios de episodio, mazo y periodo temporal.
+
+\noindent\textbf{Objetivos espec\'ificos.}
+\begin{enumerate}
+  \item Caracterizar el corpus y su calidad sobre la representaci\'on
+        tabular final: an\'alisis exploratorio, diccionario de datos,
+        mecanismos de ausencia, valores at\'ipicos, balance de clases y
+        representatividad.
+  \item Construir una tuber\'ia reproducible que vaya de la repetici\'on
+        JSON a una tabla de instant\'aneas frescas, con perspectiva
+        normalizada, semillas fijas y verificaci\'on de esquema.
+  \item Dise\~nar y verificar los controles de fuga de datos: agrupaci\'on
+        por episodio, lista negra expl\'icita de campos prohibidos y
+        pruebas automatizadas que fallen si una columna prohibida entra al
+        vector de caracter\'isticas.
+  \item Comparar una escalera de \emph{baselines}, desde un predictor
+        trivial hasta \emph{gradient boosting}, bajo tres protocolos de
+        partici\'on, reportando discriminaci\'on y calibraci\'on con
+        intervalos de confianza calculados sobre episodios.
+  \item Analizar explicabilidad y generalizaci\'on: ablaciones por familia
+        de caracter\'isticas, importancia por permutaci\'on agrupada,
+        curvas de fiabilidad y la curva de capacidad predictiva por turno.
+\end{enumerate}
+
+\subsection{Contribuci\'on esperada}
+\label{subsec:contribution}
+
+Se esperan tres contribuciones. Primera, una caracterizaci\'on de la
+probabilidad de victoria desde el estado de juego en un juego de cartas que
+no ha sido estudiado de esta forma, incluyendo el perfil por turno de la
+capacidad predictiva que Janusz \textit{et al.} reportan para
+\emph{Hearthstone} pero que no existe para el \emph{PTCG}. Segunda, un
+protocolo de evaluaci\'on cuyos controles de fuga est\'an medidos y no
+solo afirmados: la auditor\'ia cuantifica la contaminaci\'on que
+producir\'ia el protocolo ingenuo, de modo que el dise\~no agrupado se
+justifica con una cifra de este corpus y no por analog\'ia. Tercera, una
+tuber\'ia reproducible y un diccionario de datos documentado para un corpus
+que hoy carece de descripci\'on arbitrada, siguiendo la estructura que el
+descriptor SC2EGSet establece para datos de repeticiones de deportes
+electr\'onicos~\cite{bialecki_sc2egset_2023}.
+
+Un resultado negativo tambi\'en ser\'ia una contribuci\'on. Si la
+discriminaci\'on colapsa bajo el protocolo temporal, eso constituye
+evidencia sobre la rapidez con que un metajuego invalida un evaluador de
+estados, que es la pregunta que Bertram \textit{et al.} plantean para
+repertorios de cartas en cambio
+permanente~\cite{bertram_cardrepresentations_2024}.
+
+\subsection{Estructura del documento}
+\label{subsec:structure}
+La Secci\'on~\ref{sec:related} revisa la literatura a lo largo de tres ejes
+y cierra con el \emph{baseline} de literatura y las brechas identificadas.
+La Secci\'on~\ref{sec:methodology} presenta la metodolog\'ia propuesta. La
+Secci\'on~\ref{sec:trackanalysis} detalla el an\'alisis t\'ecnico que exige
+el Track A. La Secci\'on~\ref{sec:ethics} discute las consideraciones
+\'eticas preliminares. La Secci\'on~\ref{sec:aideclaration} declara el uso
+de herramientas de inteligencia artificial. La
+Secci\'on~\ref{sec:conclusion} cierra con el estado actual y los pr\'oximos
+pasos.
+
+% ===========================================================================
+% 6.2.3  TRABAJOS RELACIONADOS --- TRES EJES
+% ===========================================================================
+\section{Trabajos Relacionados}
+\label{sec:related}
+
+Esta revisi\'on cubre los siete trabajos arbitrados asignados al autor bajo
+el Eje C (conjunto de datos, validaci\'on y cambio de distribuci\'on), que
+es el eje del que depende la validez de todo el estudio. Los candidatos se
+recuperaron de Scopus, IEEE Xplore, la ACM Digital Library y los registros
+de los editores de las revistas correspondientes, mediante cadenas de
+b\'usqueda que combinaron \code{win prediction}, \code{game state},
+\code{collectible card game} y \code{esport replay dataset} para el
+dominio, y \code{data leakage}, \code{grouped cross-validation},
+\code{repeated measures} y \code{temporal dataset shift} para la
+metodolog\'ia. Se examinaron nueve candidatos a texto completo y se
+retuvieron siete. La inclusi\'on exigi\'o venue arbitrado de revista o
+conferencia, un DOI que resolviera, y contenido que respaldara una
+decisi\'on efectivamente tomada en este trabajo; las dos exclusiones est\'an
+documentadas en el informe de selecci\'on del autor. Cinco de los siete se
+publicaron en 2021 o despu\'es. Los dos trabajos m\'as antiguos se retienen
+deliberadamente: uno es la formulaci\'on can\'onica de la fuga de
+datos~\cite{kaufman_leakage_2011}, el otro es la \'unica competencia
+publicada de predicci\'on de victoria desde el estado de juego en un juego
+de cartas coleccionables~\cite{janusz_hearthstone_2017}. Esta es una
+revisi\'on individual; el art\'iculo conjunto de la Etapa 1 la fusionar\'a
+con las revisiones de los Ejes A y B escritas por los otros dos integrantes
+del equipo, para un corpus combinado de al menos veintiun trabajos.
+
+\subsection{Eje A: el problema y su dominio}
+\label{subsec:axisa}
+\emph{\textquestiondown C\'omo se ha abordado este problema en la literatura?
+\textquestiondown Qu\'e enfoques dominan? \textquestiondown Qu\'e se considera resuelto y qu\'e sigue
+abierto?}
+
+\subsubsection{Predicci\'on del desenlace a partir de un \'unico estado}
+La formulaci\'on dominante trata la predicci\'on del desenlace como
+clasificaci\'on binaria supervisada sobre una instant\'anea de la
+posici\'on, con la etiqueta tomada del resultado registrado de la partida
+completa. El AAIA'17 Data Mining Challenge lo enuncia exactamente en esos
+t\'erminos para \emph{Hearthstone}: los participantes recib\'ian la
+descripci\'on de un estado de juego y entregaban la verosimilitud de que el
+jugador uno ganara, puntuada mediante el \'area bajo la curva
+ROC~\cite{janusz_hearthstone_2017}. El descriptor SC2EGSet aplica el mismo
+encuadre a \emph{StarCraft II}, derivando indicadores econ\'omicos de las
+repeticiones y clasificando el desenlace de la partida a partir de
+ellos~\cite{bialecki_sc2egset_2023}. Ninguna de las dos formulaciones
+requiere un simulador en el momento de la predicci\'on, y ninguna trata la
+trayectoria como un problema de control; el estado es la entrada y el
+desenlace registrado es la etiqueta. Esta es la formulaci\'on que se adopta
+aqu\'i.
+
+Lo que ambos trabajos establecen es que la formulaci\'on es viable en juegos
+de esta familia y que la se\~nal es sustancial. Lo que no establecen es que
+el nivel alcanzable se transfiera entre juegos. Los dos puntos de
+operaci\'on reportados difieren m\'as entre s\'i que la diferencia entre
+m\'etodos dentro de cualquiera de los dos estudios, y no est\'an medidos en
+la misma escala: Janusz \textit{et al.} reportan AUC sobre estados
+extra\'idos de partidas entre agentes que eligen sus acciones al azar,
+mientras que Bia\l ecki \textit{et al.} reportan acierto sobre
+caracter\'isticas promediadas a lo largo de toda la partida. Un estudio
+sobre un tercer juego no puede heredar ninguna de las dos cifras como
+expectativa.
+
+\subsubsection{Capacidad predictiva a lo largo de la partida}
+Un segundo tema, presente en ambos trabajos pero desarrollado por ninguno,
+es que la capacidad predictiva no es un escalar. Janusz \textit{et al.}
+grafican el AUC sobre turnos consecutivos y muestran que crece a lo largo
+de la partida~\cite{janusz_hearthstone_2017}; Bia\l ecki \textit{et al.}
+grafican el acierto sobre el tiempo de partida a intervalos de
+aproximadamente siete segundos y observan que sus tres clasificadores
+alcanzan una as\'intota alrededor de los 550 segundos, lo que interpretan
+como el punto en que los indicadores econ\'omicos dejan de aportar
+informaci\'on adicional y otros factores toman el
+relevo~\cite{bialecki_sc2egset_2023}. Ambas curvas se\~nalan el mismo punto
+metodol\'ogico: una \'unica cifra agregada promedia un r\'egimen en el que
+el estado dice poco con otro en el que lo dice casi todo. Ninguno de los dos
+trabajos reporta intervalos de confianza sobre esas curvas, y ninguno
+reporta c\'omo cambia su forma cuando cambia la poblaci\'on de jugadores.
+
+\subsubsection{Generalizaci\'on ante contenido cambiante}
+El tercer tema es que el contenido de estos juegos no se queda quieto.
+Bertram \textit{et al.} lo abordan directamente para \emph{Magic: The
+Gathering}, donde se publican conjuntos de cartas nuevos con regularidad, y
+eval\'uan reservando un conjunto de cartas completo. Sus resultados separan
+dos capacidades que una \'unica puntuaci\'on dentro de la distribuci\'on
+confunde. Entrenada sobre un solo conjunto, una codificaci\'on
+\emph{one-hot} de carta alcanza un $67.80\%$ de acierto \emph{top-1}
+sobre datos reservados de ese mismo conjunto y no puede producir
+predicci\'on alguna para cartas que nunca ha visto, mientras que una
+incrustaci\'on aleatoria de la misma dimensionalidad alcanza un
+$67.87\%$ dentro de la distribuci\'on y un $23.79\%$ fuera de ella, que
+es el acierto del azar para su tarea de
+elecci\'on~\cite{bertram_cardrepresentations_2024}. Las representaciones
+construidas a partir de atributos de carta, metadatos y codificaciones de
+imagen alcanzan un $68.00\%$ dentro de la distribuci\'on y un
+$42.87\%$ sobre conjuntos no vistos; escalado a un corpus de 2\,990
+cartas y unos 75 millones de decisiones, el mismo modelo alcanza un
+$55.44\%$ sobre el conjunto \textsc{bro}, enteramente
+reservado~\cite{bertram_cardrepresentations_2024}. La lecci\'on trasciende
+su tarea: una codificaci\'on del contenido basada en la identidad puede ser
+indistinguible de una sem\'antica dentro de la distribuci\'on y no valer
+nada fuera de ella.
+
+\subsubsection{Qu\'e est\'a resuelto y qu\'e sigue abierto}
+Resuelto: la predicci\'on del desenlace a partir de un estado intermedio es
+un problema supervisado bien planteado y tratable en juegos de cartas
+coleccionables y en juegos de estrategia en tiempo real; las
+caracter\'isticas tabulares derivadas del estado transportan se\~nal
+sustancial; y la capacidad predictiva var\'ia sistem\'aticamente a lo largo
+de la partida. Abierto: si las probabilidades estimadas est\'an calibradas y
+no meramente bien ordenadas; c\'omo se comporta el perfil por etapa bajo un
+cambio declarado en la poblaci\'on de jugadores o de mazos; y si algo de
+esto se sostiene en el \emph{Pok\'emon TCG}, para el que no existe estudio
+publicado.
+
+\subsection{Eje B: t\'ecnicas del track seleccionado}
+\label{subsec:axisb}
+\emph{\textquestiondown Cu\'al es el estado actual de los m\'etodos que pensamos
+utilizar, cu\'ales son sus fortalezas y l\'imites, y bajo qu\'e supuestos
+funcionan?}
+
+\subsubsection{El rendimiento marginal de la complejidad del modelo}
+La evidencia disponible aqu\'i sostiene que los modelos tabulares
+cl\'asicos son el instrumento adecuado para esta tarea, y lo hace con
+cifras y no con preferencias. En la competencia de \emph{Hearthstone} se
+registraron 296 equipos y 188 enviaron soluci\'on; todos los equipos mejor
+clasificados usaron redes neuronales y el ganador us\'o redes
+convolucionales, y aun as\'i la puntuaci\'on ganadora de 0.8019 de AUC
+supera al \emph{baseline} de los organizadores, 0.7846, una red
+totalmente conectada con dos capas ocultas entrenada sobre la
+representaci\'on tabular, por menos de un dos por ciento, y los
+organizadores lo hacen notar expl\'icitamente~\cite{janusz_hearthstone_2017}.
+La regresi\'on log\'istica aparece entre los enfoques que describen como
+simples y no obstante eficaces. En SC2EGSet, tres clasificadores
+convencionales con hiperpar\'ametros iniciales t\'ipicos quedan a menos de
+0.016 de acierto unos de otros en la tarea de dos jugadores: m\'aquina de
+vectores de soporte con n\'ucleo RBF en 0.9071, XGBoost en 0.8924 y
+regresi\'on log\'istica en 0.8916~\cite{bialecki_sc2egset_2023}. Dos
+estudios independientes sobre dos juegos distintos coinciden, por tanto, en
+que la mayor parte de la se\~nal extra\'ible de una representaci\'on
+tabular del estado de juego es alcanzable sin arquitecturas profundas, y en
+que el residuo es lo bastante peque\~no como para que la interpretabilidad
+y el costo dominen la elecci\'on.
+
+Una tercera fuente afina el argumento en direcci\'on a los modelos m\'as
+simples. Karbalaie \textit{et al.} compararon diez clasificadores y
+encontraron que los modelos lineales fueron los m\'as honestos bajo
+validaci\'on consciente del participante: la regresi\'on log\'istica y el
+an\'alisis discriminante lineal difirieron a lo sumo en 0.03 de acierto
+entre el protocolo contaminado y el correcto, y mostraron brechas entre
+entrenamiento y prueba de aproximadamente 0.08, mientras que los
+\emph{ensembles}, \emph{extra trees}, \emph{random forest},
+\emph{gradient boosting}, mostraron brechas de al menos 0.34 y fueron
+los modelos cuyas puntuaciones m\'as infl\'o el protocolo
+defectuoso~\cite{karbalaie_participantaware_2026}. Los modelos de alta
+capacidad no son solo m\'as dif\'iciles de interpretar: son los modelos a
+los que un protocolo defectuoso favorece. Ese es un argumento para mantener
+un modelo lineal regularizado en la comparaci\'on como punto de referencia,
+y no solo por formalidad.
+
+\subsubsection{Validaci\'on cuando las observaciones no son independientes}
+El supuesto que estos m\'etodos comparten es que las muestras son
+independientes, y es exactamente el supuesto que este corpus viola.
+Karbalaie \textit{et al.} cuantifican la consecuencia sobre 623 ensayos de
+72 participantes: la validaci\'on cruzada estratificada de diez pliegues da
+un acierto de 0.91 para \emph{extra trees}, y el mismo modelo bajo
+validaci\'on dejando un participante fuera da
+0.66~\cite{karbalaie_participantaware_2026}. Su explicaci\'on es la que se
+transfiere: en datos de medidas repetidas el tama\~no muestral efectivo se
+aproxima al n\'umero de participantes, no al n\'umero de ensayos.
+Sustituir participante por episodio e instant\'anea por ensayo enuncia la
+restricci\'on que gobierna el presente trabajo. Reportan adem\'as que la
+validaci\'on cruzada agrupada de $k$ pliegues coincide con el dise\~no
+anidado y con dejar uno fuera dentro de 0.02 de acierto a un costo mucho
+menor, lo que importa cuando la unidad de agrupaci\'on se cuenta en decenas
+de miles. \textbf{Brecha de dominio, declarada expl\'icitamente:} se trata
+de un estudio de biomec\'anica, y se cita por su argumento estad\'istico
+sobre observaciones dependientes, no como resultado del dominio de juegos.
+
+\subsubsection{La fuga de datos como objeto formal}
+Kaufman \textit{et al.} aportan el marco que vuelve verificables, y no
+meramente intuitivas, esas decisiones. Definen la fuga de datos (\emph{data
+leakage}) como una propiedad intr\'inseca de la relaci\'on entre las
+entradas observacionales de un modelo y la instancia objetivo: una
+caracter\'istica es leg\'itima solo si es observable para el prop\'osito de
+inferir ese objetivo en particular, evaluada instancia por instancia. Dos
+consecuencias gobiernan nuestro dise\~no. La primera es el \emph{requisito
+de la no m\'aquina del tiempo}: un modelo leg\'itimo solo puede usar
+informaci\'on de un instante no posterior al del objetivo. La segunda es la
+\emph{separaci\'on aprender--predecir}, la metodolog\'ia de evitaci\'on en
+la que cada observaci\'on se etiqueta con la informaci\'on necesaria para
+decidir su legitimidad y el conjunto de entrenamiento se construye despu\'es
+de modo que solo entren entradas leg\'itimas~\cite{kaufman_leakage_2011}.
+Advierten adem\'as que la fuga entra por las decisiones de dise\~no, 
+dise\~no de caracter\'isticas, selecci\'on de modelo, elecci\'on de
+hiperpar\'ametros informada por conocimiento que el modelo desplegado no
+tendr\'ia, a la que llaman la forma m\'as peligrosa, porque un evaluador
+no puede detectarla ni siquiera bus\-c\'an\-do\-la, y se\~nalan que eliminar
+las fugas evidentes puede no sellar el resto.
+
+Sasse \textit{et al.} actualizan ese marco convirti\'endolo en un
+cat\'alogo de escenarios que los profesionales encuentran realmente,
+organizado como fuga de prueba a entrenamiento, de prueba a prueba, de
+caracter\'istica a objetivo, de objetivo, de conjunto de datos y de
+variables de confusi\'on~\cite{sasse_leakage_2025}. Tres de sus entradas se
+corresponden directamente con decisiones de este trabajo. Su tratamiento de
+la fuga de prueba a entrenamiento enumera el no tener en cuenta muestras
+dependientes como causa primaria y lo demuestra sobre pares de hermanos en
+una cohorte de neuroimagen, donde permitir que familiares caigan a ambos
+lados de la partici\'on eleva el acierto medido. Su caso de preprocesamiento
+establece que el escalado, la imputaci\'on, la reducci\'on de
+dimensionalidad y el sobremuestreo estimados sobre el conjunto completo
+antes de particionar constituyen por s\'i mismos fuga de datos, raz\'on por
+la cual cualquier correcci\'on de balance de clases en este trabajo debe
+ajustarse dentro del pliegue de entrenamiento. Su categor\'ia de
+caracter\'istica a objetivo cubre el caso que aqu\'i m\'as importa:
+variables informativas y disponibles durante el aprendizaje pero ausentes en
+el despliegue. Su prescripci\'on es una pregunta antes que una regla, 
+comprobar si cada caracter\'istica estar\'ia disponible tras el despliegue, y es la pregunta que aplicamos campo por campo en la
+Secci\'on~\ref{subsec:leakage}.
+
+\subsubsection{Justificaci\'on t\'ecnica del Track A}
+El Track A se elige por la fuerza de esa evidencia y no por descarte. El
+corpus de repeticiones se reduce de forma natural a una tabla de ancho fijo
+con campos num\'ericos, binarios y categ\'oricos, que es el r\'egimen en el
+que los dos estudios del dominio de juegos citados arriba muestran una
+paridad casi total entre modelos cl\'asicos y profundos. La pregunta
+cient\'ifica es cu\'ales caracter\'isticas del estado transportan
+informaci\'on sobre la victoria, lo que exige modelos cuyas atribuciones
+puedan inspeccionarse. Y el riesgo dominante es de protocolo y no de
+capacidad: la contaminaci\'on medida de una partici\'on a nivel de fila hace
+que sea el dise\~no de la partici\'on, y no la arquitectura, la variable que
+determina si un resultado tiene significado. Un modelo secuencial profundo
+sobre la trayectoria, la alternativa natural del Track B, responder\'ia
+una pregunta distinta y m\'as amplia, heredando todos los riesgos de fuga y
+ninguna de las ventajas de interpretabilidad. El aprendizaje por refuerzo,
+la lectura natural de un corpus de episodios, se descarta porque el objeto
+de estudio es la funci\'on de valor de forma aislada, aprendida
+\emph{offline} a partir de desenlaces registrados, y no una pol\'itica.
+
+\subsection{Eje C: conjunto de datos y conjuntos an\'alogos}
+\label{subsec:axisc}
+\emph{\textquestiondown Qu\'e trabajos han utilizado el conjunto de datos, bajo qu\'e
+protocolo, cu\'al es el mejor resultado publicado y qu\'e problemas
+presenta?}
+
+\subsubsection{Sin literatura previa sobre este corpus}
+No localizamos ninguna publicaci\'on arbitrada que utilice los episodios del
+PTCG AI Battle Challenge~\cite{ptcg_dataset_2026}. El corpus se public\'o en
+2026 y est\'a ligado a una competencia todav\'ia en curso. De acuerdo con el
+enunciado del curso, el eje se cubre por tanto con conjuntos de datos
+an\'alogos del mismo dominio, y la sustituci\'on se argumenta en lugar de
+darse por supuesta.
+
+\subsubsection{Por qu\'e los an\'alogos son comparables, y d\'onde no lo son}
+SC2EGSet es el an\'alogo estructural m\'as cercano: un corpus de
+repeticiones competitivas de un juego de dos jugadores, procesado en
+registros de estado de juego por partida, publicado junto con sus
+herramientas de extracci\'on y acompa\~nado de experimentos de predicci\'on
+de victoria sobre caracter\'isticas
+tabulares~\cite{bialecki_sc2egset_2023}. Comparte la forma de la tuber\'ia,  repetici\'on cruda, estado analizado, caracter\'isticas tabulares,
+etiqueta supervisada de desenlace, y el hecho de que los datos fueron
+producidos por competencia y no por experimento. Difiere en g\'enero, en
+tanto \emph{StarCraft II} es un juego de estrategia en tiempo real con
+tiempo continuo y no un juego de cartas por turnos con recursos discretos,
+y difiere en unidad de observaci\'on, puesto que sus modelos consumen
+agregados por partida y no estados instant\'aneos. El conjunto de datos de
+la competencia de \emph{Hearthstone} es el an\'alogo m\'as cercano en
+g\'enero: un juego de cartas coleccionables con mazos, mano, tablero e
+informaci\'on oculta, cuya tarea es precisamente la predicci\'on del ganador
+a partir de un estado intermedio~\cite{janusz_hearthstone_2017}. Difiere en
+la calidad de los agentes que lo generaron y en que sus estados fueron
+publicados por los organizadores en formato tabular y JSON crudo en lugar de
+ser analizados por quien modela. El corpus de \emph{drafting} de
+\emph{Magic: The Gathering} es an\'alogo solo en el sentido estrecho que
+importa para una de nuestras decisiones: es un juego de cartas
+coleccionables cuyo contenido cambia con el tiempo y cuya evaluaci\'on
+reserva contenido no visto~\cite{bertram_cardrepresentations_2024}. Su tarea
+es predecir una elecci\'on humana de carta, no un desenlace de partida, y no
+debe leerse como un resultado de predicci\'on de victoria.
+
+\subsubsection{Problemas documentados de los corpus comparables}
+Los problemas que estos autores declaran son los problemas que deber\'iamos
+esperar. Bia\l ecki \textit{et al.} afirman que su corpus contiene
+\'unicamente repeticiones de nivel de torneo y que, en consecuencia, ``no
+existe posibilidad de realizar an\'alisis m\'as generales que tomen en
+consideraci\'on a personas de distintos niveles de habilidad''; que los
+cambios del juego a lo largo del tiempo hacen que algunos campos de datos
+tomen valor cero, de modo que la representaci\'on del juego cambi\'o con el
+tiempo; que la completitud dependi\'o de qu\'e organizadores de torneo
+decidieron publicar; y que deliberadamente no filtraron repeticiones
+terminadas de forma prematura, con el fin de preservar las distribuciones
+originales~\cite{bialecki_sc2egset_2023}. Cada uno de esos puntos tiene su
+contraparte en nuestro corpus: los episodios se seleccionan por puntuaci\'on
+media de los agentes y se truncan a un tope diario de volumen; seis
+versiones del motor coexisten en la muestra auditada; y los episodios
+abandonados est\'an presentes y son identificables.
+
+Janusz \textit{et al.} documentan dos problemas propios. Sus estados
+proven\'ian de partidas entre agentes que eleg\'ian sus decisiones dentro del
+juego al azar, lo que constituye una poblaci\'on espec\'ifica y no
+representativa; y se detect\'o una fuga de datos involuntaria durante las
+primeras semanas de la competencia, que oblig\'o a los organizadores a
+mover 1\,250\,000 casos del conjunto de prueba al de
+entrenamiento~\cite{janusz_hearthstone_2017}. Vale la pena enunciar lo
+segundo con claridad: un incidente de fuga dentro de una competencia
+organizada profesionalmente sobre exactamente esta tarea es la evidencia
+m\'as fuerte disponible de que el riesgo es real y no hipot\'etico.
+
+\subsubsection{Cambio de distribuci\'on y qu\'e da\~na primero}
+Su respuesta parcial al problema de la poblaci\'on es tambi\'en el resultado
+de generalizaci\'on m\'as \'util del que disponemos. Habiendo entrenado
+sobre estados de juego aleatorio, construyeron un segundo corpus de 28\,604
+partidas y 814\,407 estados generados por agentes fuertes de b\'usqueda en
+\'arbol Monte Carlo que realizaban 15\,000 simulaciones por acci\'on, y
+observaron que el AUC total ca\'ia solo de aproximadamente 0.79 a
+aproximadamente 0.75 al evaluar sobre esa poblaci\'on
+desplazada~\cite{janusz_hearthstone_2017}. Un cambio en la calidad de los
+agentes que generan los estados cuesta, por tanto, algo, pero mucho menos de
+lo que podr\'ia temerse.
+
+Lo que ese experimento no mide es la calibraci\'on, y la evidencia
+sistem\'atica indica que esa es la magnitud en mayor riesgo. Guo
+\textit{et al.} examinaron 4\,457 referencias y retuvieron quince estudios
+que cuantificaban el cambio temporal del conjunto de datos e implementaban
+alguna mitigaci\'on. Los once estudios que evaluaron calibraci\'on
+reportaron deterioro de la calibraci\'on, mientras que solo tres de los doce
+que evaluaron discriminaci\'on reportaron deterioro de la discriminaci\'on;
+los tres que lo hicieron eran estudios de un solo centro, mientras que los
+nueve que no reportaron deterioro eran
+multic\'entricos~\cite{guo_temporalshift_2021}. Su inventario de
+mitigaciones est\'a dominado por el reajuste del modelo ($n=12$), la
+calibraci\'on de probabilidades ($n=7$), la actualizaci\'on del modelo
+($n=6$) y la selecci\'on de modelo ($n=6$), frente a solo dos enfoques a
+nivel de caracter\'isticas, y su s\'intesis es que todas esas estrategias
+preservaron la calibraci\'on pero ninguna preserv\'o uniformemente la
+discriminaci\'on. Aportan adem\'as el vocabulario que este trabajo
+necesita, distinguiendo el cambio de covariables
+($P_{\text{ent}}(x)\neq P_{\text{prueba}}(x)$ con
+$P_{\text{ent}}(y|x)=P_{\text{prueba}}(y|x)$) del cambio de concepto
+($P_{\text{ent}}(y|x)\neq P_{\text{prueba}}(y|x)$ con
+$P_{\text{ent}}(x)=P_{\text{prueba}}(x)$), y se\~nalando que ambos pueden
+coexistir. \textbf{Brecha de dominio, declarada expl\'icitamente:} se trata
+de predicci\'on cl\'inica, citada por la asimetr\'ia que mide y por la
+terminolog\'ia que estandariza, no como hallazgo del dominio de juegos. Sus
+propias limitaciones declaradas, un barrido incompleto de actas de
+congresos, modelos desplegados no publicados y la ausencia de tratamiento
+del cambio geogr\'afico, no afectan a ninguno de los dos usos.
+
+% TABLA COMPARATIVA OBLIGATORIA (integrada; antes en tab/comparative_table)
+\subsection{An\'alisis comparativo}
+\label{subsec:comparative}
+
+% ============================================================
+% TABLA COMPARATIVA — PARTE 1 DE 2
+% ============================================================
+
+\begin{table*}[!tp]
+\centering
+\caption{Resumen comparativo de los siete trabajos revisados. Las filas se
+ordenan por proximidad a nuestra tarea. Los valores est\'an transcritos de
+la fuente; ``n/a'' marca un campo que el trabajo no posee, no un campo que
+no hayamos podido encontrar.}
+\label{tab:comparative}
+
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+
+\begin{tabularx}{\textwidth}{@{}l c P{2.05cm} P{2.35cm} P{1.5cm} P{2.35cm} Y@{}}
+\toprule
+\textbf{Referencia} & \textbf{A\~no} & \textbf{T\'ecnica} &
+\textbf{Conjunto de datos / entorno} & \textbf{M\'etrica principal} &
+\textbf{Resultado reportado} & \textbf{Limitaci\'on identificada}\\
+\midrule
+
+\cite{janusz_hearthstone_2017} & 2017 &
+Competencia: \emph{ensembles} de CNN y ANN, XGBoost, regresi\'on
+log\'istica; el \emph{baseline} de los organizadores es una red totalmente
+conectada de 2 capas ocultas sobre datos tabulares &
+Estados de juego de \emph{Hearthstone}; 3.25\,M de estados de entrenamiento
+provenientes de $\approx$65\,000 partidas, 750\,000 estados de prueba
+provenientes de $>$180\,000 partidas; 9 mazos en entrenamiento frente a 27
+en prueba &
+ROC-AUC &
+0.7846 el \emph{baseline}; 0.8019 la mejor soluci\'on; brecha $<2\%$.
+Transferencia a estados de agentes MCTS: $\approx$0.79 $\rightarrow$
+$\approx$0.75 &
+Estados generados por agentes que eligen acciones al azar, una poblaci\'on
+no representativa; no se reporta calibraci\'on; se detect\'o una fuga
+involuntaria a mitad de competencia que oblig\'o a pasar 1.25\,M de casos de
+prueba al conjunto de entrenamiento\\
+\addlinespace
+
+\cite{bialecki_sc2egset_2023} & 2023 &
+Regresi\'on log\'istica, SVM (RBF) y XGBoost con hiperpar\'ametros
+pr\'oximos a los predeterminados; validaci\'on cruzada de 5 pliegues &
+SC2EGSet: 55 paquetes de repeticiones de torneos de \emph{StarCraft II};
+11\,115 partidas \'unicas reducidas a 22\,230 muestras promediadas; 17
+caracter\'isticas econ\'omicas seleccionadas &
+Acierto &
+0.9071 con dos jugadores (SVM-RBF), 0.8924 XGBoost, 0.8916 regresi\'on
+log\'istica; 0.8488 con un jugador &
+Solo jugadores de nivel de torneo, por lo que no admite an\'alisis entre
+niveles de habilidad; los autores llaman a sus experimentos ``m\'as
+ilustrativos que investigativos''; campos puestos a cero conforme el juego
+cambi\'o; no se describe agrupaci\'on por partida para los pliegues\\
+\addlinespace
+
+\cite{bertram_cardrepresentations_2024} & 2024 &
+Redes siamesas bajo ordenamiento contextual de preferencias, sobre
+representaciones generalizadas de carta (atributos, metadatos, im\'agenes
+autocodificadas) &
+Elecciones de \emph{draft} de \emph{Magic: The Gathering};
+$\approx$100\,M de elecciones en 14 conjuntos de cartas; un conjunto
+completo reservado &
+Acierto \emph{top-1} &
+67.20\% sobre conjuntos vistos frente a 55.44\% sobre el conjunto no
+visto; la codificaci\'on \emph{one-hot} queda indefinida sobre cartas no
+vistas; la incrustaci\'on aleatoria da 23.79\% fuera de la distribuci\'on &
+La tarea es predecir una elecci\'on humana de carta y no un desenlace de
+partida, por lo que solo es an\'aloga en cuanto a generalizaci\'on de
+contenido; las elecciones humanas no son ni correctas ni consistentes, lo
+que acota el acierto alcanzable; el ajuste fino sobre un conjunto degrada
+los dem\'as\\
+\addlinespace
+
+\cite{karbalaie_participantaware_2026} & 2026 &
+Diez clasificadores comparados bajo cuatro dise\~nos de validaci\'on:
+estratificada de 10 pliegues, dejando un participante fuera, agrupada de 3
+pliegues y anidada (dejando uno fuera $+$ bucle interno agrupado) &
+623 ensayos de salto de 72 participantes tras reconstrucci\'on de ligamento
+cruzado anterior; 624 caracter\'isticas extra\'idas reducidas a un
+\emph{top-10} fijo &
+Acierto, brecha entrenamiento--prueba, estabilidad de rangos &
+\emph{Extra trees} 0.91 bajo estratificada de 10 pliegues frente a 0.66
+dejando un participante fuera; los modelos lineales difieren $\leq$0.03; la
+anidada coincide con dejar uno fuera dentro de 0.02 &
+Dominio de biomec\'anica, citado por su argumento estad\'istico y no como
+resultado del dominio de juegos; una \'unica tarea binaria sobre 72
+participantes; calibraci\'on y atribuci\'on de caracter\'isticas
+expl\'icitamente fuera de alcance\\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+
+% ============================================================
+% TABLA COMPARATIVA — PARTE 2 DE 2
+% ============================================================
+
+\begin{table*}[!tp]
+
+% Mantiene el mismo número de tabla que la parte anterior.
+\addtocounter{table}{-1}
+
+\centering
+\caption{Resumen comparativo de los siete trabajos revisados
+(continuaci\'on).}
+\label{tab:comparative-cont}
+
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+
+\begin{tabularx}{\textwidth}{@{}l c P{2.05cm} P{2.35cm} P{1.5cm} P{2.35cm} Y@{}}
+\toprule
+\textbf{Referencia} & \textbf{A\~no} & \textbf{T\'ecnica} &
+\textbf{Conjunto de datos / entorno} & \textbf{M\'etrica principal} &
+\textbf{Resultado reportado} & \textbf{Limitaci\'on identificada}\\
+\midrule
+
+\cite{guo_temporalshift_2021} & 2021 &
+Revisi\'on sistem\'atica (PRISMA) de estrategias de mitigaci\'on: reajuste
+del modelo ($n$=12), calibraci\'on de probabilidades ($n$=7),
+actualizaci\'on del modelo ($n$=6), selecci\'on de modelo ($n$=6) &
+15 estudios de predicci\'on cl\'inica retenidos de 4\,457 referencias
+examinadas; regresi\'on log\'istica usada en 13 de 15 &
+Cambio en calibraci\'on y en discriminaci\'on &
+Deterioro de calibraci\'on en 11 de los 11 estudios que la midieron;
+deterioro de discriminaci\'on en solo 3 de 12 &
+Dominio cl\'inico, citado por la asimetr\'ia medida y por la terminolog\'ia
+del cambio de distribuci\'on; no se realiz\'o metaan\'alisis; cobertura
+incompleta de actas de congresos; no se examin\'o el cambio geogr\'afico\\
+\addlinespace
+
+\cite{sasse_leakage_2025} & 2025 &
+Cat\'alogo de escenarios de fuga: de prueba a entrenamiento, de prueba a
+prueba, de caracter\'istica a objetivo, de objetivo, decaimiento del
+conjunto de datos y de variables de confusi\'on, con demostraciones
+ilustrativas &
+n/a --- art\'iculo de revisi\'on; las demostraciones usan una cohorte de
+neuroimagen, sin corpus de referencia propio &
+n/a --- sin m\'etrica principal \'unica &
+n/a --- los efectos se muestran gr\'aficamente por escenario en lugar de
+tabularse como una cifra \'unica &
+Es un cat\'alogo y no una comparaci\'on cuantitativa, por lo que establece
+qu\'e fallos existen pero no su magnitud relativa; las demostraciones se
+limitan a un solo tipo de dato\\
+\addlinespace
+
+\cite{kaufman_leakage_2011} & 2011 &
+Definici\'on formal de la fuga mediante la legitimidad de las entradas
+observacionales; evitaci\'on por etiquetado de legitimidad y separaci\'on
+aprender--predecir; detecci\'on por an\'alisis exploratorio, an\'alisis
+posterior y prueba temprana en campo &
+n/a --- trabajo metodol\'ogico; ilustrado con competencias publicadas de
+miner\'ia de datos &
+n/a &
+n/a --- no se reporta experimento alguno &
+Sin evaluaci\'on emp\'irica de la metodolog\'ia propuesta; los autores
+afirman que los intentos de reparar la fuga a posteriori suelen ser
+incompletos y pueden empeorar la situaci\'on\\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+De la Tabla~\ref{tab:comparative} emergen tres patrones. El primero es una
+divisi\'on de m\'etricas que bloquea la comparaci\'on directa: los dos
+estudios sobre estados de juego reportan escalares distintos, AUC en un caso
+y acierto en el otro, y ninguno reporta una regla de puntuaci\'on propia ni
+una curva de fiabilidad. Cualquier afirmaci\'on de que uno de estos sistemas
+est\'a mejor calibrado que otro carecer\'ia de respaldo, porque ninguno lo
+midi\'o. El segundo es que los estudios que miden generalizaci\'on bajo
+cambio la miden contra cosas diferentes, calidad de los
+agentes~\cite{janusz_hearthstone_2017}, conjuntos de cartas no
+vistos~\cite{bertram_cardrepresentations_2024}, identidad del
+participante~\cite{karbalaie_participantaware_2026}, tiempo
+calendario~\cite{guo_temporalshift_2021}, y que las degradaciones
+reportadas son en todos los casos lo bastante grandes como para importar:
+0.79 $\rightarrow$ 0.75 de AUC, 67.20\% $\rightarrow$ 55.44\% de
+acierto, 0.91 $\rightarrow$ 0.66 de acierto. Una \'unica cifra dentro de la
+distribuci\'on es la magnitud menos informativa que reporta cualquiera de
+estos trabajos.
+
+El tercer patr\'on es una limitaci\'on recurrente antes que una tendencia.
+En todas las entradas emp\'iricas, la unidad de observaci\'on es menor que
+la unidad que realmente es independiente, y los trabajos difieren en si
+act\'uan en consecuencia. Janusz \textit{et al.} separan entrenamiento y
+prueba a nivel de partidas completas, de modo que su protocolo est\'a
+agrupado aunque no lo formulen as\'i. Karbalaie \textit{et al.} convierten
+la agrupaci\'on en el objeto de estudio. Bia\l ecki \textit{et al.} reportan
+validaci\'on cruzada de cinco pliegues sobre 22\,230 muestras promediadas
+derivadas de 11\,115 partidas \'unicas, dos filas por partida, una por
+jugador, sin describir restricci\'on alguna de agrupaci\'on a nivel de
+partida. \textbf{Esta es una inferencia nuestra, no una afirmaci\'on de los
+autores:} si esos pliegues se extrajeron a nivel de fila, ambas filas de una
+partida podr\'ian caer a lados opuestos de una partici\'on, y sus aciertos
+reportados ser\'ian optimistas en una cantidad desconocida. Lo se\~nalamos
+como salvedad de comparabilidad y no como error, puesto que el art\'iculo no
+declara el particionador que utiliz\'o.
+
+Una cuarta observaci\'on concierne al peso de la evidencia. Dos de los siete
+trabajos son referencias metodol\'ogicas sin conjunto de datos ni m\'etrica
+propios~\cite{kaufman_leakage_2011,sasse_leakage_2025}; sus celdas se marcan
+como no aplicables en lugar de rellenarse con un valor plausible. Forzar
+n\'umeros en esas filas tergiversar\'ia lo que esos trabajos son.
+
+% ===========================================================================
+% 6.2.4  BASELINE DE LITERATURA
+% ===========================================================================
+\subsection{\emph{Baseline} de literatura}
+\label{subsec:litbaseline}
+
+No existe resultado publicado sobre el corpus objetivo, de modo que el
+\emph{baseline} se toma del trabajo an\'alogo cuya tarea, unidad de
+observaci\'on y m\'etrica son las m\'as cercanas a las nuestras.
+
+\begin{quote}
+\textbf{Objetivo de referencia:} ROC-AUC en la banda $0.78$--$0.80$,
+proveniente del AAIA'17 Data Mining Challenge sobre \emph{Hearthstone}.
+Tarea: predecir el ganador a partir de un \'unico estado de juego. Unidad de
+observaci\'on: un estado de juego. M\'etrica: \'area bajo la curva ROC.
+\emph{Baseline} oficial de los organizadores: $0.7846$, obtenido por una red
+totalmente conectada con dos capas ocultas sobre la representaci\'on
+tabular, que qued\'o en el puesto $94$. Mejor soluci\'on enviada: $0.8019$,
+un \emph{ensemble} construido sobre redes convolucionales. Protocolo:
+3\,250\,000 estados de entrenamiento provenientes de aproximadamente
+65\,000 partidas frente a 750\,000 estados de prueba provenientes de m\'as
+de 180\,000 partidas distintas, con 9 mazos en entrenamiento y 27 en prueba,
+de modo que el conjunto de prueba contiene cartas nunca vistas en
+entrenamiento; puntuaciones preliminares sobre un $5\%$ aleatorio fijo del
+conjunto de prueba y puntuaciones finales sobre el
+resto~\cite{janusz_hearthstone_2017}.
+\end{quote}
+
+\noindent\textbf{Qu\'e pretende hacer este trabajo con esa cifra.} El
+objetivo operativo es que el modelo cl\'asico m\'as fuerte alcance esa banda
+de $0.78$--$0.80$ de AUC bajo nuestro propio protocolo primario en la
+ventana tard\'ia de la partida, y establecer en qu\'e punto de la partida se
+alcanza por primera vez esa banda. No afirmamos que superaremos $0.8019$,
+porque las dos cifras no est\'an medidas sobre el mismo objeto.
+
+\noindent\textbf{Diferencias de protocolo que impiden una comparaci\'on
+justa.}
+\begin{itemize}
+  \item \textbf{Juego distinto.} \emph{Hearthstone} y el \emph{Pok\'emon
+        TCG} difieren en sistemas de recursos, condiciones de victoria y
+        estructura de tablero, de modo que el contenido informativo de un
+        estado no es la misma magnitud.
+  \item \textbf{Poblaci\'on de agentes distinta.} Sus estados provienen de
+        agentes que act\'uan al azar; los nuestros, de agentes que compiten
+        y son seleccionados por puntuaci\'on. Su propio experimento de
+        transferencia muestra que esto importa, y cuesta aproximadamente
+        $0.04$ de AUC en la direcci\'on de agentes aleatorios a agentes
+        fuertes~\cite{janusz_hearthstone_2017}.
+  \item \textbf{Partici\'on distinta.} Su separaci\'on es por partida y por
+        mazo entre dos conjuntos fijos; la nuestra es una partici\'on
+        agrupada por episodio, con protocolos adicionales temporal y de
+        reserva de mazos.
+  \item \textbf{Prevalencia de clases distinta.} Su conjunto de
+        entrenamiento tiene $50.46\%$ de victorias y el de prueba
+        $57.27\%$, de modo que las dos mitades de su propio banco de
+        pruebas no provienen de la misma
+        distribuci\'on~\cite{janusz_hearthstone_2017}.
+  \item \textbf{Descripci\'on del estado distinta.} Su representaci\'on
+        tabular fue suministrada por los organizadores, y las mejores
+        participaciones reconstruyeron caracter\'isticas a partir del JSON
+        crudo; nuestro conjunto de caracter\'isticas lo construimos nosotros
+        y est\'a restringido por una lista negra de fuga.
+\end{itemize}
+
+\noindent Se dispone de un segundo anclaje, m\'as d\'ebil. SC2EGSet reporta
+$0.9071$ de acierto en predicci\'on de victoria con dos jugadores y
+$0.8488$ con un solo jugador~\cite{bialecki_sc2egset_2023}. Se registra
+aqu\'i por completitud y no se adopta como objetivo: la m\'etrica es acierto
+y no AUC, la unidad es una partida completa y no un instante, las
+caracter\'isticas son promedios sobre la partida, y la cuesti\'on de la
+agrupaci\'on planteada en la Secci\'on~\ref{subsec:comparative} queda sin
+resolver.
+
+\subsection{Brechas identificadas}
+\label{subsec:gaps}
+
+\textbf{Brechas encontradas en la literatura.}
+\begin{enumerate}
+  \item \textbf{Ning\'un trabajo arbitrado utiliza este corpus.} Los
+        episodios del PTCG AI Battle Challenge no tienen descripci\'on
+        publicada, ni diccionario de datos documentado, ni \emph{baseline}
+        reportado.
+  \item \textbf{La tarea no se ha estudiado en el \emph{Pok\'emon TCG}.} La
+        predicci\'on de victoria desde el estado de juego est\'a establecida
+        en \emph{Hearthstone}~\cite{janusz_hearthstone_2017} y en
+        \emph{StarCraft II}~\cite{bialecki_sc2egset_2023}, pero no en un
+        juego cuya estructura de recursos se apoya en cartas de premio,
+        asignaci\'on de energ\'ia, banca y evoluci\'on.
+  \item \textbf{Se reporta discriminaci\'on sin calibraci\'on.} Ninguno de
+        los dos estudios sobre estados de juego reporta una regla de
+        puntuaci\'on propia ni una curva de
+        fiabilidad~\cite{janusz_hearthstone_2017,bialecki_sc2egset_2023}, y
+        Karbalaie \textit{et al.} colocan expl\'icitamente la calibraci\'on
+        fuera de su alcance y la recomiendan como trabajo
+        futuro~\cite{karbalaie_participantaware_2026}. Guo \textit{et al.}
+        muestran que esta es la magnitud que se degrada
+        primero~\cite{guo_temporalshift_2021}. Un modelo pensado como
+        evaluador de posiciones est\'a siendo validado, por tanto, sobre la
+        propiedad equivocada.
+  \item \textbf{La evaluaci\'on agrupada se aplica de forma inconsistente en
+        corpus de estados de juego.} El costo medido de ignorar la
+        dependencia solo est\'a disponible desde otros
+        campos~\cite{karbalaie_participantaware_2026,sasse_leakage_2025};
+        dentro de los conjuntos de datos de juegos la restricci\'on unas
+        veces se satisface sin ser
+        nombrada~\cite{janusz_hearthstone_2017} y otras queda sin
+        describir~\cite{bialecki_sc2egset_2023}.
+  \item \textbf{La generalizaci\'on rara vez se eval\'ua bajo un cambio
+        declarado.} Cuando se hace, la degradaci\'on es
+        sustancial~\cite{janusz_hearthstone_2017,%
+        bertram_cardrepresentations_2024}, y la evidencia sistem\'atica
+        encuentra solo quince estudios que a la vez cuantifiquen el cambio
+        temporal y act\'uen sobre \'el~\cite{guo_temporalshift_2021}.
+\end{enumerate}
+
+\noindent\textbf{Brechas que este trabajo aborda.} Las brechas 2 a 5. La 2,
+planteando la tarea en el \emph{Pok\'emon TCG} por primera vez y reportando
+el perfil por turno de la capacidad predictiva. La 3, reportando
+\emph{log loss}, \emph{Brier score} y curvas de fiabilidad junto al ROC-AUC,
+y poniendo a prueba la hip\'otesis H3 de forma expl\'icita. La 4, agrupando
+por \code{episode\_id} toda partici\'on, todo intervalo de confianza y todo
+pliegue de validaci\'on cruzada, y reportando la contaminaci\'on medida que
+producir\'ia la alternativa ingenua. La 5, evaluando bajo tres cambios
+declarados, episodios no vistos, mazos no vistos y periodos temporales
+posteriores, y reportando cada uno por separado en lugar de promediarlos.
+
+\noindent\textbf{Brechas fuera de alcance.} La brecha 1 se documenta, no se
+cierra: un proyecto de un semestre no puede establecer una referencia
+arbitrada para el corpus, y este trabajo no pretende serlo. La
+comparabilidad estricta con el banco de pruebas de \emph{Hearthstone}
+tambi\'en queda fuera de alcance, por las razones enumeradas en la
+Secci\'on~\ref{subsec:litbaseline}; las diferencias son estructurales y no
+pueden eliminarse reejecutando ninguno de los dos experimentos. M\'as
+all\'a de estas, no intentamos construir un agente competitivo, aprender una
+pol\'itica, separar la deriva del metajuego del cambio de versi\'on del
+motor, la muestra auditada confunde ambas causas, ni generalizar
+ning\'un hallazgo a jugadores humanos.
+
+% ===========================================================================
+% 6.2.5  METODOLOGIA PROPUESTA
+% ===========================================================================
+\section{Metodolog\'ia Propuesta}
+\label{sec:methodology}
+
+Esta secci\'on describe lo que proponemos hacer. No se ha entrenado
+ning\'un modelo y ning\'un resultado aqu\'i reportado es emp\'irico; las
+\'unicas magnitudes medidas que aparecen son propiedades del corpus,
+establecidas por la auditor\'ia que se describe en la
+Secci\'on~\ref{sec:trackanalysis}.
+
+\subsection{Formalizaci\'on del problema}
+\label{subsec:formalization}
+
+Sea $\mathcal{E}$ el conjunto de episodios, cada uno una partida completa
+entre dos agentes. Un episodio $e \in \mathcal{E}$ produce una secuencia
+ordenada de estados; de ella retenemos la subsecuencia de estados
+\emph{frescos} del asiento que act\'ua, indexada por $t$. Cada estado
+retenido produce una observaci\'on
+\[
+  (x_i,\; y_i,\; g_i,\; \tau_i,\; d_i),
+\]
+donde $x_i \in \mathcal{X} \subseteq \mathbb{R}^p$ es el vector de
+caracter\'isticas construido a partir de la observaci\'on disponible para el
+asiento activo en ese instante, $y_i \in \{0,1\}$ indica si el jugador desde
+cuya perspectiva se construy\'o la fila gan\'o el episodio, $g_i \in
+\mathcal{E}$ es el identificador del episodio, $\tau_i \in \mathbb{N}$ es el
+\'indice de turno y $d_i$ la fecha de calendario. Los tres \'ultimos campos
+se arrastran para agrupaci\'on, estratificaci\'on y an\'alisis; por
+construcci\'on, nunca son componentes de $x_i$.
+
+La tarea es clasificaci\'on binaria probabil\'istica: aprender
+$f: \mathcal{X} \rightarrow [0,1]$ tal que $f(x) \approx P(y = 1 \mid x)$.
+Puesto que la salida es una probabilidad y no una etiqueta, el objetivo de
+entrenamiento es una regla de puntuaci\'on propia, la
+log-verosimilitud negativa regularizada:
+\begin{equation}
+\label{eq:objective}
+\begin{split}
+\hat{f} = \arg\min_{f \in \mathcal{F}} \Big\{
+  &-\frac{1}{N}\sum_{i=1}^{N}\big[\, y_i \log f(x_i)\\
+  &+ (1-y_i)\log\big(1-f(x_i)\big) \,\big]
+  + \lambda\,\Omega(f) \Big\},
+\end{split}
+\end{equation}
+con $\Omega$ la penalizaci\'on de complejidad de la familia de modelos
+$\mathcal{F}$ y $\lambda$ seleccionado sobre datos de validaci\'on.
+Minimizar una regla de puntuaci\'on propia en lugar de una p\'erdida de
+clasificaci\'on es una elecci\'on deliberada: es el objetivo cuyo \'optimo
+es la probabilidad condicional verdadera, y la calibraci\'on es una de las
+propiedades que este trabajo se propone medir.
+
+Dos restricciones completan la formulaci\'on. La primera es la condici\'on
+de legitimidad de Kaufman \textit{et al.}: todo componente de $x_i$ debe ser
+observable para el prop\'osito de inferir $y_i$, evaluado instancia por
+instancia, y en particular no puede depender de informaci\'on generada
+despu\'es del turno $\tau_i$~\cite{kaufman_leakage_2011}. La segunda es una
+restricci\'on de partici\'on. Para cualesquiera dos partes $A$ y $B$ de una
+divisi\'on,
+\begin{equation}
+\label{eq:grouping}
+  \{\, g_i : i \in A \,\} \;\cap\; \{\, g_i : i \in B \,\} \;=\; \emptyset ,
+\end{equation}
+de modo que ning\'un episodio aporte filas a m\'as de una parte. La
+restricci\'on \eqref{eq:grouping} es el enunciado formal del argumento del
+tama\~no muestral efectivo de Karbalaie \textit{et al.}: la unidad
+independiente es el episodio, no la
+fila~\cite{karbalaie_participantaware_2026}.
+
+\subsection{Tuber\'ia propuesta}
+\label{subsec:pipeline}
+
+\begin{figure}[!t]
+\centering
+\footnotesize
+\setlength{\fboxsep}{6pt}
+\fbox{\begin{minipage}{0.90\columnwidth}
+\ttfamily\raggedright
+repetici\'on JSON\\[2pt]
+$\vert$\, validaci\'on de esquema (firma de nivel superior,
+\code{schema\_version})\\
+$\vert$\, selecci\'on de estados frescos del asiento activo\\
+$\vert$\, proyecci\'on a la perspectiva del jugador activo (propio / rival)\\
+$\vert$\, filtro de lista negra $\rightarrow$ falla la construcci\'on si un
+campo prohibido llega al vector de caracter\'isticas\\
+$\vert$\, ingenier\'ia de caracter\'isticas (familias M0--M4)\\[3pt]
+$\Downarrow$\\[3pt]
+tabla: una fila por instant\'anea, m\'as \code{episode\_id}, \code{date} y
+\code{turn} (solo agrupaci\'on)\\[2pt]
+$\vert$\, partici\'on agrupada por \code{episode\_id} $\rightarrow$
+entrenamiento / validaci\'on / prueba\\
+$\vert$\, ajuste del preprocesamiento SOLO sobre el pliegue de
+entrenamiento\\[3pt]
+$\Downarrow$\\[3pt]
+escalera de modelos B0--B4 $\rightarrow$ m\'etricas por ventana de turno,
+m\'as intervalos de confianza bootstrap sobre episodios
+\end{minipage}}
+\caption{Tuber\'ia propuesta, de la repetici\'on cruda al modelo evaluado.
+El filtro de lista negra y la partici\'on agrupada se imponen mediante
+pruebas automatizadas, no por convenci\'on.}
+\label{fig:pipeline}
+\end{figure}
+
+La Fig.~\ref{fig:pipeline} resume el flujo previsto. Dos decisiones de
+dise\~no merecen justificaci\'on. Primera, la perspectiva de cada fila se
+normaliza a \emph{propio} frente a \emph{rival} usando el \'indice de
+asiento, de modo que el modelo aprenda relaciones entre magnitudes y no la
+identidad de un asiento; la auditor\'ia encontr\'o que asiento y orden de
+turno est\'an casi perfectamente confundidos en los d\'ias tard\'ios, lo que
+de otro modo convertir\'ia la identidad del asiento en un atajo atractivo.
+Segunda, los par\'ametros de preprocesamiento, escalado, codificaci\'on
+de variables categ\'oricas, cualquier imputaci\'on, cualquier ponderaci\'on
+de clases, se estiman dentro del pliegue de entrenamiento y despu\'es se
+aplican a los datos reservados. Sasse \textit{et al.} clasifican la
+alternativa, estimarlos sobre el conjunto completo antes de particionar,
+como fuga de prueba a entrenamiento, aunque el modelo en s\'i se ajuste
+despu\'es de la partici\'on~\cite{sasse_leakage_2025}.
+
+\subsection{Protocolo experimental}
+\label{subsec:protocol}
+
+\subsubsection{Partici\'on de los datos}
+El protocolo primario es una partici\'on $70/15/15$ \emph{agrupada por
+episodio}, que satisface \eqref{eq:grouping}. La alternativa, una
+partici\'on aleatoria sobre filas, se rechaza sobre bases medidas y no de
+principio: en la muestra auditada, una partici\'on aleatoria $70/30$ de
+instant\'aneas colocar\'ia el $99.9945\%$ de los episodios a ambos lados
+simult\'aneamente. Se proponen dos protocolos secundarios. Un protocolo
+temporal entrena sobre los d\'ias auditados m\'as tempranos, valida sobre
+los d\'ias intermedios y prueba sobre los m\'as tard\'ios, implementando la
+separaci\'on aprender--predecir que Kaufman \textit{et al.} describen como
+predicci\'on sobre el futuro~\cite{kaufman_leakage_2011}. Un protocolo de
+reserva de mazos aparta mazos completos o pares de mazos para el conjunto de
+prueba, que es el dise\~no que Bertram \textit{et al.} emplean para separar
+la memorizaci\'on de contenido conocido de la comprensi\'on del
+contenido~\cite{bertram_cardrepresentations_2024}. Los tres responden
+preguntas distintas y se reportan por separado, nunca promediados.
+
+\subsubsection{Estrategia de validaci\'on}
+Los hiperpar\'ametros se seleccionan con validaci\'on cruzada agrupada de
+$k$ pliegues sobre la partici\'on de entrenamiento, tomando el episodio como
+clave de agrupaci\'on; la partici\'on de prueba se toca una sola vez, al
+final. Karbalaie \textit{et al.} reportan que la validaci\'on cruzada
+agrupada de $k$ pliegues coincide con el dise\~no de dejar un grupo fuera,
+mucho m\'as costoso, dentro de 0.02 de acierto y a un costo un orden de
+magnitud menor, lo que resulta decisivo cuando la unidad de agrupaci\'on se
+cuenta en decenas de miles~\cite{karbalaie_participantaware_2026}. Se
+prefiere un dise\~no plenamente anidado all\'a donde el presupuesto
+computacional lo permita, puesto que tanto Karbalaie \textit{et al.} como
+Sasse \textit{et al.} identifican el sesgo de selecci\'on como una fuga
+residual cuando los mismos pliegues sirven para ajustar y para
+evaluar~\cite{karbalaie_participantaware_2026,sasse_leakage_2025}.
+
+\subsubsection{M\'etricas}
+Cada m\'etrica se incluye porque responde una pregunta que las dem\'as no
+pueden responder; la Tabla~\ref{tab:metrics} indica cu\'al.
+
+\begin{table}[!t]
+\centering
+\caption{M\'etricas de evaluaci\'on y su justificaci\'on.}
+\label{tab:metrics}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{1.9cm} Y@{}}
+\toprule
+\textbf{M\'etrica} & \textbf{Pregunta que responde, y por qu\'e no basta por s\'i sola}\\
+\midrule
+ROC-AUC \newline \textit{(principal)} &
+\textquestiondown Ordena el modelo correctamente dos posiciones? Es independiente del
+umbral y robusta ante desbalance moderado, y es la m\'etrica de la \'unica
+tarea publicada comparable~\cite{janusz_hearthstone_2017}. No dice nada
+sobre si la probabilidad es correcta.\\
+\emph{Log loss} &
+\textquestiondown Es exacta la probabilidad en s\'i misma? Es el objetivo de
+entrenamiento \eqref{eq:objective}, de modo que reportarla muestra
+adem\'as si la optimizaci\'on tuvo \'exito.\\
+\emph{Brier score} &
+\textquestiondown Cu\'al es el error cuadr\'atico de la probabilidad, y c\'omo se
+descompone en calibraci\'on y refinamiento?\\
+Curva de fiabilidad y error de calibraci\'on &
+Entre las posiciones a las que el modelo asigna un $70\%$,
+\textquestiondown gana efectivamente el $70\%$? Es la propiedad que Guo \textit{et al.}
+encuentran que se degrada primero bajo cambio
+temporal~\cite{guo_temporalshift_2021} y que ninguno de los dos estudios
+comparables sobre estados de juego
+reporta~\cite{janusz_hearthstone_2017,bialecki_sc2egset_2023}.\\
+Acierto, precisi\'on, exhaustividad y F1 &
+Se reportan solo una vez fijado y justificado un umbral, para comparabilidad
+con trabajos que reportan acierto~\cite{bialecki_sc2egset_2023}.
+Insuficientes por s\'i solas: un modelo puede acertar la clase y estar
+sistem\'aticamente sobreconfiado.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+ROC-AUC es la m\'etrica principal por tres razones: el objetivo est\'a
+cercano al equilibrio a nivel de episodio, de modo que el acierto ser\'ia
+poco informativo antes que enga\~noso; la m\'etrica no exige comprometerse
+con un umbral, y en esta etapa no hay definido ning\'un costo de decisi\'on;
+y es la \'unica m\'etrica sobre la que existe una cifra publicada
+an\'aloga. Si la distribuci\'on de clases de la tabla final resultara
+marcadamente desbalanceada, una magnitud a\'un no medida, puesto que
+depende de cu\'antas instant\'aneas aporta cada bando, se a\~nadir\'a
+PR-AUC, con la clase minoritaria declarada expl\'icitamente. Cada m\'etrica
+se reporta de forma global y por ventana de turno, y todo intervalo de
+confianza se obtiene por remuestreo \emph{bootstrap} \emph{sobre
+episodios}, nunca sobre filas, por la misma raz\'on que gobierna
+\eqref{eq:grouping}.
+
+\subsubsection{Prevenci\'on de la fuga de datos}
+Los vectores de fuga y sus contramedidas se enumeran en la
+Secci\'on~\ref{subsec:leakage}, donde cada uno se empareja con la evidencia
+de auditor\'ia que lo establece como riesgo concreto y no hipot\'etico. El
+mecanismo es una lista negra expl\'icita m\'as una prueba automatizada que
+hace fallar la construcci\'on si una columna prohibida alcanza la matriz de
+caracter\'isticas, que es la forma operativa de la separaci\'on
+aprender--predecir~\cite{kaufman_leakage_2011}.
+
+\subsection{Plan de \emph{baselines}}
+\label{subsec:baselines}
+Cada pelda\~no de la escalera se justifica por lo que el anterior dej\'o sin
+explicar.
+\begin{enumerate}
+  \item \textbf{B0 --- \emph{baseline} trivial.} Un clasificador de
+        probabilidad a priori. Fija el suelo; lo que quede por debajo es
+        ruido.
+  \item \textbf{B1 --- heur\'istica de dominio.} Una regla \'unica sobre una
+        diferencia de recursos, definida tras el an\'alisis exploratorio.
+        Responde si hace falta aprendizaje autom\'atico en absoluto.
+  \item \textbf{B2 --- regresi\'on log\'istica regularizada.}
+        \textquestiondown Es la relaci\'on esencialmente lineal? Aporta coeficientes
+        inspeccionables y probabilidades que pueden calibrarse. Es adem\'as
+        el modelo que la evidencia revisada trata como referencia honesta:
+        fue el algoritmo m\'as com\'un en los quince estudios cl\'inicos de
+        cambio temporal~\cite{guo_temporalshift_2021}, qued\'o a 0.016 de
+        acierto del mejor modelo en SC2EGSet~\cite{bialecki_sc2egset_2023},
+        y estuvo entre los menos inflados por un protocolo defectuoso en el
+        banco de pruebas de
+        validaci\'on~\cite{karbalaie_participantaware_2026}.
+  \item \textbf{B3 --- \'arbol de decisi\'on y \emph{random forest}.}
+        \textquestiondown Existen interacciones y no linealidades que el modelo lineal
+        pierde?
+  \item \textbf{B4 --- \emph{gradient boosting}} (XGBoost, LightGBM o
+        CatBoost), incluido solo si B3 muestra que el margen lo justifica.
+        \textquestiondown Cu\'anto compra la complejidad, y a qu\'e costo de
+        interpretabilidad? La evidencia revisada fija una expectativa baja
+        sobre la respuesta: la mejor soluci\'on de \emph{Hearthstone}
+        super\'o al \emph{baseline} de una red de dos capas por menos de un
+        dos por ciento de AUC~\cite{janusz_hearthstone_2017}.
+  \item \textbf{\emph{Baseline} de literatura.} La banda de $0.78$--$0.80$
+        de AUC declarada en la Secci\'on~\ref{subsec:litbaseline}, con sus
+        l\'imites declarados de comparabilidad.
+\end{enumerate}
+
+Las ablaciones por familia de caracter\'isticas, progreso, recursos,
+tablero, energ\'ia y contexto de mazo, se ejecutan bajo el mismo
+protocolo, de modo que la contribuci\'on marginal de cada bloque se mida en
+lugar de afirmarse. Una ganancia grande del bloque de contexto de mazo se
+interpreta como evidencia de memorizaci\'on del metajuego y no de
+comprensi\'on, que es la lectura que Bertram \textit{et al.} justifican: una
+representaci\'on que identifica el contenido en lugar de describirlo puede
+ser excelente dentro de la distribuci\'on e in\'util fuera de
+ella~\cite{bertram_cardrepresentations_2024}.
+
+\subsection{Plan de explicabilidad}
+\label{subsec:explainability}
+La contribuci\'on no puede ser una puntuaci\'on de titular; la pregunta
+sustantiva es cu\'ales caracter\'isticas del estado transportan informaci\'on
+sobre la victoria. Se proponen cuatro instrumentos, cada uno ligado a una
+pregunta. Los coeficientes de la regresi\'on log\'istica responden si la
+asociaci\'on de una caracter\'istica con la victoria tiene la direcci\'on que
+el conocimiento del dominio predice. La importancia por permutaci\'on
+agrupada, permutando dentro de los episodios, nunca entre ellos,
+responde cu\'anto aporta una caracter\'istica una vez respetada la
+dependencia; Karbalaie \textit{et al.} se\~nalan expl\'icitamente que las
+estimaciones de importancia dependen del dise\~no de validaci\'on y pueden
+ser inestables bajo particiones a nivel de
+fila~\cite{karbalaie_participantaware_2026}, raz\'on por la cual la
+agrupaci\'on forma parte de la medici\'on y no es un detalle de ella. Las
+ablaciones por familia responden cu\'anto vale cada bloque de
+caracter\'isticas. Los valores SHAP se emplean \'unicamente cuando el modelo
+elegido es un \emph{ensemble} de \'arboles y la pregunta es la atribuci\'on
+por instancia, por qu\'e \emph{esta} posici\'on recibi\'o esta
+puntuaci\'on, puesto que esa es la pregunta que los tres instrumentos
+anteriores no pueden responder; no se incluyen meramente porque est\'en
+disponibles.
+
+\subsection{Contrato de reproducibilidad}
+\label{subsec:reproducibility}
+Las semillas se fijan y se versionan; la auditor\'ia ya se ejecuta bajo una
+\'unica semilla declarada. Las configuraciones viven en ficheros y no en
+banderas de l\'inea de comandos. La representaci\'on tabular se materializa
+una sola vez en formato columnar, puesto que el cuello de botella
+computacional es el an\'alisis sint\'actico y no el entrenamiento. Los datos
+crudos nunca se versionan; el repositorio lleva los \emph{scripts} y las
+instrucciones para obtenerlos. Esto refleja la pr\'actica del descriptor
+SC2EGSet, que publica sus herramientas de extracci\'on, sus registros de
+procesamiento y sus estad\'isticas resumidas por paquete de repeticiones
+junto a los datos~\cite{bialecki_sc2egset_2023}, y atiende una debilidad
+documentada de la literatura sobre cambio temporal, donde el c\'odigo estaba
+disponible en solo dos de quince estudios
+revisados~\cite{guo_temporalshift_2021}.
+
+\subsection{Riesgos y mitigaci\'on}
+\label{subsec:risks}
+\begin{table}[!t]
+\centering
+\caption{Riesgos identificados y su mitigaci\'on.}
+\label{tab:risks}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{1.9cm} c Y@{}}
+\toprule
+\textbf{Riesgo} & \textbf{Impacto} & \textbf{Mitigaci\'on / disparador}\\
+\midrule
+Instant\'aneas de un mismo episodio repartidas entre particiones & A &
+Agrupar por \code{episode\_id} en todas partes; prueba automatizada que
+verifica intersecci\'on vac\'ia entre particiones\\
+Un campo prohibido alcanza el vector de caracter\'isticas & A &
+Lista negra expl\'icita; la construcci\'on falla si una columna prohibida
+est\'a presente\\
+Fuga introducida por decisiones de dise\~no & M &
+Reglas de exclusi\'on y ventanas de turno declaradas antes de tocar el
+conjunto de prueba~\cite{kaufman_leakage_2011}\\
+Preprocesamiento ajustado sobre el conjunto completo & M &
+Todas las transformaciones se ajustan dentro del pliegue de
+entrenamiento~\cite{sasse_leakage_2025}\\
+Cambio de distribuci\'on entre d\'ias tempranos y tard\'ios & M &
+Reportar el protocolo temporal por separado y declarar cualquier ca\'ida
+como resultado, no como fallo~\cite{guo_temporalshift_2021}\\
+Memorizaci\'on de mazos en lugar de comprensi\'on del estado & M &
+Protocolo de reserva de mazos y ablaci\'on del bloque de contexto de
+mazo~\cite{bertram_cardrepresentations_2024}\\
+Caracter\'isticas trivialmente predictivas cerca del final & M &
+An\'alisis por ventana de turno; las conclusiones tempranas se sostienen
+solo sobre la ventana temprana\\
+Versi\'on del motor confundida con el tiempo de calendario & M &
+Registrar la versi\'on como covariable de auditor\'ia y declarar la
+confusi\'on\\
+Lectura optimista de una puntuaci\'on no calibrada & M &
+Reportar una regla de puntuaci\'on propia y curvas de fiabilidad junto al
+AUC~\cite{guo_temporalshift_2021}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Integraci\'on prevista con el agente}
+\label{subsec:agent}
+En la Etapa 3 el estimador entrenado es consumido por un agente inteligente
+como evaluador de posiciones. La interfaz es deliberadamente estrecha: el
+agente entrega un estado, el mismo extractor de caracter\'isticas usado en
+entrenamiento produce $x$, y el modelo devuelve $f(x) \in [0,1]$. El agente
+no entrena el modelo, no lo actualiza mediante interacci\'on y no lo
+sustituye, de modo que el proyecto no se convierte en aprendizaje por
+refuerzo en ninguna etapa. El consumo se verificar\'a mostrando que el
+ordenamiento de posiciones candidatas por parte del agente cambia cuando el
+estimador se reemplaza por el \emph{baseline} trivial B0, es decir, que el
+agente est\'a efectivamente usando la predicci\'on. La calibraci\'on importa
+precisamente por esta raz\'on: un evaluador que ordena correctamente las
+posiciones pero est\'a sistem\'aticamente sobreconfiado enga\~nar\'a a
+cualquier regla de decisi\'on que compare sus salidas contra un umbral fijo.
+
+% ===========================================================================
+% 6.2.6  ANALISIS TECNICO DEL TRACK A
+% ===========================================================================
+\section{An\'alisis T\'ecnico del Track Seleccionado}
+\label{sec:trackanalysis}
+
+El track aprobado es el Track A, aprendizaje autom\'atico cl\'asico sobre
+datos tabulares. El an\'alisis que sigue se apoya en una auditor\'ia del
+corpus realizada antes de cualquier modelado; produjo un registro por
+episodio para cada episodio auditado, un censo de campos a nivel de
+instant\'anea y un conjunto de compuertas de decisi\'on, todo reproducible
+bajo una \'unica semilla fija.
+
+\emph{Regla epist\'emica de esta secci\'on.} Toda cifra que aparece a
+continuaci\'on fue medida por nuestra propia auditor\'ia del corpus y es
+reproducible a partir de los \emph{scripts} de auditor\'ia. Las magnitudes
+que no han sido medidas se nombran como pendientes, nunca se estiman.
+
+\subsection{An\'alisis exploratorio}
+\label{subsec:eda}
+
+\subsubsection{Alcance de lo que ha sido medido}
+El corpus publica 67 entregas diarias que abarcan del 2026-06-16 al
+2026-08-21, declarando 329\,336 episodios y 1.29~TB sin comprimir. La
+auditor\'ia cubre una muestra temporal de 10 de esos d\'ias, el
+$14.9\%$ de los d\'ias y el $15.8\%$ de los episodios declarados, 
+elegidos para abarcar las fases inicial, media y tard\'ia de la competencia,
+con tres d\'ias consecutivos al comienzo de modo que pudiera medirse la
+deriva d\'ia a d\'ia. Dentro de esa muestra se analizaron 52\,085 episodios
+a partir de 182.6~GiB de JSON con cero errores de an\'alisis sint\'actico,
+produciendo 7\,038\,378 instant\'aneas utilizables. Toda afirmaci\'on de
+esta secci\'on est\'a acotada a esa muestra; nada de lo aqu\'i escrito
+caracteriza a los 57 d\'ias no auditados.
+
+\subsubsection{Tama\~no, estructura y unidad de observaci\'on}
+La duraci\'on de las partidas est\'a fuertemente sesgada a la derecha. El
+n\'umero de pasos por episodio tiene mediana 140 y media 137.1, con
+cuartiles 101 y 171, un percentil 95 de 221 y un m\'aximo de 6\,900. El
+recuento de turnos es mucho menor que el de pasos, mediana 13, media
+14.3, percentil 95 de 27, m\'aximo 1\,035, porque un solo turno se
+descompone en muchas acciones at\'omicas. Esa brecha gobierna c\'omo debe
+definirse una ventana de turno: fijar el ``juego temprano'' en los turnos
+uno a ocho ser\'ia una elecci\'on arbitraria contra una distribuci\'on cuya
+mediana es 13, de modo que la ventana se define a partir de la
+distribuci\'on emp\'irica y se declara antes de tocar el conjunto de prueba.
+
+La unidad de observaci\'on es un estado fresco del asiento que act\'ua, y
+esta es una decisi\'on medida antes que estil\'istica. En un sondeo de
+139\,672 estados frescos, la observaci\'on perteneciente al asiento que no
+act\'ua result\'o id\'entica a su propio estado anterior en 137\,989 casos,
+es decir el $98.8\%$. Tratar cada asiento de cada paso como una fila
+duplicar\'ia por tanto casi todas las observaciones sin a\~nadir
+informaci\'on, y reponderar\'ia silenciosamente los episodios por su
+duraci\'on. Restringirse al asiento activo da una raz\'on medida entre
+estados activos y pasos de 0.9854, que es de donde procede la cifra de
+7\,038\,378, y no de $2 \times n_{\text{pasos}}$.
+
+El n\'umero de unidades \emph{independientes} es 52\,085. Siete millones de
+filas y cincuenta y dos mil unidades independientes es el hecho m\'as
+consecuente de esta secci\'on, y la Secci\'on~\ref{subsec:leakage} est\'a
+construida sobre \'el.
+
+\subsubsection{Distribuci\'on del objetivo a nivel de episodio}
+El desenlace se deriva del campo de recompensas a nivel de episodio, que
+resuelve el $99.86\%$ de los episodios. Las combinaciones observadas son
+$(1,-1)$ en 27\,135 episodios, $(-1,1)$ en 24\,844, $(0,0)$ en 33, y una
+recompensa que no es un n\'umero en 73. A nivel de episodio esto da un
+$52.10\%$ de victorias para el asiento P0, un $47.70\%$ para P1, un
+$0.063\%$ de empates y un $0.140\%$ de abandonos, sin episodios sin
+resolver. Restringido a los 51\,979 episodios con ganador decidido, la tasa
+de victoria de P0 es 0.5220 y la del jugador que mueve primero es 0.5287.
+
+\subsubsection{Estructura temporal y deriva}
+Los diez d\'ias auditados no son intercambiables. Medida con la divergencia
+de Jensen--Shannon en base 2 entre el primer y el \'ultimo d\'ia auditado,
+la distribuci\'on de mazos es esencialmente disjunta, con 1.0000, la
+poblaci\'on de agentes casi tanto, con 0.9723, la distribuci\'on de cartas
+se ha desplazado hasta 0.4889, mientras que la duraci\'on de las partidas
+apenas se ha movido, con 0.1221. La diversidad no decae de forma suave: los
+mazos distintos por d\'ia van de 1\,268 el 2026-06-23 a 48 el 2026-07-17, y
+los equipos distintos de 2\,309 a 79 en esos mismos dos d\'ias. La mediana
+de la puntuaci\'on media de los episodios sube de 628 el primer d\'ia a
+1\,141 el 2026-07-17. Seis versiones del motor coexisten en la muestra, de
+la \code{1.30.1} a la \code{1.32.4}, y est\'an ordenadas en el tiempo, lo
+que significa que tiempo de calendario y versi\'on del motor est\'an
+confundidos en la muestra auditada. La auditor\'ia no puede separar la
+deriva del metajuego del cambio del motor, y este trabajo reportar\'a esa
+confusi\'on en lugar de resolverla.
+
+Un hallazgo de deriva constituye una amenaza directa a una caracter\'istica
+concreta. La probabilidad de que el jugador que mueve primero sea el asiento
+P0 era 0.5089 el 2026-06-29 y es 0.9991 desde el 2026-07-17 en adelante. En
+los d\'ias tard\'ios, identidad de asiento y orden de turno son casi la
+misma variable.
+
+\subsection{Diccionario de datos}
+\label{subsec:datadict}
+
+Un censo de campos sobre 139\,672 estados frescos encontr\'o 34 campos de
+estado presentes en el $100\%$ de las instant\'aneas inspeccionadas: 11
+campos globales, 13 campos por jugador y 10 campos por Pok\'emon sobre
+1\,118\,776 instancias de Pok\'emon. La Tabla~\ref{tab:datadict} agrupa las
+caracter\'isticas candidatas por familia y tipo. El diccionario es
+preliminar y est\'a sujeto a revisi\'on tras el an\'alisis exploratorio de
+la tabla materializada.
+
+\begin{table}[!t]
+\centering
+\caption{Diccionario de datos por familia de caracter\'isticas. La
+``presencia'' es la proporci\'on medida de instant\'aneas inspeccionadas en
+las que el campo de origen existe.}
+\label{tab:datadict}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{1.5cm} P{1.35cm} Y@{}}
+\toprule
+\textbf{Familia} & \textbf{Tipo} & \textbf{Campos, derivaci\'on y presencia}\\
+\midrule
+Progreso & entero, binario &
+\code{turn} y \code{turnActionCount} directos; el indicador de jugador
+inicial derivado de \code{firstPlayer} y \code{yourIndex};
+\code{energyAttached} y \code{retreated} binarios. Presencia $100\%$.\\
+Recursos & entero &
+\code{deckCount} y \code{handCount} directos; el tama\~no de la mano
+derivado de la lista de la mano propia; el tama\~no del descarte derivado.
+Presencia $100\%$.\\
+Premios & entero &
+Ranuras de premio restantes, derivadas contando las ranuras no vac\'ias.
+Presencia $100\%$; el contenido est\'a siempre oculto.\\
+Tablero & entero, continuo, binario &
+Tama\~no de la banca frente a \code{benchMax}; \code{hp}, \code{maxHp} y su
+raz\'on; totales de puntos de vida visibles; recuento de Pok\'emon
+da\~nados; \code{energies}, \code{energyCards}, \code{tools};
+\code{preEvolution} y \code{appearThisTurn} como binarios. Presencia
+$100\%$.\\
+Estado alterado & binario &
+\code{poisoned}, \code{burned}, \code{asleep}, \code{paralyzed} y
+\code{confused} por jugador; \code{stadium}, \code{stadiumPlayed} y
+\code{supporterPlayed} globales. Presencia $100\%$.\\
+Diferenciales & entero, continuo &
+Propio menos rival para recuentos de mano, premios, banca, puntos de vida,
+energ\'ia y mazo. Derivados.\\
+Contexto de mazo & categ\'orico &
+Huella del mazo sobre un cat\'alogo de 2\,376 mazos distintos. Alta
+cardinalidad; se admite \'unicamente en la ablaci\'on de contexto de mazo.\\
+\midrule
+Agrupaci\'on \newline (nunca caracter\'isticas) & --- &
+\code{episode\_id}, \code{date} y el \'indice de turno. Se arrastran para
+agrupaci\'on, estratificaci\'on y reporte por ventana.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Dos campos se excluyen sobre bases medidas antes de cualquier modelado. El
+campo de resultado del estado actual contiene el valor $-1$ en el
+$100\%$ de los 139\,672 estados frescos inspeccionados: es constante y no
+transporta informaci\'on en el momento de la predicci\'on. El campo
+\code{looking} es nulo en 137\,029 de esos estados, es decir el
+$98.1\%$, y su nulidad es una propiedad del juego y no un defecto,
+v\'ease la Secci\'on~\ref{subsec:imputation}.
+
+\subsection{Calidad de los datos}
+\label{subsec:quality}
+
+\subsubsection{Qu\'e ha sido verificado}
+Los 52\,085 episodios auditados se analizaron sin error. Una \'unica firma
+de esquema de nivel superior cubre el $100\%$ de ellos y
+\code{schema\_version} vale 1 en todos, de modo que el corpus es
+estructuralmente homog\'eneo pese a las seis versiones del motor. Los
+\'indices de turno fueron mon\'otonos en todos los episodios inspeccionados,
+con cero violaciones. Todos los episodios auditados aparecen en el manifiesto
+de su d\'ia; a la inversa, cinco episodios declarados en el manifiesto del
+2026-08-04 est\'an ausentes de los ficheros, de 4\,816 declarados.
+
+\subsubsection{Duplicados}
+Tres comprobaciones independientes de duplicidad devolvieron cero: ning\'un
+\code{episode\_id} repetido, ning\'un SHA-256 repetido sobre los bytes del
+fichero, y ninguna huella can\'onica repetida, esta \'ultima calculada sobre
+la semilla de configuraci\'on, ambos mazos de sesenta cartas en orden, la
+secuencia completa de acciones de ambos asientos y las recompensas,
+excluyendo deliberadamente los metadatos vol\'atiles. Ning\'un
+\code{episode\_id} aparece en m\'as de un d\'ia. El juego contra uno mismo,
+donde el mismo equipo ocupa ambos asientos, ocurre en cero de los 52\,085
+episodios.
+
+La duplicaci\'on exacta no es, por tanto, una preocupaci\'on a nivel de
+episodio. La duplicaci\'on funcional dentro de un episodio es una cuesti\'on
+distinta y sigue abierta: instant\'aneas consecutivas de la misma partida
+difieren en una acci\'on at\'omica y son casi id\'enticas por
+construcci\'on. En la muestra sondeada, los 139\,672 estados frescos fueron
+distintos dentro de sus turnos, de modo que no hay dos filas id\'enticas a
+nivel de bytes, pero las cuasi duplicadas son la norma antes que la
+excepci\'on. Esto no es un defecto que deba eliminarse, es la estructura
+de dependencia de los datos, y se aborda mediante agrupaci\'on y no mediante
+deduplicaci\'on.
+
+\subsubsection{Comprobaciones a\'un pendientes sobre la representaci\'on tabular}
+La auditor\'ia verific\'o el corpus crudo. Lo siguiente debe reverificarse
+sobre la tabla materializada, y se consigna aqu\'i como pendiente antes que
+como supuesto: la ausencia de valores por columna; los rangos imposibles,
+como puntos de vida negativos, puntos de vida por encima del m\'aximo,
+recuentos negativos o tama\~no de banca por encima de \code{benchMax}; la
+consistencia l\'ogica entre campos relacionados; las filas duplicadas dentro
+y entre episodios; y la cardinalidad efectiva de las columnas categ\'oricas.
+
+\subsection{Valores ausentes e imputaci\'on}
+\label{subsec:imputation}
+
+La pol\'itica distingue dos mecanismos, porque tratarlos por igual ser\'ia
+un error.
+
+\textbf{Ausencia estructural.} Un campo es nulo porque el juego lo define
+as\'i: no hay Pok\'emon activo, no hay estadio en juego, la carta est\'a
+oculta. El caso m\'as claro es \code{looking}, nulo en el $98.1\%$ de los
+estados inspeccionados, y el segundo es la mano del rival, nula en el
+$100\%$ de ellos. No son valores estad\'isticamente ausentes y no se
+imputan. Se codifican sem\'anticamente, con un indicador binario de presencia
+m\'as un centinela expl\'icito. Imputar una media aqu\'i fabricar\'ia un
+estado de juego que no puede ocurrir, y adem\'as destruir\'ia la se\~nal
+misma que el campo transporta: el hecho de que no se est\'e mirando nada es
+informaci\'on.
+
+\textbf{Ausencia inesperada.} Un campo requerido est\'a ausente porque un
+episodio est\'a malformado o el analizador sint\'actico es incompleto. El
+procedimiento es medir primero la frecuencia; si es residual, excluir la
+observaci\'on o el episodio dejando constancia del criterio y del recuento;
+si es sistem\'atica, tratarla como un defecto del analizador o un cambio de
+esquema y corregir la tuber\'ia en lugar de parchear los datos. Ninguna
+variable num\'erica se imputa autom\'aticamente antes de haber estudiado su
+mecanismo de ausencia.
+
+Sea cual sea el mecanismo elegido, el estimador se ajusta dentro del pliegue
+de entrenamiento. Sasse \textit{et al.} nombran expl\'icitamente la
+imputaci\'on entre los pasos de preprocesamiento que producen fuga cuando se
+estiman sobre el conjunto completo antes de
+particionar~\cite{sasse_leakage_2025}. La estrategia definitiva se fija tras
+el an\'alisis exploratorio de la tabla materializada y se documenta con la
+frecuencia que la justifica.
+
+\subsection{Detecci\'on de valores at\'ipicos}
+\label{subsec:outliers}
+
+En este corpus un valor extremo suele ser un at\'ipico v\'alido antes que un
+error. Los pasos por episodio alcanzan 6\,900 frente a una mediana de 140, y
+el recuento de turnos alcanza 1\,035 frente a una mediana de 13 y un
+percentil 95 de 27. Una partida de 1\,035 turnos merece investigaci\'on, no
+borrado: puede ser un tiempo agotado, un bucle de acciones, una interacci\'on
+inusual de cartas, un fallo del simulador o una partida genuinamente larga, y
+esos cinco casos exigen respuestas distintas.
+
+El procedimiento propuesto es, por tanto, diagn\'ostico antes que
+correctivo. Los candidatos se marcan por distancia distribucional, una
+regla intercuartil o de puntuaci\'on $z$ robusta sobre las caracter\'isticas
+de duraci\'on y recuento, y por rangos imposibles en el dominio, que es
+una prueba distinta con un significado distinto. Los episodios marcados se
+inspeccionan caso por caso contra los estados registrados para ellos. Solo se
+eliminan los registros demostrablemente corruptos, y cualquier regla de
+exclusi\'on se declara antes de examinar la partici\'on de prueba; una regla
+elegida despu\'es de ver su efecto sobre la puntuaci\'on de prueba es una
+fuga por decisi\'on de dise\~no en el sentido de Kaufman \textit{et
+al.}~\cite{kaufman_leakage_2011}. Se\~nalamos un contraste con la
+pr\'actica seguida en un corpus comparable: los autores de SC2EGSet
+reemplazaron por la mediana los valores que exced\'ian tres desviaciones
+est\'andar en sus propios experimentos~\cite{bialecki_sc2egset_2023}.
+Preferimos no adoptar esa regla por defecto aqu\'i, porque en un juego por
+turnos la cola de la distribuci\'on de duraci\'on puede ser exactamente
+donde vive el comportamiento interesante.
+
+\subsection{Desbalance de clases}
+\label{subsec:imbalance}
+
+A nivel de episodio el objetivo est\'a cerca del equilibrio: $52.10\%$
+frente a $47.70\%$, con empates en $0.063\%$ y abandonos en
+$0.140\%$.
+
+Esa no es, sin embargo, la distribuci\'on que ver\'a el modelo. La etiqueta
+se define desde la perspectiva del jugador que act\'ua, y cada partida aporta
+un n\'umero distinto de instant\'aneas desde cada bando, de modo que la
+prevalencia de clases de la tabla final es funci\'on de la tabularizaci\'on y
+\textbf{a\'un no ha sido medida}. Debe recalcularse sobre la tabla
+materializada antes de tomar decisi\'on alguna, y esta secci\'on se
+completar\'a con esa medici\'on.
+
+La regla de decisi\'on queda no obstante fijada de antemano, de modo que no
+pueda elegirse para acomodar un resultado. Si el desbalance resultante es
+leve no se corregir\'a: corregir un desbalance que no necesita correcci\'on
+distorsiona las probabilidades predichas, y esas probabilidades son la salida
+de este proyecto y no un subproducto. Si es apreciable, se preferir\'a la
+ponderaci\'on de clases al remuestreo, por la misma raz\'on. No se usar\'a
+sobremuestreo sint\'etico sin justificaci\'on expl\'icita, y bajo ninguna
+circunstancia fuera del pliegue de entrenamiento, Sasse \textit{et al.}
+enumeran el sobremuestreo aplicado antes de particionar entre sus casos
+documentados de fuga de prueba a entrenamiento~\cite{sasse_leakage_2025}.
+
+Los 33 empates y los 73 abandonos se tratan por separado. Los empates se
+excluyen del objetivo binario y se documentan; su volumen no puede sostener
+una tercera clase. Los abandonos tienen ganador identificable, pero el final
+no procede de la din\'amica del juego, los estados registrados son tiempos
+agotados, errores y estados inv\'alidos, de modo que se excluyen del
+entrenamiento y se reservan para un an\'alisis de sensibilidad.
+
+\subsection{Dependencia entre muestras y prevenci\'on de la fuga de datos}
+\label{subsec:leakage}
+
+Esta es la subsecci\'on de la que depende la validez de todo lo dem\'as, y
+el enunciado del curso penaliza la fuga confirmada m\'as severamente que
+cualquier otro fallo aislado.
+
+\subsubsection{La estructura de dependencia, medida}
+Cada episodio aporta en promedio unas 135 instant\'aneas, e instant\'aneas
+consecutivas difieren en una \'unica acci\'on at\'omica. Las filas son por
+tanto fuertemente dependientes dentro de un episodio e independientes solo
+entre episodios. Medimos la consecuencia directamente: bajo una partici\'on
+aleatoria $70/30$ a nivel de instant\'anea, la fracci\'on esperada de
+episodios presentes en \emph{ambas} particiones es 0.999945. Dicho de otro
+modo, el protocolo ingenuo contamina esencialmente todo el corpus.
+
+La literatura dice qu\'e le har\'ia eso a las cifras. Karbalaie
+\textit{et al.} midieron un acierto de 0.91 para \emph{extra trees} bajo
+validaci\'on cruzada estratificada de diez pliegues frente a 0.66 dejando un
+participante fuera sobre los mismos datos, e identificaron la causa en que el
+tama\~no muestral efectivo es el n\'umero de participantes y no el de
+ensayos~\cite{karbalaie_participantaware_2026}. Sasse \textit{et al.}
+clasifican precisamente este caso, no tener en cuenta muestras
+dependientes, como v\'ia primaria de fuga de prueba a entrenamiento y lo
+demuestran sobre pares de hermanos en una cohorte de
+neuroimagen~\cite{sasse_leakage_2025}. Nuestro corpus es una instancia
+m\'as extrema de la misma estructura: no dos muestras relacionadas, sino
+135.
+
+\subsubsection{El momento de la predicci\'on}
+Un campo puede existir en el JSON y aun as\'i ser inv\'alido como
+caracter\'istica. La prueba que gobierna es el requisito de la no m\'aquina
+del tiempo de Kaufman \textit{et al.}: un modelo leg\'itimo solo puede usar
+informaci\'on de un instante no posterior al del
+objetivo~\cite{kaufman_leakage_2011}, afinada por la pregunta que Sasse
+\textit{et al.} recomiendan hacer de cada columna, si ese campo
+estar\'ia disponible en el despliegue~\cite{sasse_leakage_2025}. Aplicar esa
+prueba campo por campo produce cuatro clases.
+
+\emph{Seguras.} Los campos de estado presentes en el $100\%$ de las
+instant\'aneas, le\'idos de la observaci\'on propia del asiento activo en el
+turno $\tau$, junto con los recuentos, razones y diferenciales derivados de
+ellos. Son lo que el propio agente vio cuando decidi\'o.
+
+\emph{Requieren investigaci\'on.} El indicador de jugador inicial, porque
+asiento y orden de turno est\'an casi perfectamente confundidos desde el
+2026-07-17 en adelante y el modelo podr\'ia aprender el asiento en lugar del
+tempo; y el registro acumulado de acciones, que es leg\'itimo \'unicamente si
+se trunca estrictamente antes de $\tau$.
+
+\emph{Fuga directa, excluidas por construcci\'on.} El campo de recompensas a
+nivel de episodio y el resultado final; cualquier recompensa por paso, que es
+no nula \'unicamente en el \'ultimo paso; la carga \'util de visualizaci\'on,
+presente en el $100\%$ de los episodios, que expone el mazo restante de
+cada jugador en orden, informaci\'on perfecta que nunca aparece en la
+observaci\'on y que el agente no ten\'ia; las marcas de tiempo y los
+identificadores derivados del fichero; y los nombres de equipo o de agente,
+que act\'uan como sustituto de la habilidad. Lo \'ultimo no es hipot\'etico:
+la mediana de la puntuaci\'on media de los episodios seleccionados cada
+d\'ia sube de 628 a m\'as de 1\,100 a lo largo de la muestra, de modo que un
+identificador de agente codifica parcialmente el desenlace.
+
+\emph{Excluidas por constantes.} El campo de resultado del estado actual,
+fijo en $-1$ en todos los estados frescos.
+
+\subsubsection{Informaci\'on oculta, verificada antes que supuesta}
+El entorno ya retiene lo que debe retener, y lo comprobamos en lugar de
+confiar. A lo largo de 139\,672 estados inspeccionados, la mano del rival fue
+nula en el $100\%$ de los casos con cero fugas detectadas, mientras que el
+recuento de cartas del rival estuvo siempre disponible como entero. Las
+1\,281\,678 ranuras de premio inspeccionadas, propias y del rival por
+igual, fueron todas nulas. La fuga de informaci\'on oculta no es, por
+tanto, un riesgo que debamos mitigar; es una propiedad que no debemos
+destruir, raz\'on por la cual las caracter\'isticas se extraen exclusivamente
+de la observaci\'on propia del asiento y nunca de la carga \'util de
+visualizaci\'on.
+
+\subsubsection{Contramedidas}
+La Tabla~\ref{tab:leakage} empareja cada vector con la evidencia que lo
+convierte en un riesgo concreto y con el control aplicado. Cada control se
+impone mediante una prueba automatizada y no por convenci\'on, que es la
+forma operativa de la separaci\'on aprender--predecir de Kaufman \textit{et
+al.}~\cite{kaufman_leakage_2011}.
+
+\begin{table}[!t]
+\centering
+\caption{Vectores de fuga de datos, la evidencia de auditor\'ia que
+establece cada uno como riesgo real, y el control aplicado.}
+\label{tab:leakage}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{1.55cm} P{2.35cm} Y@{}}
+\toprule
+\textbf{Vector} & \textbf{Evidencia medida} & \textbf{Control}\\
+\midrule
+Fuga de episodio &
+Una partici\'on aleatoria $70/30$ por filas sit\'ua 0.999945 de los
+episodios en ambas particiones &
+Partici\'on y pliegues agrupados por \code{episode\_id}; prueba que verifica
+intersecci\'on vac\'ia\\
+Informaci\'on futura &
+Carga \'util de visualizaci\'on presente en el $100\%$ de los episodios,
+que expone el mazo restante ordenado &
+Caracter\'isticas extra\'idas solo de la observaci\'on del asiento en
+$\tau$; carga \'util en lista negra\\
+Sustituto de la habilidad &
+La mediana de la puntuaci\'on media sube de 628 a m\'as de 1\,100 a lo largo
+de la muestra &
+Metadatos de agente y equipo usados solo para auditor\'ia y agrupaci\'on,
+nunca como caracter\'isticas\\
+Memorizaci\'on de mazos &
+2\,376 mazos, pero los 10 primeros cubren el $39.94\%$ de las
+instancias; un d\'ia tiene solo 48 &
+Protocolo de reserva de mazos; contexto de mazo confinado a una \'unica
+ablaci\'on declarada\\
+Informaci\'on oculta &
+$0$ fugas en 139\,672 estados; 1\,281\,678 ranuras de premio todas nulas &
+Analizador que lee solo la observaci\'on propia, con una aserci\'on
+automatizada de privacidad\\
+Metadatos &
+52\,085 \code{episode\_id} distintos sobre 52\,085 filas &
+Columnas de agrupaci\'on excluidas de la matriz de caracter\'isticas por
+construcci\'on\\
+Preprocesamiento &
+--- (riesgo de dise\~no, no propiedad del corpus) &
+Todas las transformaciones se ajustan dentro del pliegue de
+entrenamiento~\cite{sasse_leakage_2025}\\
+Temporal &
+Divergencia de Jensen--Shannon de mazos de 1.0000 entre el primer y el
+\'ultimo d\'ia auditado &
+El protocolo temporal corta por fecha, nunca al
+azar~\cite{kaufman_leakage_2011}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Representatividad}
+\label{subsec:representativeness}
+
+El corpus no es una muestra aleatoria del juego de \emph{Pok\'emon TCG}, y
+el editor lo dice: las repeticiones se seleccionan a diario, ordenadas por
+puntuaci\'on media de los agentes, y se truncan a 20~GiB por
+d\'ia~\cite{ptcg_dataset_2026}. De ah\'i se siguen tres consecuencias, y las
+tres est\'an medidas. La poblaci\'on es de agentes artificiales, no de
+humanos. Es la franja alta de la escalera de clasificaci\'on, con la mediana
+de la puntuaci\'on media ascendiendo a lo largo de la muestra. Y est\'a
+concentrada: los diez mazos m\'as frecuentes suman el $39.94\%$ de las
+instancias de mazo y los cien m\'as frecuentes el $74.76\%$, con d\'ias
+individuales que caen a 48 mazos distintos.
+
+Esto refleja la limitaci\'on que los autores de SC2EGSet declaran para su
+propio corpus, que solo contiene repeticiones de nivel de torneo y por tanto
+no admite an\'alisis entre niveles de habilidad~\cite{bialecki_sc2egset_2023},
+y es una versi\'on m\'as aguda del problema de poblaci\'on al que Janusz
+\textit{et al.} se enfrentan desde la direcci\'on opuesta, pues sus estados
+fueron generados por agentes que act\'uan al
+azar~\cite{janusz_hearthstone_2017}. Le\'idos en conjunto, ambos acotan
+nuestro caso: un corpus procede de la poblaci\'on m\'as d\'ebil posible y el
+otro de la m\'as fuerte, y ninguno es la poblaci\'on general. Cualquier
+afirmaci\'on de este proyecto es, por tanto, una afirmaci\'on sobre agentes
+artificiales competitivos de una franja de puntuaci\'on espec\'ifica durante
+una muestra espec\'ifica de diez d\'ias, y la Secci\'on~\ref{sec:ethics}
+trata la tentaci\'on de enunciarla de forma m\'as amplia como el principal
+riesgo \'etico.
+
+% ===========================================================================
+% 6.2.7  CONSIDERACIONES ETICAS PRELIMINARES
+% ===========================================================================
+\section{Consideraciones \'Eticas Preliminares}
+\label{sec:ethics}
+
+\subsection{Sensibilidad de los datos}
+El corpus no contiene datos cl\'inicos, biom\'etricos ni conductuales sobre
+individuos identificados: sus registros son partidas simuladas entre agentes
+de software, publicadas bajo una licencia
+CC0-1.0~\cite{ptcg_dataset_2026}. Cabe una salvedad. Cada episodio lleva los
+nombres de equipo y de agente de los competidores, y en la muestra auditada
+esos nombres son seud\'onimos elegidos por sus due\~nos que en algunos casos
+se asemejan a nombres personales. Identifican a participantes de una
+competencia p\'ublica y no a sujetos de estudio, pero siguen siendo
+atribuibles a personas. Los tratamos por tanto como metadatos y no como
+material: se usan para auditor\'ia, agrupaci\'on y la comprobaci\'on de juego
+contra uno mismo, quedan excluidos de la matriz de caracter\'isticas por la
+lista negra descrita en la Secci\'on~\ref{subsec:leakage}, y no se
+publicar\'a ning\'un ranking ni comparaci\'on agregada de competidores
+nombrados. Esto coincide con el control de fuga, lo cual es conveniente pero
+no es la raz\'on de la decisi\'on.
+
+\subsection{Sesgo y representatividad}
+El principal riesgo de este proyecto no es el da\~no a un sujeto de datos;
+es la sobreafirmaci\'on. Los episodios se seleccionan a diario por
+puntuaci\'on media de los agentes y se truncan a un volumen diario
+fijo~\cite{ptcg_dataset_2026}, de modo que el corpus es la franja alta de una
+escalera de agentes artificiales y no una muestra del juego de
+\emph{Pok\'emon TCG}. La auditor\'ia cuantifica la concentraci\'on que se
+sigue de ello: los diez mazos m\'as frecuentes cubren el $39.94\%$ de las
+instancias de mazo, un d\'ia auditado contiene solo 48 mazos distintos, y el
+conjunto de mazos del \'ultimo d\'ia auditado es esencialmente disjunto del
+del primero. Un modelo ajustado aqu\'i aprende un metajuego estrecho y en
+movimiento.
+
+De ah\'i se siguen tres lecturas err\'oneas, y cada una merece ser nombrada
+porque cada una es f\'acil de cometer. Extrapolar a jugadores humanos
+carecer\'ia de respaldo: no aparece ninguna partida humana en el corpus, y
+los dos corpus comparables de deportes electr\'onicos que revisamos declaran
+exactamente esta limitaci\'on para s\'i
+mismos~\cite{bialecki_sc2egset_2023,janusz_hearthstone_2017}. Extrapolar al
+juego completo tampoco tendr\'ia respaldo, puesto que un modelo que nunca vio
+un arquetipo de mazo carece de base para juzgar posiciones construidas en
+torno a \'el, Bertram \textit{et al.} muestran c\'omo se ve ese fallo
+cuando el contenido se codifica por identidad en lugar de por
+descripci\'on~\cite{bertram_cardrepresentations_2024}. Y tratar la salida
+como una propiedad estable de una posici\'on tampoco tendr\'ia respaldo a lo
+largo del tiempo, porque la poblaci\'on cambia de forma medible en diez
+d\'ias.
+
+\subsection{Interpretaci\'on de la probabilidad}
+Una estimaci\'on de probabilidad de victoria invita a un mal uso
+espec\'ifico: leer un n\'umero entre cero y uno como una posibilidad bien
+fundada cuando puede ser solo una puntuaci\'on bien ordenada. La distinci\'on
+no es pedante. Guo \textit{et al.} encontraron deterioro de la calibraci\'on
+en todos los estudios que la midieron bajo cambio temporal, frente a
+deterioro de la discriminaci\'on en solo tres de
+doce~\cite{guo_temporalshift_2021}, lo que significa que un modelo puede
+seguir ordenando posiciones correctamente mucho despu\'es de que sus
+probabilidades declaradas hayan dejado de ser ciertas. Ninguno de los dos
+estudios comparables sobre estados de juego reporta calibraci\'on en
+absoluto~\cite{janusz_hearthstone_2017,bialecki_sc2egset_2023}. Reportar una
+regla de puntuaci\'on propia y curvas de fiabilidad junto al AUC es por
+tanto un compromiso \'etico tanto como metodol\'ogico: es lo que permite a
+un lector saber cu\'al de las dos cosas es nuestro n\'umero.
+
+\subsection{Mitigaciones previstas antes del entrenamiento}
+\begin{itemize}
+  \item Toda cifra reportada lleva su alcance: los diez d\'ias auditados, la
+        franja de puntuaci\'on y las versiones del motor presentes.
+  \item La discriminaci\'on y la calibraci\'on se reportan por separado, y
+        los resultados bajo los protocolos temporal y de reserva de mazos se
+        reportan aparte del protocolo primario en lugar de promediarse con
+        \'el.
+  \item Los identificadores de agente y equipo quedan excluidos de la matriz
+        de caracter\'isticas, y no se publican resultados por competidor.
+  \item Los intervalos de confianza se calculan sobre episodios, de modo que
+        la incertidumbre no se subestime contando filas correlacionadas como
+        evidencia independiente.
+  \item El resumen, las conclusiones y cualquier s\'intesis p\'ublica
+        declaran la poblaci\'on sobre la que se ajust\'o el modelo, de modo
+        que la limitaci\'on viaje con el resultado en lugar de quedar
+        confinada a esta secci\'on.
+\end{itemize}
+
+\subsection{Diferido a la Etapa 3}
+La \'etica del despliegue, los escenarios de mal uso y los riesgos
+operativos de un agente que consuma este estimador, en particular el
+efecto de un evaluador sobreconfiado sobre las decisiones del agente, se
+abordan en la etapa final, cuando exista un agente.
+
+% ===========================================================================
+% DECLARACION DE USO DE HERRAMIENTAS DE IA
+% ===========================================================================
+\section{Declaraci\'on de Uso de Herramientas de Inteligencia Artificial}
+\label{sec:aideclaration}
+
+\begin{table}[!t]
+\centering
+\caption{Uso de herramientas de inteligencia artificial en esta versi\'on
+individual de la Etapa 1.}
+\label{tab:aiusage}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{1.5cm} P{1.5cm} Y@{}}
+\toprule
+\textbf{Integrante} & \textbf{Herramienta} & \textbf{D\'onde y para qu\'e}\\
+\midrule
+S. Hern\'andez &
+Claude (Claude Code, Opus~5) &
+Organizaci\'on y cribado de la literatura; recuperaci\'on de textos
+completos desde fuentes de los editores y de acceso abierto; extracci\'on de
+figuras, tablas y limitaciones declaradas de los siete trabajos revisados;
+resoluci\'on de metadatos bibliogr\'aficos contra Crossref y los registros de
+los editores; asistencia con LaTeX y construcci\'on del fichero BibTeX.\\
+\addlinespace
+S. Hern\'andez &
+Claude (Claude Code, Opus~5) &
+Fase anterior: asistencia con los \emph{scripts} de auditor\'ia del corpus y
+con la lectura de sus salidas. Toda magnitud atribuida a la auditor\'ia en la
+Secci\'on~\ref{sec:trackanalysis} es la salida de un \emph{script} que se
+ejecut\'o sobre los datos descargados, no una cifra producida por un modelo
+de lenguaje.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent\textbf{Verificaci\'on realizada hasta ahora.} Cada uno de los
+siete trabajos citados fue recuperado y le\'ido a texto completo antes de ser
+citado, y todo valor atribuido a una fuente en este documento ( tama\~nos
+de conjuntos de datos, valores de m\'etricas, recuentos de estudios ) fue
+transcrito de la tabla, figura o pasaje correspondiente de esa fuente. Todos
+los DOI se resolvieron contra Crossref o el registro del editor, y la
+bibliograf\'ia cita la versi\'on que efectivamente se ley\'o. Una entrada
+merece menci\'on expl\'icita: para el marco de la fuga de datos citamos la
+versi\'on de conferencia de KDD'11, que es la versi\'on obtenida y le\'ida;
+existe una versi\'on de revista ampliada, que difiere en la lista de autores,
+y solo sustituir\'a a la actual si se lee a trav\'es de la suscripci\'on
+institucional.
+
+\noindent\textbf{Verificaci\'on a\'un pendiente.} Una relectura manual de las
+siete fuentes por parte del autor, independiente de la extracci\'on descrita
+arriba, no se ha completado todav\'ia y est\'a programada antes de la
+entrega. Hasta entonces, esta declaraci\'on afirma extracci\'on asistida por
+m\'aquina con trazabilidad a nivel de fuente, y no confirmaci\'on humana
+independiente de cada cifra. El registro de trazabilidad, afirmaci\'on,
+fuente, ubicaci\'on en la fuente, se mantiene junto a esta versi\'on de
+modo que cada enunciado pueda comprobarse individualmente.
+
+\noindent\textbf{Lo que no fue generado por inteligencia artificial.} La
+pregunta de investigaci\'on, las hip\'otesis de trabajo, la elecci\'on del
+Track A, la decisi\'on de agrupar por episodio, la lista negra de campos
+prohibidos, el dise\~no de la auditor\'ia y su ejecuci\'on, y la
+interpretaci\'on de los resultados de la auditor\'ia son trabajo propio de
+los autores. En este documento no se reporta ning\'un resultado experimental,
+de modo que ninguna herramienta gener\'o resultado alguno.
+
+% ===========================================================================
+% CONCLUSION
+% ===========================================================================
+\section{Estado Actual y Pr\'oximos Pasos}
+\label{sec:conclusion}
+
+La revisi\'on establece que predecir el desenlace de una partida a partir de
+un \'unico estado intermedio es un problema supervisado bien planteado en
+esta familia de juegos, que las caracter\'isticas tabulares extra\'idas del
+estado transportan se\~nal sustancial, y que los modelos cl\'asicos capturan
+la mayor parte de ella: la mejor soluci\'on de \emph{Hearthstone} mejor\'o al
+\emph{baseline} de una red de dos capas ocultas en menos de un dos por ciento
+de AUC~\cite{janusz_hearthstone_2017}, y tres clasificadores convencionales
+quedaron a menos de 0.016 de acierto unos de otros en
+SC2EGSet~\cite{bialecki_sc2egset_2023}. Establece tambi\'en lo que la
+literatura no ha resuelto. Ning\'un trabajo publicado plantea la pregunta
+para el \emph{Pok\'emon TCG}. Ning\'un estudio comparable sobre estados de
+juego reporta si sus probabilidades est\'an calibradas, aunque la evidencia
+sistem\'atica identifica la calibraci\'on como la propiedad que falla
+primero~\cite{guo_temporalshift_2021}. Y el costo de ignorar la dependencia
+entre observaciones ha sido cuantificado en otros campos, un acierto de
+0.91 para \emph{extra trees} que colapsa a 0.66 una vez respetada la
+agrupaci\'on~\cite{karbalaie_participantaware_2026}, pero se aplica de
+forma desigual dentro de los conjuntos de datos de juegos.
+
+Este trabajo ataca esa intersecci\'on. Su objeto es el valor de un estado de
+forma aislada, aprendido \emph{offline} bajo un protocolo cuyos controles de
+fuga se justifican por medici\'on y no por argumento: en nuestra propia
+auditor\'ia de 52\,085 episodios y 7\,038\,378 instant\'aneas, una
+partici\'on aleatoria a nivel de fila situar\'ia el $99.995\%$ de los
+episodios a ambos lados de la divisi\'on. La contribuci\'on a la que el
+proyecto aspira no es una puntuaci\'on de titular, sino una respuesta a tres
+preguntas ligadas: cu\'anto dice un estado, en qu\'e momento de la partida
+empieza a decirlo, y cu\'anto sobrevive a un cambio de episodios, de mazos y
+de d\'ias.
+
+El punto de referencia declarado es la banda de $0.78$--$0.80$ de AUC del
+AAIA'17 sobre \emph{Hearthstone}, adoptada como orden de magnitud y no como
+banco de pruebas, con las diferencias de juego, poblaci\'on de agentes,
+partici\'on, prevalencia de clases y descripci\'on del estado que impiden una
+comparaci\'on estricta enunciadas en la
+Secci\'on~\ref{subsec:litbaseline}. Si el modelo cl\'asico m\'as fuerte
+alcanza esa banda en la ventana tard\'ia de la partida bajo nuestro protocolo
+agrupado, el hallazgo sustantivo ser\'a en qu\'e punto de la partida lo hace
+por primera vez.
+
+\noindent\textbf{Pr\'oximos pasos (Etapa 2).}
+\begin{itemize}
+  \item Materializar la representaci\'on tabular una sola vez, en formato
+        columnar, y completar sobre ella las comprobaciones consignadas como
+        pendientes en la Secci\'on~\ref{sec:trackanalysis}: prevalencia de
+        clases del objetivo final, ausencia de valores por columna, rangos
+        imposibles, filas duplicadas y cardinalidad efectiva.
+  \item Implementar los controles de fuga como pruebas ejecutables, la
+        aserci\'on de lista negra y la aserci\'on de intersecci\'on vac\'ia
+        entre particiones, y convertirlas en precondici\'on de cualquier
+        ejecuci\'on de entrenamiento.
+  \item Fijar las ventanas de turno a partir de la distribuci\'on emp\'irica
+        de duraci\'on y declararlas antes de examinar la partici\'on de
+        prueba.
+  \item Implementar y comparar la escalera de \emph{baselines} B0 a B4 bajo
+        el protocolo agrupado, reportando discriminaci\'on y calibraci\'on
+        con intervalos de confianza remuestreados sobre episodios.
+  \item Ejecutar los protocolos temporal y de reserva de mazos y las
+        ablaciones por familia de caracter\'isticas, reportando cada uno por
+        separado, y poner a prueba la hip\'otesis H3 sobre si la
+        calibraci\'on se degrada antes que la discriminaci\'on.
+  \item Fusionar esta revisi\'on individual con las versiones de los Ejes A y
+        B producidas por los otros dos integrantes del equipo en el
+        art\'iculo conjunto de la Etapa 1, resolviendo el solapamiento
+        tem\'atico en lugar de concatenar las tres secciones de trabajos
+        relacionados.
+\end{itemize}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

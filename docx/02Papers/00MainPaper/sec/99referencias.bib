@@ -1,0 +1,456 @@
+% ============================================================
+% sec/99referencias.bib
+%
+% Bibliografía unificada del artículo de la Etapa 1.
+% Concatena los tres archivos por integrante:
+%   Daniel_refs.bib     (Eje A — problema y dominio)
+%   Adriel_refs.bib     (Eje B — técnicas y evaluación)
+%   Sebastian_refs.bib  (Eje C — conjunto de datos y validación)
+%
+% Estilo numérico IEEE. Solo publicaciones arbitradas de revista
+% o conferencia, más una entrada de conjunto de datos citada como
+% tal. Ninguna entrada entra sin DOI resuelto manualmente y
+% contenido leído.
+%
+% Convención de claves: autor_palabraclave_anio
+%
+% ESTADO DE VERIFICACIÓN
+%   Las entradas de los Ejes A y B están verificadas contra
+%   fuente primaria. Las del Eje C marcadas VERIFICAR requieren
+%   completarse desde el registro del editor antes de la entrega.
+% ============================================================
+
+
+% ############################################################
+% EJE A — problema y dominio (Daniel Duarte Cordero)
+% ############################################################
+
+@article{kamal_moba_2025,
+  author  = {Kamal, Ahmad Alif and Mansor, Mohd. Asyraf and Truna, Liyana
+             and Mohd. Shaipullah, Norhunaini and Habib Sultan, Nor Hafizie},
+  title   = {Machine Learning Applications in Multiplayer Online Battle
+             Arena Esports---A Systematic Review},
+  journal = {Pertanika Journal of Science \& Technology},
+  volume  = {33},
+  number  = {2},
+  pages   = {765--798},
+  year    = {2025},
+  doi     = {10.47836/pjst.33.2.11}
+}
+
+@inproceedings{tian_hero_2022,
+  author    = {Tian, Peng and Lan, Wenfei and Zhang, Xiao},
+  title     = {Hero Featured Learning Algorithm for Winning Rate Prediction
+               of Honor of Kings},
+  booktitle = {2022 IEEE Conference on Games (CoG)},
+  pages     = {322--329},
+  year      = {2022},
+  publisher = {IEEE},
+  doi       = {10.1109/CoG51982.2022.9893634}
+}
+
+@inproceedings{miernik_evolving_2022,
+  author    = {Miernik, Rados{\l}aw and Kowalski, Jakub},
+  title     = {Evolving Evaluation Functions for Collectible Card Game {AI}},
+  booktitle = {Proceedings of the 14th International Conference on Agents
+               and Artificial Intelligence (ICAART)},
+  volume    = {3},
+  pages     = {253--260},
+  year      = {2022},
+  publisher = {SciTePress},
+  isbn      = {978-989-758-547-0},
+  doi       = {10.5220/0010806900003116}
+}
+
+@inproceedings{angliss_vgcbench_2026,
+  author    = {Angliss, Cameron L. and Cui, Jiaxun and Hu, Jiaheng
+               and Rahman, Arrasy and Stone, Peter},
+  title     = {{VGC-Bench}: Towards Mastering Diverse Team Strategies in
+               Competitive Pok{\'e}mon},
+  booktitle = {Proceedings of the 25th International Conference on Autonomous
+               Agents and Multiagent Systems (AAMAS 2026)},
+  pages     = {2299--2307},
+  year      = {2026},
+  publisher = {IFAAMAS},
+  doi       = {10.65109/fp1262BOUG5148}
+}
+
+@inproceedings{chitayat_meta_2023,
+  author    = {Pedrassoli Chitayat, Alan and Block, Florian
+               and Walker, James and Drachen, Anders},
+  title     = {Beyond the Meta: Leveraging Game Design Parameters for
+               Patch-Agnostic Esport Analytics},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence
+               and Interactive Digital Entertainment},
+  volume    = {19},
+  number    = {1},
+  pages     = {116--125},
+  year      = {2023},
+  doi       = {10.1609/aiide.v19i1.27507}
+}
+
+@article{emmanuel_missing_2021,
+  author  = {Emmanuel, Tlamelo and Maupong, Thabiso and Mpoeleng, Dimane
+             and Semong, Thabo and Mphago, Banyatsang and Tabona, Oteng},
+  title   = {A Survey on Missing Data in Machine Learning},
+  journal = {Journal of Big Data},
+  volume  = {8},
+  number  = {1},
+  pages   = {140},
+  year    = {2021},
+  doi     = {10.1186/s40537-021-00516-9}
+}
+
+@article{vandenGoorbergh_imbalance_2022,
+  author  = {van den Goorbergh, Ruben and van Smeden, Maarten
+             and Timmerman, Dirk and Van Calster, Ben},
+  title   = {The Harm of Class Imbalance Corrections for Risk Prediction
+             Models: Illustration and Simulation Using Logistic Regression},
+  journal = {Journal of the American Medical Informatics Association},
+  volume  = {29},
+  number  = {9},
+  pages   = {1525--1534},
+  year    = {2022},
+  doi     = {10.1093/jamia/ocac093}
+}
+
+% ------------------------------------------------------------
+% Baseline de literatura. Compartida con el Eje C: es a la vez el
+% antecedente de dominio más cercano y el conjunto análogo del
+% que procede el número objetivo.
+% ------------------------------------------------------------
+@inproceedings{janusz_hearthstone_2017,
+  author    = {Janusz, Andrzej and Tajmajer, Tomasz
+               and {\'S}wiechowski, Maciej},
+  title     = {Helping {AI} to Play Hearthstone: {AAIA'17} Data Mining
+               Challenge},
+  booktitle = {Proceedings of the 2017 Federated Conference on Computer
+               Science and Information Systems (FedCSIS)},
+  series    = {Annals of Computer Science and Information Systems},
+  volume    = {11},
+  pages     = {121--125},
+  year      = {2017},
+  doi       = {10.15439/2017F573}
+}
+
+
+% ############################################################
+% EJE B — técnicas y evaluación (Adriel S. Chaves Salazar)
+% ############################################################
+
+% --- ¿Qué familia de modelos para datos tabulares? -----------
+% Survey principal del Eje B.
+@article{borisov_tabular_2024,
+  author    = {Borisov, Vadim and Leemann, Tobias and Se{\ss}ler, Kathrin
+               and Haug, Johannes and Pawelczyk, Martin and Kasneci, Gjergji},
+  title     = {Deep Neural Networks and Tabular Data: A Survey},
+  journal   = {IEEE Transactions on Neural Networks and Learning Systems},
+  volume    = {35},
+  number    = {6},
+  pages     = {7499--7519},
+  year      = {2024},
+  month     = jun,
+  publisher = {IEEE},
+  issn      = {2162-2388},
+  doi       = {10.1109/TNNLS.2022.3229161}
+}
+
+% --- ¿Por qué gana esa familia? El mecanismo. ---------------
+% Sin DOI: los proceedings de NeurIPS se citan por URL.
+@inproceedings{grinsztajn_trees_2022,
+  author    = {Grinsztajn, L{\'e}o and Oyallon, Edouard
+               and Varoquaux, Ga{\"e}l},
+  title     = {Why Do Tree-Based Models Still Outperform Deep Learning on
+               Typical Tabular Data?},
+  booktitle = {Advances in Neural Information Processing Systems 35
+               (NeurIPS 2022), Datasets and Benchmarks Track},
+  volume    = {35},
+  pages     = {507--520},
+  year      = {2022},
+  publisher = {Curran Associates, Inc.},
+  url       = {https://proceedings.neurips.cc/paper_files/paper/2022/file/0378c7692da36807bdec87ab043cdadc-Paper-Datasets_and_Benchmarks.pdf}
+}
+
+% --- ¿Qué tan difícil es estimar probabilidad de victoria? ---
+% Versión de revista. NUNCA citar arXiv:2406.16171.
+@article{brill_winprob_2026,
+  author    = {Brill, Ryan S. and Yurko, Ronald and Wyner, Abraham J.},
+  title     = {Exploring the Difficulty of Estimating Win Probability:
+               A Simulation Study},
+  journal   = {Journal of Quantitative Analysis in Sports},
+  volume    = {22},
+  number    = {1},
+  pages     = {105--115},
+  year      = {2026},
+  publisher = {De Gruyter},
+  doi       = {10.1515/jqas-2024-0130}
+}
+
+% --- ¿Cuánto infla las métricas una partición mal hecha? -----
+% Análogo de visión por computador. Declarar la brecha de dominio.
+@article{figueiredo_leakage_2024,
+  author  = {Figueiredo, Ravi B. D. and Mendes, Hugo A.},
+  title   = {Analyzing Information Leakage on Video Object Detection
+             Datasets by Splitting Images Into Clusters With High
+             Spatiotemporal Correlation},
+  journal = {IEEE Access},
+  volume  = {12},
+  pages   = {47646--47655},
+  year    = {2024},
+  doi     = {10.1109/ACCESS.2024.3383047}
+}
+
+% --- ¿Cómo se evalúa la calidad de una probabilidad? ---------
+% Segundo survey. Año 2023: el 2021 es el preprint arXiv:2112.10327.
+@article{silvafilho_calibration_2023,
+  author    = {{Silva Filho}, Telmo and Song, Hao and Perello-Nieto, Miquel
+               and Santos-Rodriguez, Raul and Kull, Meelis and Flach, Peter},
+  title     = {Classifier Calibration: A Survey on How to Assess and Improve
+               Predicted Class Probabilities},
+  journal   = {Machine Learning},
+  volume    = {112},
+  number    = {9},
+  pages     = {3211--3260},
+  year      = {2023},
+  publisher = {Springer},
+  doi       = {10.1007/s10994-023-06336-7}
+}
+
+% --- ¿Estará calibrado el modelo que elegimos? ---------------
+% Fundacional de 2005: se cita porque define el campo.
+@inproceedings{niculescumizil_probabilities_2005,
+  author    = {Niculescu-Mizil, Alexandru and Caruana, Rich},
+  title     = {Predicting Good Probabilities with Supervised Learning},
+  booktitle = {Proceedings of the 22nd International Conference on Machine
+               Learning (ICML '05)},
+  pages     = {625--632},
+  year      = {2005},
+  address   = {New York, NY, USA},
+  publisher = {Association for Computing Machinery},
+  isbn      = {1595931805},
+  doi       = {10.1145/1102351.1102430}
+}
+
+% --- ¿Importa la calibración en la práctica, en un juego? ----
+% Puente entre el bloque metodológico y el dominio.
+@inproceedings{xenopoulos_winprob_2022,
+  author    = {Xenopoulos, Peter and Freeman, William Robert
+               and Silva, Claudio},
+  title     = {Analyzing the Differences between Professional and Amateur
+               Esports through Win Probability},
+  booktitle = {Proceedings of the ACM Web Conference 2022 (WWW '22)},
+  pages     = {3418--3427},
+  year      = {2022},
+  address   = {New York, NY, USA},
+  publisher = {Association for Computing Machinery},
+  isbn      = {9781450390965},
+  doi       = {10.1145/3485447.3512277}
+}
+
+% --- Precedente de dominio: predicción en vivo, split cronológico
+@article{hodge_winprediction_2021,
+  author  = {Hodge, Victoria J. and Devlin, Sam and Sephton, Nick
+             and Block, Florian and Cowling, Peter I. and Drachen, Anders},
+  title   = {Win Prediction in Multiplayer Esports: Live Professional
+             Match Prediction},
+  journal = {IEEE Transactions on Games},
+  volume  = {13},
+  number  = {4},
+  pages   = {368--379},
+  year    = {2021},
+  doi     = {10.1109/TG.2019.2948469}
+}
+
+% --- Formaliza el metajuego y su deriva ----------------------
+% ATENCIÓN: es Pokémon Showdown (videojuego), NO el juego de
+% cartas coleccionables. Declararlo en toda mención.
+@article{saravanan_metadiscovery_2024,
+  author    = {Saravanan, Akash and Guzdial, Matthew},
+  title     = {A Framework for Predicting the Impact of Game Balance Changes
+               Through Meta Discovery},
+  journal   = {IEEE Transactions on Games},
+  volume    = {16},
+  number    = {4},
+  pages     = {821--830},
+  year      = {2024},
+  month     = dec,
+  publisher = {IEEE},
+  issn      = {2475-1510},
+  doi       = {10.1109/TG.2024.3457822}
+}
+
+% --- ¿Qué método de recalibración usar? ----------------------
+@article{ojeda_calibrating_2023,
+  author  = {Ojeda, Francisco M. and Jansen, Max L. and Thi{\'e}ry, Alexandre
+             and Blankenberg, Stefan and Weimar, Christian
+             and Schmid, Matthias and Ziegler, Andreas},
+  title   = {Calibrating Machine Learning Approaches for Probability
+             Estimation: A Comprehensive Comparison},
+  journal = {Statistics in Medicine},
+  volume  = {42},
+  number  = {29},
+  pages   = {5451--5478},
+  year    = {2023},
+  doi     = {10.1002/sim.9921}
+}
+
+% --- ¿Cómo medir la calibración sin artefactos de binning? ---
+@article{dimitriadis_reliability_2021,
+  author  = {Dimitriadis, Timo and Gneiting, Tilmann
+             and Jordan, Alexander I.},
+  title   = {Stable Reliability Diagrams for Probabilistic Classifiers},
+  journal = {Proceedings of the National Academy of Sciences},
+  volume  = {118},
+  number  = {8},
+  pages   = {e2016191118},
+  year    = {2021},
+  doi     = {10.1073/pnas.2016191118}
+}
+
+
+% ############################################################
+% EJE C — conjunto de datos y validación
+%         (Sebastián Hernández Bonilla)
+% ############################################################
+
+% ------------------------------------------------------------
+% Formalización canónica de la fuga de datos.
+%
+% ATENCIÓN — DOS VERSIONES EXISTEN:
+%   KDD '11        — Kaufman, Rosset, Perlich (3 autores)
+%   ACM TKDD 2012  — añade Stitelman (4 autores), versión ampliada
+%
+% Se cita la de KDD'11 porque es la versión obtenida y leída.
+% Solo sustituirla por la de revista si esta última se lee a
+% través de la suscripción institucional.
+%
+% VERIFICAR: páginas y DOI contra el registro de ACM.
+% ------------------------------------------------------------
+@inproceedings{kaufman_leakage_2011,
+  author    = {Kaufman, Shachar and Rosset, Saharon and Perlich, Claudia},
+  title     = {Leakage in Data Mining: Formulation, Detection, and
+               Avoidance},
+  booktitle = {Proceedings of the 17th ACM SIGKDD International Conference
+               on Knowledge Discovery and Data Mining (KDD '11)},
+  pages     = {VERIFICAR},
+  year      = {2011},
+  address   = {New York, NY, USA},
+  publisher = {Association for Computing Machinery},
+  doi       = {VERIFICAR}
+}
+
+% ------------------------------------------------------------
+% Catálogo de escenarios de fuga.
+% VERIFICADO (2026-08-30). Corrige una atribución previa de 2023:
+% la publicación es de 2025.
+% ------------------------------------------------------------
+@article{sasse_leakage_2025,
+  author  = {Sasse, L. and Nicolaisen-Sobesky, E. and Dukart, J.
+             and Eickhoff, S. B. and G{\"o}tz, M. and Hamdan, S.
+             and Komeyer, V. and Kulkarni, A. and Lahnakoski, J. M.
+             and Love, B. C. and Raimondo, F. and Patil, Kaustubh R.},
+  title   = {Overview of Leakage Scenarios in Supervised Machine Learning},
+  journal = {Journal of Big Data},
+  volume  = {12},
+  number  = {1},
+  pages   = {135},
+  year    = {2025},
+  doi     = {10.1186/s40537-025-01193-8}
+}
+
+% ------------------------------------------------------------
+% Análogo estructural más cercano: corpus de repeticiones
+% competitivas con experimentos de predicción de victoria.
+% VERIFICADO (2026-08-30).
+% ------------------------------------------------------------
+@article{bialecki_sc2egset_2023,
+  author  = {Bia{\l}ecki, Andrzej and Jakubowska, Natalia
+             and Dobrowolski, Pawe{\l} and Bia{\l}ecki, Piotr
+             and Krupi{\'n}ski, Leszek and Szczap, Andrzej
+             and Bia{\l}ecki, Robert and Gajewski, Jan},
+  title   = {{SC2EGSet}: {StarCraft II} Esport Replay and Game-State
+             Dataset},
+  journal = {Scientific Data},
+  volume  = {10},
+  number  = {1},
+  pages   = {600},
+  year    = {2023},
+  issn    = {2052-4463},
+  doi     = {10.1038/s41597-023-02510-7}
+}
+
+% ------------------------------------------------------------
+% Costo medido de ignorar la dependencia entre observaciones.
+% Brecha de dominio: biomecánica. Se cita por su argumento
+% estadístico, no como resultado del dominio de juegos.
+%
+% VERIFICAR: revista, volumen, número, páginas y DOI.
+% ------------------------------------------------------------
+@article{karbalaie_participantaware_2026,
+  author  = {VERIFICAR},
+  title   = {Participant-Aware Model Validation for Repeated-Measures Data:
+             Comparative Cross-Validation Study},
+  journal = {VERIFICAR},
+  volume  = {VERIFICAR},
+  number  = {VERIFICAR},
+  pages   = {VERIFICAR},
+  year    = {2026},
+  doi     = {VERIFICAR}
+}
+
+% ------------------------------------------------------------
+% Asimetría entre degradación de calibración y de discriminación
+% bajo cambio temporal. Brecha de dominio: predicción clínica.
+%
+% VERIFICAR: lista completa de autores, revista, volumen, páginas
+% y DOI.
+% ------------------------------------------------------------
+@article{guo_temporalshift_2021,
+  author  = {Guo, VERIFICAR},
+  title   = {Systematic Review of Approaches to Preserve Machine Learning
+             Performance in the Presence of Temporal Dataset Shift in
+             Clinical Medicine},
+  journal = {VERIFICAR},
+  volume  = {VERIFICAR},
+  number  = {VERIFICAR},
+  pages   = {VERIFICAR},
+  year    = {2021},
+  doi     = {VERIFICAR}
+}
+
+% ------------------------------------------------------------
+% Generalización ante contenido cambiante en un juego de cartas
+% coleccionables. Análogo solo en cuanto a generalización de
+% contenido: su tarea es predecir una elección humana de carta.
+%
+% VERIFICAR: revista o conferencia, volumen, páginas y DOI.
+% ------------------------------------------------------------
+@article{bertram_cardrepresentations_2024,
+  author  = {Bertram, VERIFICAR},
+  title   = {Learning With Generalised Card Representations for
+             ``{Magic}: The Gathering''},
+  journal = {VERIFICAR},
+  volume  = {VERIFICAR},
+  number  = {VERIFICAR},
+  pages   = {VERIFICAR},
+  year    = {2024},
+  doi     = {VERIFICAR}
+}
+
+
+% ############################################################
+% CONJUNTO DE DATOS
+%
+% Se cita como conjunto de datos y no como publicación: carece de
+% descripción arbitrada, y esa ausencia se declara como brecha 1
+% en la Sección de brechas.
+% ############################################################
+
+% VERIFICAR: título exacto, URL y fecha de acceso.
+@misc{ptcg_dataset_2026,
+  author       = {{The Pok{\'e}mon Company}},
+  title        = {{PTCG AI} Battle Challenge Simulation Episodes},
+  year         = {2026},
+  howpublished = {Conjunto de datos en Kaggle, licencia CC0-1.0},
+  note         = {VERIFICAR: título exacto, URL y fecha de acceso}
+}
