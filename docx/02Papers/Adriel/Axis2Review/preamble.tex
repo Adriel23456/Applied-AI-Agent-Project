@@ -6,9 +6,6 @@
 % ============================================================
 
 % ---------- Idioma ----------
-% es-tabla     -> "Tabla" en vez de "Cuadro"
-% es-noquoting -> evita que babel haga activo el carácter " (rompe listings)
-% es-nodecimaldot -> respeta el punto decimal si se usa siunitx
 \usepackage[T1]{fontenc}
 \usepackage[spanish,es-tabla,es-noquoting,es-nodecimaldot]{babel}
 \usepackage{microtype}
@@ -19,6 +16,12 @@
 \renewcommand{\refname}{Referencias}
 \renewcommand{\figurename}{Fig.}
 \renewcommand{\tablename}{TABLA}
+
+% ---------- Numeración de página ----------
+% IEEEtran conference la desactiva por defecto porque en actas
+% reales la asigna el editor. Se activa por ser trabajo de curso.
+\pagestyle{plain}
+\AtBeginDocument{\thispagestyle{plain}}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -35,6 +38,8 @@
 \definecolor{tecrule}{RGB}{155,184,216}
 \definecolor{boxbg}{RGB}{242,246,252}
 \definecolor{labelgray}{RGB}{120,120,120}
+\definecolor{notaverde}{RGB}{22,110,60}
+\definecolor{decisionambar}{RGB}{170,110,10}
 \definecolor{codebg}{RGB}{248,248,248}
 \definecolor{codekw}{RGB}{0,0,180}
 \definecolor{codecmt}{RGB}{0,120,60}
@@ -94,7 +99,7 @@
 
 \usepackage[hidelinks]{hyperref}
 
-% ---------- Entrada segura de archivos, imágenes y código ----------
+% ---------- Entrada segura ----------
 \newcommand{\cajaarchivofaltante}[1]{%
   \par\medskip\noindent
   \fcolorbox{red!60!black}{red!5}{%
@@ -122,16 +127,50 @@
 
 \newcommand{\code}[1]{\texttt{#1}}
 
-% ---------- Marcador de pendiente ----------
-% \pc = "por completar". Se imprime en rojo para que ningún hueco
-% pase inadvertido. ANTES DE ENTREGAR, redefinirlo como vacío:
-%   \newcommand{\pc}[1]{}
-% y recompilar: todo lo que desaparezca nunca se escribió.
+% ============================================================
+% MARCADORES DE REDACCIÓN
+%
+% Los tres se apagan antes de entregar redefiniéndolos como vacíos:
+%   \renewcommand{\pc}[1]{}
+%   \renewcommand{\razon}[1]{}
+%   \renewcommand{\decidir}[1]{}
+% Recompilar: todo lo que desaparezca del PDF nunca se escribió.
+% ============================================================
+
+% \pc  = POR COMPLETAR. Contenido que depende de los ejes A y C.
 \newcommand{\pc}[1]{%
   \texorpdfstring{\textcolor{red}{\textbf{[POR COMPLETAR: #1]}}}%
                  {[POR COMPLETAR: #1]}}
 
-% Numeración de páginas — no es el comportamiento por defecto de
-% IEEEtran conference. Se activa porque este documento se entrega
-% como trabajo de curso, no como sumisión a una conferencia real.
-\pagestyle{plain}
+% \razon = POR QUÉ esta parte debe decir lo que dice, con su fuente.
+\newcommand{\razon}[1]{%
+  \texorpdfstring{\textcolor{notaverde}{\small\textit{[RAZÓN: #1]}}}%
+                 {[RAZÓN: #1]}}
+
+% \decidir = requiere decisión de equipo o criterio humano.
+\newcommand{\decidir}[1]{%
+  \texorpdfstring{\textcolor{decisionambar}{\small\textbf{[DECIDIR: #1]}}}%
+                 {[DECIDIR: #1]}}
+
+% ---------- Columnas X con peso, para tabularx ----------
+% Permite repartir el ancho flexible en proporciones distintas.
+% Los pesos de todas las columnas W deben sumar el número de
+% columnas W de la tabla.
+\newcolumntype{W}[1]{>{\hsize=#1\hsize\raggedright\arraybackslash}X}
+
+% ---------- Marcador compacto para celdas de tabla ----------
+% \pc dentro de una celda produce una cadena larga que rompe el
+% ajuste de columnas. Este marcador ocupa tres caracteres.
+% Se apaga igual que los demás: \renewcommand{\pct}{}
+\newcommand{\pct}{\textcolor{red}{\textbf{[?]}}}
+
+% ============================================================
+% APAGADO DE MARCADORES
+% Descomentar las cuatro líneas antes de entregar y recompilar.
+% Todo lo que desaparezca del PDF nunca se escribió.
+% ============================================================
+
+%\renewcommand{\pc}[1]{}
+%\renewcommand{\razon}[1]{}
+%\renewcommand{\decidir}[1]{}
+%\renewcommand{\pct}{}

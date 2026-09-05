@@ -1,0 +1,131 @@
+% ============================================================
+% sec/02trabajos_relacionados.tex
+%
+% SECCIÓN CENTRAL DE LA ETAPA 1.
+%
+% DEBE CONTENER:
+%   - Eje A: el problema o dominio
+%   - Eje B: las técnicas del track
+%   - Eje C: el dataset o entorno
+%   - Tabla comparativa OBLIGATORIA (7 columnas exactas)
+%   - Apartado propio de cierre con las brechas
+%
+% MÍNIMOS:
+%   - 7 artículos arbitrados por integrante
+%   - Al menos un survey por integrante
+%   - Mayoría de los últimos 5 años
+%   - Sin preprints de arXiv salvo justificación aprobada
+% ============================================================
+\section{Trabajos Relacionados}
+\label{sec:relacionados}
+
+\pc{Un párrafo con la metodología de revisión: bases consultadas,
+cadenas de búsqueda, criterios de inclusión y exclusión, ventana
+temporal, y cuántos trabajos se retuvieron de cuántos revisados.
+Esto convierte la revisión en algo auditable en lugar de una lista
+de lecturas.}
+
+% ------------------------------------------------------------
+% EJE A
+% Responde: ¿Cómo se ha abordado este problema en la literatura?
+%           ¿Qué enfoques dominan?
+%           ¿Qué se considera resuelto y qué sigue abierto?
+% ------------------------------------------------------------
+\subsection{Eje A: el problema y el dominio}
+\label{subsec:ejea}
+
+\pc{3--5 párrafos sintetizando al menos 7 trabajos arbitrados.
+AGRUPAR POR FAMILIA DE ENFOQUE, no un párrafo por artículo. Un párrafo
+por artículo es un catálogo de lecturas, no un estado del arte.}
+
+\noindent\textbf{Qué enfoques dominan.} \pc{Respuesta directa.}
+
+\noindent\textbf{Qué se considera resuelto.} \pc{Respuesta directa.}
+
+\noindent\textbf{Qué sigue abierto.} \pc{Respuesta directa. Este
+párrafo alimenta el apartado de brechas.}
+
+% ------------------------------------------------------------
+% EJE B
+% Responde: ¿Cuál es el estado actual de los métodos que usaremos?
+%           ¿Fortalezas, límites y supuestos bajo los que funcionan?
+% AQUÍ SE JUSTIFICA EL TRACK CON LITERATURA, NO CON OPINIÓN.
+% ------------------------------------------------------------
+\subsection{Eje B: las técnicas del track}
+\label{subsec:ejeb}
+
+\pc{3--5 párrafos sintetizando al menos 7 trabajos arbitrados sobre la
+familia de técnicas del track elegido.}
+
+\noindent\textbf{Fortalezas.} \pc{Qué resuelven bien estos métodos.}
+
+\noindent\textbf{Límites.} \pc{Dónde fallan.}
+
+\noindent\textbf{Supuestos bajo los que funcionan.} \pc{Qué tiene que
+cumplirse en los datos para que el método sea aplicable.}
+
+\noindent\textbf{Justificación técnica del track.} \pc{Por qué este
+track y no otro, sostenido con las referencias anteriores. Declarar
+explícitamente qué familia alternativa se descartó y con qué argumento
+de literatura. Si este párrafo se puede escribir sin citar nada, está
+mal escrito.}
+
+% ------------------------------------------------------------
+% EJE C
+% Responde: ¿Qué trabajos han usado el dataset?
+%           ¿Qué métricas reportan y bajo qué protocolo?
+%           ¿Cuál es el mejor resultado publicado?
+%           ¿Qué problemas conocidos tiene?
+% ------------------------------------------------------------
+\subsection{Eje C: el dataset}
+\label{subsec:ejec}
+
+\pc{3--5 párrafos. Si el dataset propio carece de literatura arbitrada,
+DECLARARLO AQUÍ de forma explícita y aplicar la sustitución que permite
+el enunciado: revisar datasets análogos del mismo dominio y justificar
+por qué son comparables o por qué no lo son.}
+
+\noindent\textbf{Métricas y protocolos reportados.} \pc{Qué mide la
+literatura sobre datos análogos y bajo qué partición.}
+
+\noindent\textbf{Problemas conocidos.} \pc{Sesgos, fugas de información,
+limitaciones de tamaño o de representatividad. Este apartado es el que
+justifica varias decisiones de la Sección~\ref{sec:analisistecnico}.}
+
+% ------------------------------------------------------------
+% TABLA COMPARATIVA — OBLIGATORIA
+% Columnas exactas: referencia, año, técnica, dataset o entorno,
+% métrica principal, resultado reportado, limitación identificada.
+% ------------------------------------------------------------
+\subsection{Análisis comparativo}
+\label{subsec:comparativo}
+
+\safeinput{tab/tabla_comparativa}
+
+\pc{2--3 párrafos LEYENDO la tabla, no repitiéndola: qué tendencia se
+ve, qué comparaciones son injustas y por qué, qué limitación se repite
+en varios trabajos. Si el texto solo enumera las filas, la tabla no
+está cumpliendo su función.}
+
+% ------------------------------------------------------------
+% BRECHAS — APARTADO PROPIO DE CIERRE, OBLIGATORIO
+% Nombrar carencias concretas, decir cuáles se abordan y cuáles no.
+% ------------------------------------------------------------
+\subsection{Brechas identificadas}
+\label{subsec:brechas}
+
+\textbf{Carencias encontradas en la literatura.}
+\begin{enumerate}
+  \item \pc{Brecha 1 --- concreta y verificable contra las referencias}
+  \item \pc{Brecha 2}
+  \item \pc{Brecha 3}
+  \item \pc{Brecha 4}
+  \item \pc{Brecha 5}
+\end{enumerate}
+
+\noindent\textbf{Brechas que este trabajo aborda.} \pc{Cuáles de las
+anteriores, y cómo.}
+
+\noindent\textbf{Brechas fuera del alcance.} \pc{Cuáles quedan sin
+cubrir y por qué exceden el alcance de este proyecto. Reconocer una
+limitación con lucidez es evidencia de dominio, no lo contrario.}

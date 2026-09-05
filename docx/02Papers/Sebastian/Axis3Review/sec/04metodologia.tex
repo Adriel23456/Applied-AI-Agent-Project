@@ -1,0 +1,137 @@
+% ============================================================
+% sec/04metodologia.tex
+%
+% DEBE CONTENER:
+%   - Formalización del problema (formulación matemática si aplica)
+%   - Pipeline previsto
+%   - Protocolo experimental: particiones, validación, métricas
+%     Y SU JUSTIFICACIÓN
+%   - Plan de baselines
+%   - Riesgos identificados con su mitigación
+%
+% Cada decisión sin justificación técnica cuesta -5 puntos,
+% hasta un máximo de -15.
+% ============================================================
+\section{Metodología Propuesta}
+\label{sec:metodologia}
+
+\subsection{Formalización del problema}
+\label{subsec:formalizacion}
+\pc{Tipo de problema. Definir el espacio de entrada, el espacio de
+salida, la función objetivo y las restricciones.}
+
+\begin{equation}
+\label{eq:objetivo}
+\pc{formulación}
+\end{equation}
+
+\noindent\textbf{Definición del target.} \pc{Cómo se deriva la
+etiqueta, y qué casos se excluyen y por qué.}
+
+\noindent\textbf{Unidad de observación.} \pc{Qué es una fila.}
+
+\noindent\textbf{Unidad independiente.} \pc{Cuál es la unidad
+estadísticamente independiente. Si difiere de la unidad de observación,
+ESA distinción gobierna todas las particiones e intervalos de confianza
+de este trabajo.}
+
+\subsection{Pipeline previsto}
+\label{subsec:pipeline}
+\pc{Descripción de extremo a extremo: ingesta, preprocesamiento,
+construcción de características, modelo, evaluación, y la interfaz que
+consumirá el agente de la Etapa 3.}
+
+\begin{figure}[!t]
+  \centering
+  \safeimage[width=\columnwidth]{pipeline.png}
+  \caption{Pipeline propuesto. \pc{leyenda}}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{Protocolo experimental}
+\label{subsec:protocolo}
+
+\subsubsection{Particiones}
+\pc{Proporciones exactas. Declarar si la partición es aleatoria,
+estratificada, temporal o agrupada, y JUSTIFICARLA frente a las
+alternativas descartadas.}
+
+\subsubsection{Estrategia de validación}
+\pc{Holdout, k-fold, validación cruzada agrupada o anidada. Declarar
+cómo se seleccionan los hiperparámetros sin tocar el conjunto de
+prueba, y cuántas veces se toca ese conjunto.}
+
+\subsubsection{Métricas y su justificación}
+\begin{table}[!t]
+\centering
+\caption{Métricas de evaluación y su justificación.}
+\label{tab:metricas}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{2.2cm} Y@{}}
+\toprule
+\textbf{Métrica} & \textbf{Por qué esta y qué alternativa desplaza}\\
+\midrule
+\pc{principal}  & \pc{justificación}\\
+\pc{secundaria} & \pc{justificación}\\
+\pc{secundaria} & \pc{justificación}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\pc{Un párrafo explicando por qué la métrica principal es la principal,
+y qué queda sin capturar que obliga a reportar las secundarias.}
+
+\subsection{Plan de baselines}
+\label{subsec:planbaselines}
+
+\pc{Cada nivel se justifica por lo que el anterior no logró explicar,
+no por moda. La ausencia de baselines cuesta -10 puntos aunque el
+modelo principal funcione.}
+
+\begin{table}[!t]
+\centering
+\caption{Escalera de baselines.}
+\label{tab:baselines}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}c P{2.4cm} Y@{}}
+\toprule
+\textbf{Nivel} & \textbf{Modelo} & \textbf{Pregunta que responde}\\
+\midrule
+B0 & \pc{trivial}       & \pc{¿cuál es el piso?}\\
+B1 & \pc{heurística}    & \pc{¿hace falta ML?}\\
+B2 & \pc{lineal}        & \pc{¿la relación es lineal?}\\
+B3 & \pc{no lineal}     & \pc{¿hay interacciones?}\\
+B4 & \pc{ensamble}      & \pc{¿cuánto compra la complejidad?}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent\textbf{Tercera referencia.} El baseline de literatura
+declarado en la Sección~\ref{sec:baseline} se arrastra como referencia
+externa junto a los baselines internos anteriores.
+
+\subsection{Contrato de reproducibilidad}
+\label{subsec:reproducibilidad}
+\pc{Semillas fijas y dónde viven, configuraciones guardadas, registro
+de ejecuciones, hardware, dependencias declaradas, y el comando exacto
+que reproduce cada número reportado. Un tercero tiene que poder
+reproducir los resultados sin preguntarnos nada.}
+
+\subsection{Riesgos y mitigación}
+\label{subsec:riesgos}
+\begin{table}[!t]
+\centering
+\caption{Riesgos identificados y su mitigación.}
+\label{tab:riesgos}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{2.0cm} c Y@{}}
+\toprule
+\textbf{Riesgo} & \textbf{Impacto} & \textbf{Mitigación / disparador}\\
+\midrule
+\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
+\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
+\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
+\pc{riesgo} & \pc{A/M/B} & \pc{mitigación}\\
+\bottomrule
+\end{tabularx}
+\end{table}
