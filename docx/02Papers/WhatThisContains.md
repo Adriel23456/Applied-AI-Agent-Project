@@ -4,13 +4,13 @@ Everything bibliographic and everything written for the paper itself.
 
 ## Contents
 
-- **`00MainPaperLatex/`** — the LaTeX source of the paper: main file, sections, tables, figures and the shared `.bib`. This is where the preliminary paper of Stage 1 grows into the final article of Stage 3.
-- **One folder per member (`Adriel/`, `Daniel/`, `Sebastian/`)** — the papers each of us reviewed.
-  - **`MainPapers/`** — the 7 peer-reviewed papers we own and must be able to defend orally. These are the ones that enter the `.bib` and the comparative table.
-  - **`LegacyPapers/`** — everything read and discarded: wrong track, too old, not peer-reviewed, or superseded by a better source. Kept so we can justify why they were dropped and never re-read them by mistake.
+*   **`00MainPaper/`**: The central location for the main repository paper. This contains the consolidated findings, final LaTeX sources, and the shared `.bib` file for the team's primary deliverable.
+*   **Axis Folders (`01Daniel_AxisA/`, `02Adriel_AxisB/`, `03Sebastian_AxisC/`)**: Individual workspaces assigned to each member for their specific research axis.
+    *   Members have complete freedom to structure their respective folders however they see fit.
+    *   These directories hold individual investigations, downloaded papers, personal notes, and individual documents used to organize interesting findings before integrating them into the main paper.
 
 ## Rules
 
-- A paper only moves from `LegacyPapers/` to `MainPapers/` once its DOI resolves and its content matches what we attribute to it.
-- Each member keeps their own reading notes next to their papers.
-- Every entry in the paper's `.bib` must exist as a PDF in someone's `MainPapers/`.
+*   A paper should only be considered for the main `.bib` once its DOI resolves and its content matches what is attributed to it.
+*   Each member is responsible for managing their own reading notes and sub-folder structures within their respective Axis folder.
+*   Any reference cited in the main paper must have its source documented and accessible within the corresponding author's Axis folder.

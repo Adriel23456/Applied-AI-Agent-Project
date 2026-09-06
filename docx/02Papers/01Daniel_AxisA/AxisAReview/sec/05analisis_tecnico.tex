@@ -1,0 +1,179 @@
+% ============================================================
+% VERSIÓN INDIVIDUAL — DANIEL DUARTE CORDERO
+% TRACK A — datos tabulares.
+% ============================================================
+\section{Análisis Técnico del Track}
+\label{sec:analisistecnico}
+
+El proyecto trabaja en \textbf{Track A --- aprendizaje automático
+clásico sobre datos tabulares}. \textbf{\% TODO integración:} insertar
+la fecha exacta de aprobación comunicada por el docente.
+
+\subsection{Análisis exploratorio}
+\label{subsec:eda}
+La auditoría preliminar contiene 52,085 episodios independientes y
+7,038,378 snapshots frescos útiles. Se inspeccionaron 34 campos de
+estado presentes en el 100\% de los snapshots muestreados. El target a
+nivel de episodio se resuelve desde \texttt{rewards} en 99.86\% de los
+casos: 27,135 episodios con recompensa $(1,-1)$, 24,844 con $(-1,1)$,
+33 empates y 73 casos con final anómalo. La representación final desde
+la perspectiva del jugador activo todavía debe materializarse para
+medir su proporción de clases por snapshot; no se sustituye esa medida
+por la distribución P0/P1 del episodio.
+
+La muestra cubre diez días auditados y varias versiones del motor
+(aproximadamente 1.30.1 a 1.32.4). Se identificaron 2,376 mazos y 3,139
+agentes, con concentración apreciable y cambio temporal fuerte. La
+unidad de agrupamiento es el episodio, no el snapshot. El EDA de la
+tabla final reportará distribución por turno, episodios por día,
+cardinalidad de categóricas, percentiles de numéricas y correlaciones
+calculadas solo sobre train.
+
+\subsection{Diccionario de datos}
+\label{subsec:diccionario}
+\begin{table}[!t]
+\centering
+\caption{Diccionario de datos (extracto).}
+\label{tab:diccionario}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{1.7cm} P{1.2cm} P{1.6cm} Y@{}}
+\toprule
+\textbf{Variable} & \textbf{Tipo} & \textbf{Origen} &
+\textbf{Significado / rango / riesgo}\\
+\midrule
+\texttt{turn} & entero & \texttt{current.turn} & Progreso del juego; se usa para análisis por ventana y no como timestamp futuro.\\
+\texttt{is\_first\_player} & binaria & \texttt{firstPlayer}/\texttt{yourIndex} & Orden de inicio; riesgo de atajo porque se confunde con asiento en días tardíos.\\
+\texttt{prize\_remaining\_*} & entero & ranuras de \texttt{prize} & Premios restantes por jugador; feature derivada observable.\\
+\texttt{active\_hp\_ratio} & continua & \texttt{active.hp/maxHp} & Salud relativa del activo; debe respetar $0\leq hp\leq maxHp$.\\
+\texttt{energy\_diff} & entero & agregados self--opp & Diferencia de energías visibles en tablero.\\
+\texttt{deck\_hash} & categórica & catálogo de mazos & Alto riesgo de memorizar metajuego; solo en ablación/contexto y con holdout por mazo.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+El diccionario completo debe mantenerse en el repositorio e incluir
+familias de progreso, recursos, tablero, energía, estados especiales,
+diferenciales y contexto. Las columnas de agrupación y auditoría se
+documentan, pero se separan del vector predictivo.
+
+\subsection{Calidad de los datos}
+\label{subsec:calidad}
+La auditoría verificó 52,085 episodios válidos, cero errores de parseo,
+una única firma de esquema top-level, \texttt{schema\_version=1}, cero
+duplicados por \texttt{episode\_id}/hash canónico, cero solapamientos
+entre días y cero self-play. Se identificaron cinco episodios declarados
+en el manifest del 2026-08-04 pero ausentes de los archivos. Sobre la
+tabla materializada se verificarán faltantes por columna, rangos
+imposibles (por ejemplo, HP negativo o mayor a \texttt{maxHp}), conteos
+negativos, \texttt{bench\_size>benchMax}, consistencia lógica y
+cardinalidad de categóricas antes de cualquier modelado.
+
+\subsection{Datos faltantes e imputación}
+\label{subsec:imputacion}
+Emmanuel et al. distinguen mecanismos de datos faltantes y muestran que
+la eficacia de un método de imputación depende de las características
+del dataset; en su experimento KNN y missForest intercambian cuál es
+mejor según el conjunto de datos \cite{emmanuel_missing_2021}. Por ello,
+la política del proyecto es medir y caracterizar la ausencia antes de
+imputar, en vez de aplicar una técnica por defecto.
+
+\noindent\textbf{Ausencia estructural.} En el replay existen valores
+\texttt{None} que corresponden a estados semánticamente no aplicables u
+ocultos por las reglas del juego, por ejemplo ausencia de un objeto o
+información privada del rival. La auditoría observó \texttt{looking=None}
+en 98.1\% de los estados inspeccionados. La decisión de codificar estos
+casos semánticamente proviene del esquema y del dominio del juego;
+\textbf{Paper 6 no formaliza por sí solo la categoría ``ausencia
+estructural'' ni debe citarse como si lo hiciera}. Se requiere una
+referencia adicional específica sobre missing-by-design/structural
+missingness para sostener esa terminología en la versión final.
+
+\noindent\textbf{Ausencia inesperada.} Si un campo requerido falta por
+corrupción, cambio de esquema o error del parser, se medirá su
+frecuencia. Si es residual, podrá excluirse la observación o episodio
+con criterio documentado; si es sistemático, se tratará como defecto
+del pipeline o cambio de esquema y se corregirá antes de entrenar, no
+se ocultará mediante imputación.
+
+\noindent\textbf{Estrategia adoptada.} Ninguna variable numérica se
+imputa automáticamente. Primero se clasifica la causa de ausencia y el
+tipo de variable; luego se decide si corresponde codificación
+semántica, exclusión documentada o una técnica de imputación ajustada
+solo con train. Esta postura es coherente con la conclusión de Emmanuel
+et al. de que no existe un método universalmente superior
+\cite{emmanuel_missing_2021}.
+
+\subsection{Valores atípicos}
+\label{subsec:atipicos}
+La detección combina reglas de dominio y estadística descriptiva. Los
+rangos imposibles se consideran errores potenciales; los extremos
+válidos se auditan antes de decidir cualquier exclusión. Por ejemplo,
+\texttt{n\_steps} tiene mediana 140 y máximo 6,900, mientras
+\texttt{max\_turn} tiene mediana 13, P95 27 y máximo 1,035. Un episodio
+de 1,035 turnos no se elimina por ser extremo: se investiga si
+corresponde a timeout, bucle, interacción válida o error. Las reglas de
+exclusión se fijan antes de observar el test.
+
+\subsection{Desbalance de clases}
+\label{subsec:desbalance}
+A nivel de episodio, P0 gana 52.10\% y P1 47.70\%, con 0.063\% de
+empates y 0.140\% de forfeits. Sin embargo, la etiqueta final se define
+desde la perspectiva del jugador activo y cada bando aporta un número
+distinto de snapshots; por eso la proporción de clases relevante debe
+medirse sobre la tabla final antes de elegir una intervención.
+
+Si el desbalance es leve, la opción inicial será no corregirlo. Van den
+Goorbergh et al. muestran que, para regresión logística estándar y
+ridge, RUS, ROS y SMOTE no mejoran sistemáticamente el AUROC y pueden
+sobreestimar fuertemente la probabilidad de la clase minoritaria
+\cite{vandenGoorbergh_imbalance_2022}. Dado que nuestra salida pretende
+interpretarse como probabilidad, cualquier corrección debe evaluarse
+también por calibración. Este artículo \textbf{no} avala preferir
+\texttt{class\_weight}: esa técnica no fue evaluada y, por tanto, no se
+adoptará por cita indirecta. Si el EDA revela un desbalance material,
+se compararán alternativas únicamente dentro de train y se reportará
+su efecto sobre discriminación y calibración.
+
+\subsection{Prevención explícita de data leakage}
+\label{subsec:leakage}
+El riesgo principal del Track A en este proyecto proviene de la
+multiplicidad de snapshots por episodio y de la presencia de información
+que solo existe después de la decisión. La mitigación combina diseño de
+particiones, exclusión de columnas y pruebas automáticas.
+
+\subsubsection{Lista negra de información prohibida}
+No pueden entrar al vector de características: \texttt{episode\_id};
+nombres de equipo o agente; scores del manifest; timestamps como
+predictores directos; \texttt{rewards} y resultado final; cualquier
+campo posterior al snapshot; información privada del rival;
+\texttt{visualize}; contenido futuro de logs; nombres de archivo, rutas
+y hashes. En particular, \texttt{visualize} expone el mazo restante
+ordenado y no representa información disponible para el agente en el
+momento real de decisión.
+
+\subsubsection{Taxonomía de riesgo}
+\begin{table}[!t]
+\centering
+\caption{Vectores de fuga: riesgo, evidencia y mitigación.}
+\label{tab:leakage}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{1.9cm} Y P{2.2cm}@{}}
+\toprule
+\textbf{Tipo} & \textbf{Riesgo y evidencia medida} &
+\textbf{Mitigación}\\
+\midrule
+Episode leakage & Un split aleatorio de snapshots coloca estados de la misma partida en train y test para prácticamente todos los episodios. & Split/CV por \texttt{episode\_id}; intersección de grupos debe ser vacía.\\
+Temporal/target leakage & \texttt{rewards}, \texttt{visualize} o logs futuros revelan desenlace o información posterior. & Lista negra y parser limitado a \texttt{observation} hasta $t$.\\
+Deck/agent leakage & IDs o metadata pueden actuar como proxies del metajuego/habilidad; top-10 de mazos concentra 39.94\%. & Metadata fuera de features; holdout por mazo/matchup y ablación del contexto de mazo.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Verificación automática}
+El pipeline incluirá al menos dos invariantes que deben fallar en CI o
+antes de entrenar: (1) ninguna columna de la lista negra puede aparecer
+en el conjunto de features, y (2) la intersección de
+\texttt{episode\_id} entre cualquier par de particiones debe ser vacía.
+Se añadirá una prueba del parser para confirmar que la información
+privada del rival permanezca oculta y que ninguna transformación se
+ajuste con datos de validación o test.

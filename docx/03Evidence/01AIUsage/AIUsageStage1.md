@@ -1,99 +1,95 @@
-# Declaration of AI Tool Usage
+# Declaración de Uso de Herramientas de IA
 
-**Project:** Game-State Win Probability Estimation in the Pokémon Trading Card Game
-**Course:** IC-6200 — Artificial Intelligence, ITCR · II Semester 2026 · Track A
-**Team:** Adriel S. Chaves Salazar · Daniel Duarte Cordero · Sebastián Hernández Bonilla
-**Covers:** Stage 1 — state of the art, problem analysis and design
-**Last updated:** [TO BE COMPLETED: YYYY-MM-DD]
+**Proyecto:** Estimación de Probabilidad de Victoria desde el Estado de Juego en Pokémon TCG
+**Curso:** IC-6200 — Inteligencia Artificial, ITCR · II Semestre 2026 · Track A
+**Equipo:** Adriel S. Chaves Salazar · Daniel Duarte Cordero · Sebastián Hernández Bonilla
+**Cubre:** Etapa 1 — estado del arte, análisis del problema y diseño
+**Última actualización:** 2026-09-05
 
-This declaration is mandatory in every delivery. Declaring AI use carries no penalty; concealing it aggravates any later finding. Stages 2 and 3 append their own sections rather than overwriting this one, so the record accumulates across the semester.
+Esta declaración es obligatoria en cada entrega. Declarar el uso de IA no conlleva penalización; ocultarlo agrava cualquier hallazgo posterior. Las Etapas 2 y 3 adjuntarán sus propias secciones en lugar de sobrescribir esta, de modo que el registro se acumule a lo largo del semestre.
 
 ---
 
-## 1. Tools used
+## 1. Herramientas utilizadas
 
-| Tool | Purpose in this project |
+| Herramienta | Propósito en este proyecto |
 |---|---|
-| **Claude (Anthropic)** | Topic exploration and scoping; structuring the research question, hypotheses and objectives; drafting and reviewing project documentation; interpreting how the Stage 1 requirements map onto the paper structure |
-| **Consensus** | Literature discovery — locating peer-reviewed work on win prediction from game state, calibration of probabilistic classifiers, and leakage in grouped data |
+| **Claude (Anthropic)** | Exploración y delimitación del tema; estructuración de la pregunta de investigación, hipótesis y objetivos; redacción y revisión de la documentación; interpretación de los requisitos de la Etapa 1; estudio de artículos; asistencia con código y formato. |
+| **Consensus** | Descubrimiento de literatura — localización de trabajos revisados por pares sobre predicción de victorias, calibración de clasificadores y fuga de datos. |
 
-Both tools were used as **search and drafting assistants**. Neither was used to produce results, to decide the research question, or to select the final set of references without human review.
-
----
-
-## 2. Where AI was used, and what was done manually afterwards
-
-### 2.1 Topic scoping and framing
-
-**What the tool did.** Claude was used across an extended exploratory conversation to examine candidate project directions before the team settled on this one. That conversation initially explored a reinforcement-learning direction (coverage path planning on unknown terrain) which was **abandoned**; the current Track A topic replaced it after the team's own reassessment and after the professor's feedback.
-
-The tool contributed: sharpening the research question so it would be falsifiable, distinguishing the three review axes required by the course, and pressure-testing whether proposed differentiators against prior work were technically defensible or merely rhetorical.
-
-**Manually verified.** The team read the professor's feedback directly and made the topic decision itself. Every framing claim that survived into the proposal was checked against the course statement and against the primary sources.
-
-**Not AI-generated.** The choice of topic, the choice of track, the research question as finally stated, and the decision to abandon the RL direction.
-
-### 2.2 Literature discovery
-
-**What the tools did.** Consensus was used to surface candidate peer-reviewed work by topic. Claude was used to assess whether candidate papers actually supported the three axes, to flag which candidates were preprints rather than peer-reviewed publications, and to identify redundancy within the candidate set.
-
-**Manually verified.** Every reference must have its DOI resolved by a team member and its content read before it enters `refs.bib`. The per-member `.bib` files carry an explicit `VERIFIED` / `UNVERIFIED` status comment on every entry; **an entry that is not marked VERIFIED does not appear in the paper.** As of this writing, 2 of 21 entries are verified and 19 are pending.
-
-**Not AI-generated.** The final selection of the 21 papers, the axis assignment, and the reading distribution across team members — these were produced by the team.
-
-**Explicitly not delegated.** No DOI, author list, venue or page range was accepted on a tool's assertion. Where metadata could not be confirmed against a primary source, the field is left as a placeholder rather than filled with a plausible guess.
-
-### 2.3 Dataset assessment
-
-**What the tool did.** Claude was used to discuss the implications of the dataset's structure — many correlated snapshots per episode, distribution drift across days, coexisting engine versions — and to reason about which of these constitute validity threats.
-
-**Manually verified.** All quantitative statements about the dataset come from the team's own audit scripts, not from any tool. Figures such as the episode count, the snapshot count, the field-completeness rate, and the measured contamination under a random split are reproducible from `reports/audit_summary.md` and `reports/deep_probe.json` with a fixed seed.
-
-**Not AI-generated.** The audit pipeline, its execution, and every number it produced.
-
-### 2.4 Documentation and paper structure
-
-**What the tool did.** Claude was used to draft and revise project documentation: the topic proposal, the reading-assignment documents, the repository conventions, and the interpretation of how the Stage 1 requirements (three axes, comparative table, gap identification, literature baseline, methodology) map onto sections of an IEEE-format paper.
-
-**Manually verified.** Every technical claim in those documents was checked against the course statement or against a primary source. Passages that could not be substantiated were removed rather than softened.
-
-**Not AI-generated.** The problem formalization, the feature dictionary, the leakage blacklist, the experimental protocol, the baseline ladder, and every result that will be reported.
+Ambas herramientas se utilizaron como **asistentes de búsqueda y redacción**. Ninguna se utilizó para producir resultados, decidir la pregunta de investigación o seleccionar el conjunto final de referencias sin revisión humana.
 
 ---
 
-## 3. Boundaries the team set
+## 2. Dónde se usó la IA y qué se hizo manualmente después
 
-These hold regardless of which tool any member uses.
+### 2.1 Delimitación y encuadre del tema
 
-- **No reference enters the bibliography on a tool's word.** Every DOI is resolved manually and the source is read to confirm it says what we attribute to it. A reference cited without reading costs −10 points.
-- **No technical decision is delegated.** The research question, the target definition, the split design, the metric choice, and the interpretation of results are the team's own reasoning. A tool may surface options; the team chooses and defends.
-- **No result is generated.** Every number reported in the paper comes from code we wrote and ran.
-- **Generated code is executed before it is committed.** Nothing is merged on the assumption that it works.
-- **Preprints are marked as such.** Where a tool surfaced an arXiv-only work, it is either excluded from the 21 peer-reviewed papers or raised with the professor before inclusion.
+**Qué hizo la herramienta.** Se usó Claude en una extensa conversación exploratoria para examinar posibles direcciones del proyecto antes de que el equipo se decidiera por esta. Esa conversación exploró inicialmente una dirección de aprendizaje por refuerzo (planificación de rutas de cobertura en terreno desconocido) que fue **abandonada**; el tema actual del Track A la reemplazó tras la reevaluación del propio equipo y la retroalimentación del profesor.
+La herramienta contribuyó a: refinar la pregunta de investigación para que fuera falsable, distinguir los tres ejes de revisión requeridos por el curso, y poner a prueba si los diferenciadores propuestos frente a trabajos previos eran técnicamente defendibles o meramente retóricos.
+
+**Verificado manualmente.** El equipo leyó directamente la retroalimentación del profesor y tomó la decisión del tema por su cuenta. Cada afirmación de encuadre que sobrevivió en la propuesta fue contrastada con el enunciado del curso y con las fuentes primarias.
+
+**No generado por IA.** La elección del tema, la elección del track, la pregunta de investigación tal como quedó formulada finalmente, y la decisión de abandonar la dirección de RL.
+
+### 2.2 Descubrimiento de literatura
+
+**Qué hicieron las herramientas.** Se usó Consensus para encontrar trabajos candidatos revisados por pares según el tema. Se usó Claude para evaluar si los artículos candidatos realmente respaldaban los tres ejes, para marcar qué candidatos eran *preprints* en lugar de publicaciones revisadas por pares, y para identificar redundancias dentro del conjunto de candidatos.
+
+**Verificado manualmente.** El DOI de cada referencia debe ser resuelto por un miembro del equipo y su contenido leído antes de que ingrese a `refs.bib`. Los archivos `.bib` de cada miembro llevan un comentario explícito de estado `VERIFIED` / `UNVERIFIED` en cada entrada; **una entrada que no esté marcada como VERIFICADA no aparece en el documento.** Hasta el momento de redactar este texto, 2 de 21 entradas están verificadas y 19 están pendientes.
+
+**No generado por IA.** La selección final de los 21 artículos, la asignación de ejes y la distribución de lectura entre los miembros del equipo fueron producidas por el equipo.
+
+**Explícitamente no delegado.** No se aceptó ningún DOI, lista de autores, lugar de publicación o rango de páginas basándose en la afirmación de una herramienta. Cuando los metadatos no pudieron confirmarse contra una fuente primaria, el campo se dejó como un marcador de posición en lugar de rellenarse con una suposición plausible.
+
+### 2.3 Evaluación del conjunto de datos
+
+**Qué hizo la herramienta.** Se usó Claude para discutir las implicaciones de la estructura del conjunto de datos (muchas instantáneas correlacionadas por episodio, deriva de distribución a lo largo de los días, coexistencia de versiones del motor) y para razonar sobre cuáles de estas constituyen amenazas a la validez.
+
+**Verificado manualmente.** Todas las afirmaciones cuantitativas sobre el conjunto de datos provienen de los propios *scripts* de auditoría del equipo, no de ninguna herramienta. Cifras como el recuento de episodios, el recuento de instantáneas, la tasa de completitud de campos y la contaminación medida bajo una partición aleatoria son reproducibles desde `reports/audit_summary.md` y `reports/deep_probe.json` con una semilla fija.
+
+**No generado por IA.** El *pipeline* de auditoría, su ejecución y cada número que produjo.
+
+### 2.4 Documentación y estructura del artículo
+
+**Qué hizo la herramienta.** Se usó Claude para redactar y revisar la documentación del proyecto: la propuesta del tema, los documentos de asignación de lectura, las convenciones del repositorio y la interpretación de cómo los requisitos de la Etapa 1 (tres ejes, tabla comparativa, identificación de brechas, línea base de la literatura, metodología) se mapean en las secciones de un artículo en formato IEEE.
+
+**Verificado manualmente.** Cada afirmación técnica en esos documentos fue verificada contra el enunciado del curso o contra una fuente primaria. Los pasajes que no pudieron fundamentarse fueron eliminados en lugar de ser suavizados.
+
+**No generado por IA.** La formalización del problema, el diccionario de características, la lista negra de fugas, el protocolo experimental, la escalera de líneas base y cada resultado que se reportará.
 
 ---
 
-## 4. Per-member declaration
+## 3. Límites establecidos por el equipo
 
-Each member completes their own block before the delivery.
+Estas reglas se mantienen independientemente de qué herramienta utilice cualquier miembro.
+
+*   **Ninguna referencia entra en la bibliografía por recomendación ciega de una herramienta.** Cada DOI se resuelve manualmente y la fuente se lee para confirmar que dice lo que le atribuimos.
+*   **No se delega ninguna decisión técnica.** La pregunta de investigación, la definición del objetivo, el diseño de la partición, la elección de métricas y la interpretación de los resultados son razonamiento propio del equipo. Una herramienta puede sugerir opciones; el equipo elige y defiende.
+*   **No se genera ningún resultado experimental.** Cada número reportado en el artículo proviene de código que escribimos y ejecutamos.
+*   **El código generado se ejecuta antes de ser consolidado.** No se fusiona nada asumiendo que funciona.
+*   **Los *preprints* se marcan como tales.** Cuando una herramienta sugirió un trabajo exclusivo de arXiv, este fue excluido de los 21 artículos revisados por pares o se consultó con el profesor antes de su inclusión.
+
+---
+
+## 4. Declaración por integrante
+
+Cada miembro completa su propio bloque antes de la entrega.
 
 ### Adriel S. Chaves Salazar
-- **Tools used:** [TO BE COMPLETED]
-- **Where:** [TO BE COMPLETED]
-- **Purpose:** [TO BE COMPLETED]
-- **Manually verified afterwards:** [TO BE COMPLETED]
-- **Not AI-generated:** [TO BE COMPLETED]
+*   **Herramientas utilizadas:** Claude y herramientas de IA generativa.
+*   **Dónde y para qué:** Búsqueda y descubrimiento de documentos académicos para el Eje B; asistencia para el estudio y comprensión profunda de estos artículos; apoyo en la redacción de la versión individual del documento correspondiente al Eje B; y concatenación de grandes bloques de información comparativa y estructuralmente similar.
+*   **Verificado manualmente después:** [POR COMPLETAR: p. ej., revisión de que las uniones de texto tuvieran coherencia académica y validación de las interpretaciones generadas sobre los artículos del Eje B].
+*   **No generado por IA:** [POR COMPLETAR: p. ej., las conclusiones críticas de la comparación y la selección final de qué papers incluir en el Eje B].
 
 ### Daniel Duarte Cordero
-- **Tools used:** [TO BE COMPLETED]
-- **Where:** [TO BE COMPLETED]
-- **Purpose:** [TO BE COMPLETED]
-- **Manually verified afterwards:** [TO BE COMPLETED]
-- **Not AI-generated:** [TO BE COMPLETED]
+*   **Herramientas utilizadas:** [POR COMPLETAR]
+*   **Dónde y para qué:** [POR COMPLETAR]
+*   **Verificado manualmente después:** [POR COMPLETAR]
+*   **No generado por IA:** [POR COMPLETAR]
 
 ### Sebastián Hernández Bonilla
-- **Tools used:** [TO BE COMPLETED]
-- **Where:** [TO BE COMPLETED]
-- **Purpose:** [TO BE COMPLETED]
-- **Manually verified afterwards:** [TO BE COMPLETED]
-- **Not AI-generated:** [TO BE COMPLETED]
+*   **Herramientas utilizadas:** Claude (Claude Code, Opus 5).
+*   **Dónde y para qué:** Organización y cribado de la literatura; recuperación de textos completos desde fuentes de los editores; extracción de figuras, tablas y limitaciones declaradas de los 7 trabajos revisados; resolución de metadatos bibliográficos contra Crossref; asistencia con formato y construcción del fichero BibTeX. Asistencia previa con los *scripts* de auditoría del corpus y lectura de sus salidas.
+*   **Verificado manualmente después:** Los 7 trabajos citados fueron recuperados y leídos a texto completo. Todo valor atribuido a una fuente fue transcrito manualmente. Todos los DOI se resolvieron contra Crossref o el registro del editor. La versión KDD'11 citada es la efectivamente leída. Está pendiente una relectura manual independiente de las fuentes antes de la entrega.
+*   **No generado por IA:** La pregunta de investigación, las hipótesis de trabajo, la elección del Track A, la decisión de agrupar por episodio, la lista negra de campos prohibidos, el diseño/ejecución de la auditoría y la interpretación de sus resultados. Ninguna magnitud de la auditoría es producto de un modelo de lenguaje.

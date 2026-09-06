@@ -9,24 +9,24 @@ An applied AI solution built under research methodology, consumed by an intellig
 ## Status
 
 | Stage | Deliverable | Deadline | Weight | Status |
-|---|---|---|---|---|
-| **Stage 1** | State of the art, problem analysis, preliminary IEEE paper | 27/08/2026 | 30 % | In progress |
-| **Stage 2** | Methodological workbook: pipeline, baselines, model, ablations | Week 10 | 45 % | Not started |
-| **Stage 3** | Functional intelligent agent + final paper | Week 16 | 25 % | Not started |
+| --- | --- | --- | --- | --- |
+| **Stage 1** | State of the art, problem analysis, preliminary IEEE paper | 06/09/2026 | 30% | In progress |
+| **Stage 2** | Methodological workbook: pipeline, baselines, model, ablations | Week 10 | 45% | Not started |
+| **Stage 3** | Functional intelligent agent + final paper | Week 16 | 25% | Not started |
 
-**Track:** [TO BE COMPLETED — pending professor approval]
-**Topic:** [TO BE COMPLETED]
-**Dataset / Environment:** [TO BE COMPLETED]
+**Track:** Track A — Classical machine learning on tabular data.
+**Topic:** Estimating Win Probability from Game State in the Pokémon Trading Card Game: A Tabular Classification Study with Explicit Data Leakage Control.
+**Dataset / Environment:** PTCG AI Battle Challenge replay dataset.
 
 ---
 
 ## Team
 
 | Member | ID | Review axis |
-|---|---|---|
+| --- | --- | --- |
 | Adriel S. Chaves Salazar | 2021031465 | Axis B — techniques of the selected track |
-| Daniel Duarte Cordero | [TO BE COMPLETED] | Axis A — problem domain |
-| Sebastián Hernández Bonilla | [TO BE COMPLETED] | Axis C — dataset / environment |
+| Daniel Duarte Cordero | 2022012866 | Axis A — problem domain |
+| Sebastián Hernández Bonilla | 2022093651 | Axis C — dataset / environment |
 
 **Professor:** Kenneth Roberto Obando Rodríguez
 
@@ -37,15 +37,14 @@ Individual authorship is determined by commit history. Shared files count as sha
 ## Repository Guide
 
 | Path | Contents |
-|---|---|
+| --- | --- |
 | `docx/00GitRules/` | Branching, commit and PR conventions |
 | `docx/01AgileTaskDivision/` | Sprint planning and backlog |
 | `docx/02Papers/` | Reviewed literature per member, and the LaTeX source of the paper |
 | `docx/02Papers/00MainPaperLatex/` | IEEE paper: `MainPaper.tex`, sections, bibliography |
-| `docx/03Evidence/` | Meeting notes, agreements, milestones — raw material for the work journal |
-| `AI_USAGE.md` | Mandatory declaration of AI tool usage |
+| `docx/03Evidence/` | Meeting notes, agreements, milestones, and the `AI_USAGE.md` declarations — raw material for the work journal |
 
-Each folder carries a `WhatThisContains.md` describing its purpose.
+Some folder carries a `WhatThisContains.md` describing its purpose.
 
 ---
 
@@ -57,9 +56,10 @@ Requires a TeX distribution with `IEEEtran` (MiKTeX, TeX Live) and `latexmk`.
 cd docx/02Papers/00MainPaperLatex
 latexmk -C
 latexmk -pdf MainPaper.tex
+
 ```
 
-Output: `MainPaper.pdf`.
+Output: MainPaper.pdf.
 
 To verify no placeholders remain, redefine the `\todo` macro in `preamble.tex` as `\newcommand{\todo}[1]{}` and recompile — any section that renders empty is unfinished.
 
@@ -71,6 +71,7 @@ To verify no placeholders remain, redefine the `\todo` macro in `preamble.tex` a
 cd docx/02Papers/00WorkJournalLatex
 latexmk -C
 latexmk -pdf WorkJournal.tex
+
 ```
 
 ---
@@ -87,9 +88,9 @@ latexmk -pdf WorkJournal.tex
 
 ## Conventions
 
-- **Git.** See `docx/00GitRules/CodeControl.md`. Three branch levels: `master` → `stage<N>` → `<NN><IssueName>`. PR for every branch change; approval required only for merges into `master`.
-- **Bibliography.** BibTeX only, key format `author_keyword_year`. Peer-reviewed journal or conference sources; a DOI must resolve and its content must match what is attributed to it before an entry is committed.
-- **Documentation.** Markdown inside the repository. The paper is the deliverable; the Markdown is the working record.
+* **Git:** See `docx/00GitRules/CodeControl.md`. Three branch levels: `master` → `stage<N>` → `<NN><IssueName>`. PR for every branch change; approval required only for merges into `master`.
+* **Bibliography:** BibTeX only, key format `author_keyword_year`. Peer-reviewed journal or conference sources; a DOI must resolve and its content must match what is attributed to it before an entry is committed.
+* **Documentation:** Markdown inside the repository. The paper is the deliverable; the Markdown is the working record.
 
 ---
 
