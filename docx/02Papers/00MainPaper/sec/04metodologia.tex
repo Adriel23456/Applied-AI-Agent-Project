@@ -1,160 +1,168 @@
 % ============================================================
-% sec/04metodologia.tex — VERSIÓN INTEGRADA, TRES EJES
+% sec/04metodologia.tex
 %
-% Eje A: Duarte · Eje B: Chaves · Eje C: Hernández
-% Cifras procedentes de la auditoría del corpus.
-%
-% OBLIGATORIO: formalización con formulación matemática,
-% pipeline previsto, protocolo experimental con particiones,
-% validación y métricas justificadas, plan de baselines, y
-% riesgos con su mitigación.
+% Formalización con formulación matemática, pipeline previsto,
+% protocolo experimental con particiones, validación y métricas
+% justificadas, plan de baselines, y riesgos con mitigación.
 % ============================================================
 \section{Metodología Propuesta}
 \label{sec:metodologia}
 
-Esta sección describe lo que se propone hacer. No se ha entrenado ningún
-modelo y ningún valor aquí reportado es empírico; las únicas magnitudes
-medidas que aparecen son propiedades del corpus, establecidas por la
-auditoría que se describe en la Sección~\ref{sec:analisistecnico}.
-
-\razon{Esta advertencia debe abrir la sección. Sin ella, las cifras de
-auditoría intercaladas en el texto podrían leerse como resultados de modelo.}
+Esta sección describe lo que se propone hacer. Ninguna cifra de desempeño
+aparece aquí: no se ha entrenado ningún modelo, y las únicas magnitudes
+medidas que se citan son propiedades del corpus, establecidas por la
+auditoría que documenta la Sección~\ref{sec:analisistecnico}.
 
 \subsection{Formalización del problema}
 \label{subsec:formalizacion}
 
-Sea $\mathcal{E}$ el conjunto de episodios, cada uno una partida completa
-entre dos agentes. Un episodio $e \in \mathcal{E}$ produce una secuencia
-ordenada de estados; de ella se retiene la subsecuencia de estados
-\emph{frescos} del asiento que actúa, indexada por $t$. Cada estado retenido
-produce una observación
+Sea $\mathcal{E}$ el conjunto de partidas disponibles. Una partida
+$e \in \mathcal{E}$ produce una secuencia ordenada de estados; de ella se
+retiene la subsecuencia correspondiente al jugador que actúa en cada
+momento. Cada estado retenido genera una observación
 \[
   (x_i,\; y_i,\; g_i,\; \tau_i,\; d_i),
 \]
 donde $x_i \in \mathcal{X} \subseteq \mathbb{R}^p$ es el vector de
-características construido a partir de la observación disponible para el
-asiento activo en ese instante, $y_i \in \{0,1\}$ indica si el jugador desde
-cuya perspectiva se construyó la fila venció en el episodio,
-$g_i \in \mathcal{E}$ es el identificador del episodio,
-$\tau_i \in \mathbb{N}$ es el índice de turno y $d_i$ la fecha de calendario.
+características construido con la información disponible para ese jugador en
+ese instante, $y_i \in \{0,1\}$ indica si venció, $g_i$ identifica la partida
+de la que procede la observación, $\tau_i$ es el número de turno y $d_i$ la
+fecha. Los tres últimos se conservan para agrupar, estratificar y reportar,
+pero nunca forman parte de $x_i$.
 
-Los tres últimos campos se arrastran para agrupación, estratificación y
-análisis; por construcción, nunca son componentes de $x_i$.
-
-La tarea es clasificación binaria probabilística: aprender
-$f : \mathcal{X} \rightarrow [0,1]$ tal que
+La tarea es aprender una función $f : \mathcal{X} \rightarrow [0,1]$ tal que
 \begin{equation}
 \label{eq:objetivo}
   f(x) \approx \Pr\!\left(Y = 1 \mid X = x\right),
 \end{equation}
 donde la probabilidad se toma sobre la aleatoriedad del juego posterior al
 instante observado: el orden restante del mazo, la información oculta del
-oponente y las decisiones futuras de ambos agentes.
+oponente y las decisiones futuras de ambos jugadores. Esa aleatoriedad es lo
+que distingue este problema de uno determinista y lo que obliga a estimar
+una probabilidad en lugar de deducir una etiqueta.
 
-\razon{La ecuación debe explicitar sobre qué se toma la probabilidad. Es lo
-que distingue este problema de uno determinista, y constituye la respuesta al
-criterio de exclusión que Grinsztajn \textit{et al.} aplican a los conjuntos
-de juegos en los cuales el objetivo se deduce de los datos
-\cite{grinsztajn_trees_2022}.}
+\subsubsection{La función objetivo, y qué significa cada término}
 
-Puesto que la salida es una probabilidad y no una etiqueta, el objetivo de
-entrenamiento es una regla de puntuación propia: la log-verosimilitud
-negativa regularizada,
+Puesto que la salida es una probabilidad, el criterio de ajuste no puede ser
+una pérdida de clasificación. Se emplea la log-verosimilitud negativa con
+regularización:
+
 \begin{equation}
 \label{eq:ajuste}
 \begin{split}
-\hat{f} = \arg\min_{f \in \mathcal{F}} \Big\{
-  &-\frac{1}{N}\sum_{i=1}^{N}\big[\, y_i \log f(x_i)\\
-  &+ (1-y_i)\log\big(1-f(x_i)\big) \,\big]
-  + \lambda\,\Omega(f) \Big\},
+f^{*} = \arg\min_{f \in \mathcal{F}} \Big[
+  &-\frac{1}{N}\sum_{i=1}^{N}
+   \Big( y_i \log f(x_i) \\[-2pt]
+  &\qquad + (1-y_i)\log\big(1-f(x_i)\big) \Big)
+  \;+\; \lambda\,\Omega(f) \Big].
 \end{split}
 \end{equation}
-con $\Omega$ la penalización de complejidad de la familia $\mathcal{F}$ y
-$\lambda$ seleccionado sobre datos de validación.
 
-\razon{Minimizar una regla de puntuación propia en lugar de una pérdida de
-clasificación es una elección deliberada y debe declararse como tal: es el
-objetivo cuyo óptimo es la probabilidad condicional verdadera, y la
-calibración es una de las propiedades que este trabajo se propone medir.}
+En lenguaje llano, la expresión busca la función que produce las
+probabilidades más coherentes con lo que efectivamente ocurrió, penalizando
+a la vez que esa función sea innecesariamente complicada. Los elementos son
+los siguientes.
 
-\subsubsection{Restricciones que completan la formulación}
+\begin{itemize}
+  \item $x_i$ es el vector de características observables del estado $i$:
+        premios restantes, puntos de vida, energías, cartas en mano y demás
+        campos del diccionario descrito en la
+        Sección~\ref{subsec:diccionario}.
+  \item $y_i$ es el desenlace de la partida a la que pertenece ese estado,
+        con $1$ para victoria y $0$ para derrota, desde la perspectiva del
+        jugador que actúa.
+  \item $f(x_i)$ es la probabilidad de victoria que el modelo asigna a ese
+        estado, un número entre $0$ y $1$.
+  \item $N$ es el número de observaciones empleadas en el ajuste.
+  \item El primer término es la \textbf{pérdida logarítmica promedio}. Para
+        cada observación toma el logaritmo de la probabilidad asignada al
+        desenlace correcto. Si el modelo asigna una probabilidad alta al
+        desenlace que efectivamente ocurrió, el término contribuye poco; si
+        asigna una probabilidad baja, contribuye mucho. La penalización
+        crece sin límite conforme la probabilidad asignada al desenlace
+        correcto se acerca a cero, de modo que una predicción segura y
+        equivocada resulta especialmente costosa.
+  \item $\Omega(f)$ es el \textbf{término de regularización}, que penaliza la
+        complejidad del modelo. Su forma concreta depende de la familia:
+        para la regresión logística es la norma $\ell_2$ de los coeficientes,
+        de modo que penaliza coeficientes grandes; para los modelos basados
+        en árboles corresponde a los límites de profundidad, número mínimo de
+        observaciones por hoja y número de hojas.
+  \item $\lambda$ regula el equilibrio entre ajustarse a los datos de
+        entrenamiento y mantener el modelo simple. Un valor alto produce un
+        modelo más rígido; uno bajo, uno que puede memorizar. Se selecciona
+        sobre el subconjunto de validación, nunca sobre el de prueba.
+  \item $\mathcal{F}$ es la familia de modelos candidatos, distinta para cada
+        nivel de la escalera descrita en la
+        Sección~\ref{subsec:planbaselines}.
+  \item $\arg\min$ indica que se elige la función $f$ dentro de
+        $\mathcal{F}$ que minimiza el valor total de la expresión.
+\end{itemize}
 
-La primera es la condición de legitimidad de Kaufman \textit{et al.}: todo
-componente de $x_i$ debe ser observable para el propósito de inferir $y_i$,
-evaluado instancia por instancia, y en particular no puede depender de
-información generada después del turno $\tau_i$ \cite{kaufman_leakage_2011}.
+Dos precisiones sobre su papel en este trabajo. La primera es que el objetivo
+no consiste en clasificar victoria o derrota, sino en producir una
+probabilidad utilizable: minimizar esta expresión es lo que hace que el
+óptimo teórico sea la probabilidad condicional verdadera, y por eso resulta
+compatible con evaluar calibración. La segunda es que tanto $f$ como los
+parámetros de preprocesamiento se ajustan exclusivamente con los datos de
+entrenamiento de cada pliegue; emplear datos de validación o prueba en ese
+ajuste constituiría fuga de información.
 
-La segunda es una restricción de partición. Para cualesquiera dos partes $A$
-y $B$ de una división,
+\subsubsection{Unidad de observación y unidad independiente}
+
+Esta distinción gobierna todo el diseño experimental.
+
+\begin{itemize}
+  \item \textbf{Unidad de observación:} un estado del jugador que actúa,
+        proyectado a una perspectiva común entre propio y oponente. Es la
+        fila de la tabla y la entrada del modelo.
+  \item \textbf{Unidad independiente:} la partida. El desenlace se sortea una
+        sola vez por partida, y todas sus observaciones lo comparten.
+\end{itemize}
+
+Sobre la muestra auditada, el número de observaciones excede en
+aproximadamente dos órdenes de magnitud el de partidas. Toda mención del
+tamaño del conjunto en este documento expresa ambas cifras, porque reportar
+solo el conteo de filas transmitiría una noción inexacta de cuánta evidencia
+independiente hay disponible \cite{brill_winprob_2026}.
+
+De ahí se sigue la restricción que rige toda partición. Para cualesquiera
+dos subconjuntos $A$ y $B$ de una división,
 \begin{equation}
 \label{eq:agrupacion}
   \{\, g_i : i \in A \,\} \;\cap\; \{\, g_i : i \in B \,\} \;=\; \emptyset ,
 \end{equation}
-de modo que ningún episodio aporte filas a más de una parte.
-
-La restricción \eqref{eq:agrupacion} es el enunciado formal del argumento del
-tamaño muestral efectivo de Karbalaie \textit{et al.}: la unidad
-independiente es el episodio, no la fila
+es decir, ninguna partida aporta observaciones a más de un subconjunto. Esta
+es la formulación del argumento de tamaño muestral efectivo de Karbalaie
+\textit{et al.}: la unidad independiente es la partida y no la fila
 \cite{karbalaie_participantaware_2026}.
 
-\subsubsection{Definición del objetivo}
+Se conservan todas las observaciones de cada partida, sin submuestreo. La
+alternativa de retener una sola por partida resultaría intuitivamente
+atractiva, pues produciría filas independientes, pero Brill \textit{et al.}
+reportan que es peor: el conjunto completo aporta información sobre la
+estructura del espacio de características que se pierde al descartar
+observaciones \cite{brill_winprob_2026}.
 
-La etiqueta se deriva del campo de recompensas a nivel de episodio, que
-resuelve el 99.86\,\% de los episodios auditados: 27\,135 con recompensa
-$(1,-1)$, 24\,844 con $(-1,1)$, 33 empates y 73 desenlaces anómalos.
+\subsubsection{Definición del desenlace y exclusiones}
 
-Los empates se excluyen del objetivo binario; su volumen no puede sostener
-una tercera clase. Los desenlaces anómalos, por agotamiento de tiempo,
-error o estado inválido, tienen ganador identificable, pero el final no
-procede de la dinámica del juego, de modo que se excluyen del entrenamiento
-principal y se reservan para análisis de sensibilidad.
+La etiqueta se deriva del registro de recompensas de cada partida, que
+resuelve el desenlace en prácticamente la totalidad de los casos auditados.
+Dos grupos se excluyen, con la regla declarada antes de examinar los datos
+de prueba.
 
-\razon{Los criterios de exclusión deben declararse en la formalización y no
-en el análisis de datos. Excluir observaciones sin regla previamente
-establecida constituye una decisión posterior a los datos.}
-
-\subsubsection{Unidad de observación y unidad independiente}
-
-\begin{itemize}
-  \item \textbf{Unidad de observación.} Un estado fresco del asiento activo,
-        proyectado a una perspectiva común propio/oponente. La observación
-        del asiento inactivo no se duplica como fila adicional.
-  \item \textbf{Unidad estadísticamente independiente.} El episodio. El
-        desenlace se sortea una única vez por episodio, y todas sus
-        observaciones comparten ese sorteo.
-\end{itemize}
-
-Los 52\,085 episodios auditados generan 7\,038\,378 observaciones útiles,
-aproximadamente 135 filas por unidad independiente.
-
-\razon{Toda mención del tamaño del corpus en este documento debe expresar
-ambas cifras. Reportar únicamente el conteo de filas transmitiría una noción
-inexacta de la cantidad de evidencia disponible, precisamente el error que
-Brill \textit{et al.} identifican \cite{brill_winprob_2026}.}
-
-\subsection{Alcance del uso de las observaciones}
-\label{subsec:alcanceobs}
-
-Se conserva la totalidad de las observaciones por episodio, sin submuestreo.
-Brill \textit{et al.} reportan que retener todas las observaciones de una
-unidad resulta preferible a conservar una sola, dado que el conjunto completo
-aporta información sobre la estructura del espacio de covariables, pese a la
-dependencia entre las etiquetas \cite{brill_winprob_2026}.
-
-\razon{Esta decisión debe justificarse de forma explícita porque la
-alternativa ,retener un estado por episodio para obtener observaciones
-independientes, resulta intuitivamente atractiva y es peor. Sin la cita,
-parecería una omisión en lugar de una elección informada.}
+Los empates se excluyen del objetivo binario; su volumen es demasiado
+reducido para sostener una tercera clase. Las partidas terminadas de forma
+anómala ---por agotamiento de tiempo, error o estado inválido--- tienen
+ganador identificable, pero su final no procede de la dinámica del juego, de
+modo que se apartan del entrenamiento principal y se reservan para un
+análisis de sensibilidad.
 
 \subsection{Tubería propuesta}
 \label{subsec:pipeline}
 
-El procedimiento ingiere las repeticiones en formato JSON, valida la firma de
-esquema y su versión declarada, selecciona los estados frescos del asiento
-activo, y proyecta cada fila a la perspectiva del jugador activo. A
-continuación aplica el filtro de lista negra, construye las características
-por familia, y materializa la tabla. La partición agrupada precede al ajuste
-de toda transformación.
+El procedimiento va de la repetición cruda a la tabla evaluable en siete
+etapas, representadas en la Figura~\ref{fig:pipeline}.
 
 \begin{figure}[!t]
 \centering
@@ -173,12 +181,12 @@ de toda transformación.
                align=center}
 ]
 
-\node[etapa] (e1) {1. Ingesta y validación de esquema};
-\node[etapa, below=3.2mm of e1] (e2) {2. Estados frescos y perspectiva normalizada};
-\node[hito,  below=3.2mm of e2] (e3) {3. Filtro de lista negra};
-\node[etapa, below=3.2mm of e3] (e4) {4. Características por familia};
+\node[etapa] (e1) {1. Lectura y validación de la repetición};
+\node[etapa, below=3.2mm of e1] (e2) {2. Estados del jugador activo, perspectiva normalizada};
+\node[hito,  below=3.2mm of e2] (e3) {3. Filtro de campos excluidos};
+\node[etapa, below=3.2mm of e3] (e4) {4. Construcción de características};
 \node[hito,  below=3.2mm of e4] (e5) {5. Materialización de la tabla};
-\node[hito,  below=3.2mm of e5] (e6) {6. Partición agrupada por episodio};
+\node[hito,  below=3.2mm of e5] (e6) {6. Partición agrupada por partida};
 \node[etapa, below=3.2mm of e6] (e7) {7. Ajuste, selección y evaluación};
 
 \draw[flecha] (e1) -- (e2);
@@ -188,11 +196,11 @@ de toda transformación.
 \draw[flecha] (e5) -- (e6);
 \draw[flecha] (e6) -- (e7);
 
-\node[nota, right=2.5mm of e2] {perspectiva propio/oponente};
-\node[nota, right=2.5mm of e3] {la construcción falla si entra un campo prohibido};
-\node[nota, right=2.5mm of e5] {ejecutada una sola vez, formato columnar};
-\node[nota, right=2.5mm of e6] {antes de ajustar toda transformación};
-\node[nota, right=2.5mm of e7] {protocolos A, B y C};
+\node[nota, right=2.5mm of e2] {propio frente a oponente};
+\node[nota, right=2.5mm of e3] {falla si entra un campo prohibido};
+\node[nota, right=2.5mm of e5] {una sola vez, formato columnar};
+\node[nota, right=2.5mm of e6] {precede a toda transformación};
+\node[nota, right=2.5mm of e7] {escenarios A, B y C};
 
 \begin{scope}[on background layer]
   \node[draw=tecrule, dashed, rounded corners=3pt, inner sep=3pt,
@@ -205,273 +213,295 @@ de toda transformación.
 \node[fase, left=1mm of faseB] {Experimentación};
 
 \end{tikzpicture}
-\caption{Tubería propuesta, de la repetición cruda al modelo evaluado. Las
-etapas 1 a 5 se ejecutan una sola vez. El filtro de lista negra y la
-partición agrupada se imponen mediante pruebas automatizadas y no por
-convención. En la etapa final del proyecto, el mismo extractor alimenta al
-agente inteligente con la probabilidad estimada.}
+\caption{Tubería propuesta. Las etapas 1 a 5 se ejecutan una sola vez y
+producen la tabla; las etapas 6 y 7 operan sobre ella. El filtro de campos
+excluidos y la partición agrupada se imponen mediante pruebas automáticas y
+no por convención.}
 \label{fig:pipeline}
 \end{figure}
 
-Dos decisiones de diseño merecen justificación.
+Tres decisiones de esa tubería requieren justificación.
 
-\noindent\textbf{Normalización de la perspectiva.} Para cada jugador, los
-datos se reorganizan distinguiendo entre ``mi información'' y la información
-de cada oponente, en lugar de identificarlos por su número de asiento. Así,
-el modelo aprende a comparar las características de los jugadores y no a
-asociar el resultado con un asiento específico. Esta transformación es
-importante porque, en los últimos días, el asiento y el orden de turno
-coincidían casi siempre. Sin ella, el modelo podría usar el número de asiento
-como un atajo para predecir el resultado.
+\noindent\textbf{Normalización de la perspectiva.} Cada fila se reorganiza
+distinguiendo entre la información propia y la del oponente, en lugar de
+identificarlos por su posición en la mesa. Así el modelo aprende a comparar
+magnitudes y no a asociar el desenlace con una posición concreta. La
+auditoría hace esta transformación necesaria: en los días tardíos de la
+muestra, la posición en la mesa y el orden de turno coinciden casi siempre,
+de modo que sin normalizar, la posición se convertiría en un atajo
+disponible.
 
-\noindent\textbf{Ajuste del preprocesamiento dentro del pliegue.} Primero se
-separan los datos en un conjunto de entrenamiento y otro reservado para la
-evaluación. Los parámetros de escalado, la codificación de variables
-categóricas, la imputación de valores faltantes y la ponderación de clases se
-calculan únicamente con los datos de entrenamiento. Después, esas mismas
-reglas se aplican a los datos reservados. De este modo se evita que la
-información del conjunto de evaluación se filtre al entrenamiento y haga que
-el rendimiento del modelo parezca mejor de lo que realmente es. Sasse
-\textit{et al.} denominan fuga de prueba a entrenamiento a la alternativa de
-calcular esos parámetros usando todos los datos antes de particionarlos,
-incluso si el modelo se entrena después de la partición
-\cite{sasse_leakage_2025}.
+\noindent\textbf{Ajuste del preprocesamiento dentro del pliegue.} Los
+parámetros de escalado, codificación de categóricas, imputación y
+ponderación de clases se calculan únicamente con los datos de entrenamiento
+y después se aplican al resto. Calcularlos sobre el conjunto completo antes
+de particionar constituye fuga de información aunque el modelo se ajuste
+después de la partición \cite{sasse_leakage_2025}.
 
-Xenopoulos \textit{et al.} y Hodge \textit{et al.} describen un procedimiento
-relacionado para transformar las repeticiones en datos utilizables por un
-modelo: un analizador sintáctico recorre cada repetición y genera una
-representación del estado a intervalos regulares. Esos estados, que describen
-la situación del proceso en distintos momentos, constituyen la entrada de los
-modelos \cite{xenopoulos_winprob_2022,hodge_winprediction_2021}.
-
-\razon{Citar ambos precedentes evita que el procedimiento parezca una
-construcción improvisada. La estructura repetición--analizador--tabla es la
-práctica establecida del dominio.}
+\noindent\textbf{Materialización única.} La tabla se escribe una sola vez en
+formato columnar. El costo computacional dominante es el análisis de las
+repeticiones, no el entrenamiento, de modo que repetir esa lectura en cada
+experimento sería el cuello de botella del proyecto.
 
 \subsection{Protocolo experimental}
 \label{subsec:protocolo}
 
-\subsubsection{Partición agrupada por episodio}
+\subsubsection{Particiones}
 
-El protocolo primario es una partición 70/15/15 agrupada por episodio, que
-satisface \eqref{eq:agrupacion}.
+El protocolo primario emplea una partición $60/15/10/15$ en entrenamiento,
+validación, calibración y prueba, agrupada por partida conforme a
+\eqref{eq:agrupacion}. Los cuatro subconjuntos responden a funciones
+distintas: el primero ajusta el modelo, el segundo selecciona
+hiperparámetros, el tercero ajusta la corrección de probabilidades descrita
+en la Sección~\ref{subsec:recalibracion}, y el cuarto se toca una sola vez,
+al final.
 
-La alternativa, una partición aleatoria sobre filas, se rechaza sobre
-bases medidas y no de principio: en la muestra auditada, una partición
-aleatoria 70/30 de instantáneas colocaría el 99.9945\,\% de los episodios a
-ambos lados simultáneamente. El protocolo ingenuo contaminaría, por tanto,
-esencialmente todo el corpus.
+El conjunto de calibración se reserva de forma explícita porque la
+corrección de probabilidades debe ajustarse sobre datos que el modelo no vio
+durante el entrenamiento \cite{silvafilho_calibration_2023}. Niculescu-Mizil
+y Caruana detallan la consecuencia de incumplirlo: si el modelo separa
+perfectamente el conjunto sobre el que se calibra, la transformación
+aprendida degenera \cite{niculescumizil_probabilities_2005}.
 
-Esta decisión se basa en evidencia previa de que dividir observaciones
-relacionadas entre entrenamiento y prueba puede inflar artificialmente las
-métricas, porque el modelo termina evaluándose sobre información vinculada a
-la que ya vio durante el entrenamiento. En particular, Karbalaie
-\textit{et al.} reportan una caída del acierto de 0.91 bajo validación
-estratificada a 0.66 bajo validación agrupada sobre los mismos datos
-\cite{karbalaie_participantaware_2026}. Por ello, la partición se realiza por
-episodio y no por observación.
+La alternativa de particionar por fila se rechaza sobre bases medidas y no
+de principio. Sobre la muestra auditada, una partición aleatoria por
+observación colocaría prácticamente todas las partidas a ambos lados de la
+división, de modo que el conjunto de prueba contendría situaciones casi
+idénticas a las de entrenamiento. Karbalaie \textit{et al.} cuantifican el
+efecto de ese error sobre datos con estructura comparable: un mismo modelo
+pasa de 0.91 de acierto bajo validación estratificada a 0.66 bajo validación
+que respeta la agrupación \cite{karbalaie_participantaware_2026}.
 
-\razon{Se citan las tres referencias y no una, porque miden cosas distintas:
-la primera sobre las propiedades del estimador, la segunda sobre la magnitud
-de la inflación bajo agrupación por sujeto, la tercera sobre la cifra
-publicada. Presentar solo una dejaría el argumento a medias.}
-
-Una ventaja de este corpus respecto de los escenarios estudiados por
-Figueiredo y Mendes es que la agrupación no requiere inferencia: el
-identificador de episodio la determina de forma exacta. En su trabajo, la
-contribución central consiste precisamente en un procedimiento para inferir
+Una ventaja de este corpus respecto de los escenarios que estudian Figueiredo
+y Mendes es que la agrupación no requiere inferirse: el identificador de
+partida la determina de forma exacta, mientras que en su caso la
+contribución central consiste precisamente en un procedimiento para deducir
 agrupaciones que no vienen dadas \cite{figueiredo_leakage_2024}.
 
-\subsubsection{Tres protocolos de generalización}
+\subsubsection{Cobertura de cartas en el conjunto de entrenamiento}
+
+Las tres particiones anteriores separan partidas, y el escenario C separa
+además mazos. Ninguna de las dos separaciones debe producir cartas ausentes
+del entrenamiento, y esa condición se declara aquí de forma explícita.
+
+\begin{quote}
+Toda carta presente en el corpus debe aparecer al menos una vez en el
+conjunto de entrenamiento. Los conjuntos de validación, calibración y prueba
+pueden contener partidas y mazos no vistos, pero sus cartas deben haber
+aparecido previamente en entrenamiento.
+\end{quote}
+
+La razón es que evaluar sobre mazos no vistos y evaluar sobre cartas no
+vistas son preguntas distintas. La primera examina si el modelo aprendió a
+leer el estado o memorizó qué combinaciones de cartas vencen; la segunda
+examina si su representación generaliza a contenido nuevo, que es lo que
+Bertram \textit{et al.} estudian reservando un conjunto completo de cartas
+\cite{bertram_cardrepresentations_2024}. Mezclarlas impediría interpretar
+una caída de desempeño, porque no se sabría a cuál de las dos causas
+atribuirla.
+
+El procedimiento de auditoría de cobertura se ejecuta después de particionar
+y antes de entrenar, y consta de tres pasos verificables:
+
+\begin{enumerate}
+  \item Construir el inventario de identificadores de carta presentes en el
+        corpus completo, y el inventario correspondiente al conjunto de
+        entrenamiento resultante de la partición.
+  \item Calcular la diferencia entre ambos. Si no es vacía, la partición se
+        rechaza y se regenera con una semilla distinta, o se reasigna al
+        entrenamiento la partida de menor duración que contenga cada carta
+        faltante.
+  \item Registrar el inventario final, el número de cartas que aparecen una
+        sola vez y cualquier carta excluida por filtros previos, de modo que
+        el reporte declare la cobertura efectiva y no la supuesta.
+\end{enumerate}
+
+La evaluación sobre cartas no vistas, si llega a realizarse, se declara como
+experimento independiente y con su propia partición, separado del protocolo
+principal y reportado por separado.
+
+\subsubsection{Tres escenarios de generalización}
+
+Los tres responden preguntas distintas y se reportan por separado, nunca
+promediados. La Tabla~\ref{tab:protocolos} los resume y los liga a las
+dimensiones de la pregunta de investigación.
 
 \begin{table}[!t]
 \centering
-\caption{Protocolos de evaluación y pregunta que responde cada uno.}
+\caption{Escenarios de evaluación y dimensión de la pregunta general que
+responde cada uno.}
 \label{tab:protocolos}
 \footnotesize
-\begin{tabularx}{\columnwidth}{@{}P{1.2cm} P{2.4cm} Y@{}}
+\begin{tabularx}{\columnwidth}{@{}P{1.1cm} P{2.3cm} Y@{}}
 \toprule
-\textbf{Protocolo} & \textbf{Criterio de partición} &
+\textbf{Escenario} & \textbf{Criterio de partición} &
 \textbf{Pregunta que responde}\\
 \midrule
-A & Episodios disjuntos, asignación aleatoria &
-¿Generaliza a partidas no observadas?\\
-B & Episodios disjuntos, corte cronológico por día &
-¿Se conserva el desempeño sobre periodos posteriores?\\
-C & Episodios disjuntos, composiciones disjuntas &
-¿Aprendió a leer el estado o memorizó qué composiciones vencen?\\
+A & Partidas disjuntas, asignación aleatoria &
+¿Generaliza a partidas que no vio?\\
+B & Partidas disjuntas, corte cronológico &
+¿Se mantiene el desempeño sobre periodos posteriores?\\
+C & Partidas disjuntas, mazos disjuntos &
+¿Aprendió a leer el estado o memorizó qué mazos vencen?\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\noindent\textbf{Protocolo B.} La partición cronológica asigna al
-entrenamiento los días 2026-06-17, 06-18, 06-23 y 06-29; a la validación los
-días 07-05 y 07-11; y a la prueba los días 07-25 y 08-04. El día 06-16 se
-mantiene fuera por corresponder a un arranque parcial, y el 07-17 se reserva
-por su concentración extrema de composiciones y agentes, sujeto a revisión
-posterior al análisis exploratorio.
+\noindent\textbf{Escenario B.} La partición cronológica asigna los días más
+tempranos de la muestra al entrenamiento, los intermedios a validación y
+calibración, y los más tardíos a prueba. El primer día se mantiene fuera por
+corresponder a un arranque parcial de la competencia, y un día de
+concentración anómala de mazos y agentes se reserva y se decide tras el
+análisis exploratorio.
 
-Este protocolo implementa la separación aprender--predecir que Kaufman
-\textit{et al.} describen como predicción sobre el futuro
-\cite{kaufman_leakage_2011}. Hodge \textit{et al.} adoptan una partición
-ordenada cronológicamente con el fin de no emplear datos posteriores para
-predecir eventos anteriores \cite{hodge_winprediction_2021}, y Saravanan y
-Guzdial documentan que el conjunto de estrategias dominante cambia de forma
-continua \cite{saravanan_metadiscovery_2024}.
+Este escenario implementa la separación entre aprender y predecir que Kaufman
+\textit{et al.} describen \cite{kaufman_leakage_2011}, y responde a la
+evidencia de que la población de estrategias evoluciona de forma continua
+\cite{saravanan_metadiscovery_2024}. Hodge \textit{et al.} adoptan una
+partición equivalente para no emplear datos posteriores en la predicción de
+eventos anteriores \cite{hodge_winprediction_2021}.
 
-\noindent\textbf{Protocolo C.} Aparta composiciones de mazo, o pares de
-composiciones enfrentadas, de forma completa para el conjunto de prueba. Es
-el diseño que Bertram \textit{et al.} emplean para separar la memorización de
-contenido conocido de la comprensión del contenido
-\cite{bertram_cardrepresentations_2024}, y coincide con la evaluación sobre
-composiciones no vistas de Angliss \textit{et al.}
-\cite{angliss_vgcbench_2026}.
-
-Los tres protocolos responden preguntas distintas y se reportan por separado,
-nunca promediados.
-
-\pc{El criterio exacto de separación por composición depende del análisis de
-concentración presentado en la Sección~\ref{subsec:representatividad}.}
+\noindent\textbf{Escenario C.} Reserva mazos completos, o pares de mazos
+enfrentados, para el conjunto de prueba, respetando la condición de cobertura
+de cartas del apartado anterior. Es el diseño que separa la memorización de
+contenido conocido de la interpretación del estado
+\cite{bertram_cardrepresentations_2024,angliss_vgcbench_2026}. El criterio
+exacto de separación depende del análisis de concentración de mazos que
+presenta la Sección~\ref{subsec:representatividad}.
 
 \subsubsection{Estrategia de validación}
 
-Los hiperparámetros se seleccionan mediante validación cruzada agrupada de
-$k$ pliegues sobre la partición de entrenamiento, tomando el episodio como
-clave de agrupación. La partición de prueba se toca una sola vez, al final.
+Los hiperparámetros se seleccionan mediante validación cruzada agrupada por
+partida sobre el subconjunto de entrenamiento. Emplear la variante por
+defecto, que asume independencia entre observaciones, anularía el control
+establecido en la partición.
 
-Karbalaie \textit{et al.} reportan que la validación cruzada agrupada de $k$
-pliegues coincide con el diseño de dejar un grupo fuera, mucho más
-costoso, dentro de 0.02 de acierto y a un costo un orden de magnitud menor,
-lo que resulta decisivo cuando la unidad de agrupación se cuenta en decenas
-de miles \cite{karbalaie_participantaware_2026}.
+Karbalaie \textit{et al.} reportan que la validación cruzada agrupada por
+grupos coincide con el diseño de dejar un grupo fuera dentro de 0.02 de
+acierto y a un costo un orden de magnitud menor
+\cite{karbalaie_participantaware_2026}, lo que resulta decisivo cuando la
+unidad de agrupación se cuenta en decenas de miles. Se prefiere un diseño
+anidado allá donde el presupuesto computacional lo permita, puesto que tanto
+ese trabajo como Sasse \textit{et al.} identifican el sesgo de selección como
+una fuga residual cuando los mismos pliegues sirven para ajustar y para
+evaluar \cite{sasse_leakage_2025}.
 
-Se prefiere un diseño plenamente anidado allá donde el presupuesto
-computacional lo permita, puesto que tanto Karbalaie \textit{et al.} como
-Sasse \textit{et al.} identifican el sesgo de selección como una fuga
-residual cuando los mismos pliegues sirven para ajustar y para evaluar
-\cite{karbalaie_participantaware_2026,sasse_leakage_2025}.
-
-\razon{El uso de validación cruzada agrupada, y no de su variante por
-defecto, es una condición necesaria: las implementaciones habituales asumen
-independencia entre observaciones y anularían el control establecido en la
-partición.}
-
-\subsubsection{Conjunto de calibración}
-
-El procedimiento de recalibración descrito en la
-Sección~\ref{subsec:planbaselines} requiere un subconjunto no empleado en el
-ajuste del modelo. Silva Filho \textit{et al.} establecen que la
-recalibración debe ajustarse sobre datos no vistos durante el entrenamiento
-\cite{silvafilho_calibration_2023}. Niculescu-Mizil y Caruana detallan la
-consecuencia de incumplirlo: si el modelo separa perfectamente el conjunto
-sobre el cual se calibra, la transformación aprendida degenera
-\cite{niculescumizil_probabilities_2005}.
-
-\decidir{El esquema 70/15/15 no contempla un conjunto de calibración. Las
-alternativas son: una cuarta partición obtenida dividiendo el conjunto de
-entrenamiento y agrupando por episodio; o emplear el mismo procedimiento de
-validación cruzada agrupada ya adoptado para hiperparámetros, verificando el
-orden de operaciones para que la selección no contamine la calibración. La
-decisión debe tomarse antes de ejecutar cualquier entrenamiento, puesto que
-modificar las particiones a mitad del proceso invalidaría los resultados
-previos.}
-
-\subsubsection{Métricas y su justificación}
+\subsubsection{Métricas}
 
 Cada métrica se incluye porque responde una pregunta que las demás no pueden
-responder.
+responder. La Figura~\ref{fig:descomposicion} ilustra por qué hacen falta al
+menos dos familias.
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  caja/.style={draw=tecsteel, fill=boxbg, rounded corners=2pt,
+               text width=2.6cm, align=center, inner sep=4pt,
+               minimum height=8mm},
+  raiz/.style={draw=tecnavy, fill=tecnavy!10, rounded corners=2pt,
+               text width=3.4cm, align=center, inner sep=4pt,
+               minimum height=8mm},
+  met/.style={font=\tiny\itshape, text=labelgray, align=center,
+              text width=2.6cm},
+  flecha/.style={-{Stealth[length=4pt]}, draw=tecsteel, thick}
+]
+
+\node[raiz] (r) at (0,2.1) {Regla de puntuación propia\\(pérdida logarítmica, Brier)};
+\node[caja] (cal) at (-1.75,0.75) {Calibración};
+\node[caja] (ref) at ( 1.75,0.75) {Refinamiento};
+
+\draw[flecha] (r.south) -- ++(0,-0.2) -| (cal.north);
+\draw[flecha] (r.south) -- ++(0,-0.2) -| (ref.north);
+
+\node[met] at (-1.75,-0.15) {¿El 70\,\% que promete corresponde al 70\,\% que ocurre?};
+\node[met] at ( 1.75,-0.15) {¿Separa correctamente los casos que terminan distinto?};
+
+\node[met, text=tecnavy] at (-1.75,-1.15) {mide: error de calibración, curva de fiabilidad};
+\node[met, text=tecnavy] at ( 1.75,-1.15) {mide: área bajo la curva ROC};
+
+\end{tikzpicture}
+\caption{Descomposición de una regla de puntuación propia. Una métrica de
+ordenamiento informa solo del componente derecho; una medida de calibración,
+solo del izquierdo. Reportar únicamente una impide saber cuál de las dos
+formas de fallar está ocurriendo.}
+\label{fig:descomposicion}
+\end{figure}
 
 \begin{table}[!t]
 \centering
-\caption{Métricas de evaluación, componente que mide cada una y pregunta que
-responde.}
+\caption{Métricas de evaluación y pregunta que responde cada una.}
 \label{tab:metricas}
 \footnotesize
 \begin{tabularx}{\columnwidth}{@{}P{1.6cm} P{1.3cm} Y@{}}
 \toprule
-\textbf{Métrica} & \textbf{Componente} & \textbf{Pregunta, y por qué no basta
-por sí sola}\\
+\textbf{Métrica} & \textbf{Componente} & \textbf{Pregunta, y por qué no
+basta por sí sola}\\
 \midrule
 Área bajo la curva ROC \newline \textit{(principal)} & Refinamiento &
-¿Ordena el modelo correctamente dos posiciones? Independiente del umbral,
-robusta ante desbalance moderado, y es la métrica del único antecedente
-publicado comparable \cite{janusz_hearthstone_2017}. No dice nada sobre si la
+¿Ordena correctamente dos posiciones? No depende de un umbral y es la
+métrica del único antecedente comparable. No dice nada sobre si la
 probabilidad es correcta\\
 Pérdida logarítmica & Ambos &
-¿Es exacta la probabilidad en sí misma? Es el objetivo de entrenamiento
-\eqref{eq:ajuste}, de modo que reportarla muestra además si la optimización
-tuvo éxito\\
+¿Es exacta la probabilidad? Es además el criterio de ajuste
+\eqref{eq:ajuste}, de modo que reportarla muestra si la optimización tuvo
+éxito\\
 Puntaje de Brier & Ambos &
-¿Cuál es el error cuadrático de la probabilidad, y cómo se descompone en
-calibración y refinamiento?\\
+¿Cuál es el error cuadrático de la probabilidad, y cómo se reparte entre
+ambos componentes?\\
 Curva de fiabilidad y error de calibración & Calibración &
-Entre las posiciones a las que el modelo asigna un 70\,\%, ¿vence
-efectivamente el 70\,\%?\\
-Exactitud, precisión, exhaustividad y F1 & --- &
-Se reportan solo una vez fijado y justificado un umbral, para comparabilidad
-con trabajos que reportan exactitud \cite{bialecki_sc2egset_2023}.
-Insuficientes por sí solas: un modelo puede acertar la clase y estar
+Entre las posiciones a las que asigna un 70\,\%, ¿vence el 70\,\%?\\
+Exactitud y medidas derivadas & --- &
+Se reportan solo tras fijar y justificar un umbral, para comparabilidad con
+trabajos que las emplean. Un modelo puede acertar la clase y estar
 sistemáticamente sobreconfiado\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-La adopción simultánea se fundamenta en la descomposición que Silva Filho
-\textit{et al.} exponen: las reglas de puntuación propias se separan en un
-componente de calibración y uno de refinamiento
-\cite{silvafilho_calibration_2023}. Ninguna métrica individual distingue
-entre las dos formas en que un estimador puede fallar.
+El área bajo la curva es la métrica principal por tres razones: el desenlace
+está cerca del equilibrio, de modo que la exactitud sería poco informativa;
+la métrica no exige comprometerse con un umbral, y en esta etapa no hay
+definido ningún costo de decisión; y es la única sobre la que existe una
+cifra publicada análoga.
 
-El área bajo la curva es la métrica principal por tres razones: el objetivo
-está cercano al equilibrio a nivel de episodio, de modo que la exactitud
-sería poco informativa antes que engañosa; la métrica no exige comprometerse
-con un umbral, y en esta etapa no hay definido ningún costo de decisión; y es
-la única métrica sobre la que existe una cifra publicada análoga.
+Las medidas de calibración se incluyen porque la evidencia indica que es la
+propiedad que primero se degrada bajo cambio de población
+\cite{guo_temporalshift_2021,xenopoulos_winprob_2022}, y porque ciertas
+intervenciones sobre el balance de clases pueden dejar el ordenamiento
+prácticamente intacto mientras distorsionan las probabilidades
+\cite{vandenGoorbergh_imbalance_2022}.
 
-La calibración se incluye porque Guo \textit{et al.} la identifican como la
-propiedad que se degrada primero bajo cambio temporal
-\cite{guo_temporalshift_2021}, porque Xenopoulos \textit{et al.} observan el
-mismo patrón en un juego competitivo \cite{xenopoulos_winprob_2022}, y porque
-Van den Goorbergh \textit{et al.} muestran que ciertas intervenciones pueden
-dejar el área bajo la curva prácticamente sin variación y simultáneamente
-distorsionar las probabilidades \cite{vandenGoorbergh_imbalance_2022}.
-Niculescu-Mizil y Caruana señalan en la misma línea que, cuando se requieren
-probabilidades bien calibradas, ni la exactitud ni el área bajo la curva
-resultan suficientes \cite{niculescumizil_probabilities_2005}.
+Todas las métricas se reportan de forma global y por etapa de la partida.
+Cada punto de esas curvas se acompaña del número de partidas y de
+observaciones que lo sustenta, de modo que un desempeño reducido en la etapa
+temprana pueda distinguirse de una simple escasez de datos en esa región.
 
-Todas las métricas se reportan de forma global y por ventana de turno.
+Si la distribución de clases sobre la tabla final resultara marcadamente
+desbalanceada ---magnitud que depende de cuántas observaciones aporta cada
+bando y que aún no se ha medido--- se añadirá el área bajo la curva de
+precisión y exhaustividad, declarando explícitamente cuál es la clase
+minoritaria.
 
-\decidir{Si la distribución de clases de la tabla final resultara marcadamente
-desbalanceada, magnitud aún no medida, puesto que depende de cuántas
-instantáneas aporta cada bando, se añadirá el área bajo la curva de
-precisión-exhaustividad, con la clase minoritaria declarada explícitamente.}
-
-\noindent\textbf{Construcción de las curvas de fiabilidad.} Silva Filho
-\textit{et al.} advierten que los estimadores del error de calibración
-basados en discretización dependen del número y la construcción de los
-intervalos empleados \cite{silvafilho_calibration_2023}. Dimitriadis
-\textit{et al.} proponen un procedimiento que produce diagramas reproducibles
-junto con una medida numérica de descalibración
-\cite{dimitriadis_reliability_2021}.
-
-\decidir{Queda por verificar la disponibilidad de una implementación del
-procedimiento de Dimitriadis \textit{et al.} en el entorno de trabajo. En
-caso de no estar disponible, se emplea el error de calibración esperado con
-discretización, declarando la limitación correspondiente.}
+\noindent\textbf{Curvas de fiabilidad.} Los estimadores del error de
+calibración basados en discretización dependen del número y la construcción
+de los intervalos empleados \cite{silvafilho_calibration_2023}. Dimitriadis
+\textit{et al.} proponen un procedimiento que evita esa dependencia y
+produce diagramas reproducibles con una medida numérica asociada
+\cite{dimitriadis_reliability_2021}. Se emplea si existe implementación
+disponible en el entorno de trabajo; en caso contrario se usa el error de
+calibración con discretización, declarando la limitación.
 
 \subsubsection{Intervalos de confianza}
 
-Todo intervalo de confianza se obtiene por remuestreo sobre episodios, nunca
-sobre filas, por la misma razón que gobierna \eqref{eq:agrupacion}.
+Todo intervalo se obtiene por remuestreo sobre partidas, nunca sobre filas,
+por la misma razón que gobierna \eqref{eq:agrupacion}.
 
-Brill \textit{et al.} reportan que el remuestreo que ignora la estructura de
-agrupamiento alcanza una cobertura marcadamente inferior a la nominal, y que
-incluso el remuestreo que respeta dicha estructura permanece por debajo del
-nivel declarado \cite{brill_winprob_2026}.
-
-\razon{Debe declararse que los intervalos constituyen una cota optimista de
-la incertidumbre real. Presentarlos como intervalos de cobertura nominal
-válida contradiría la evidencia de la referencia que fundamenta el método.}
+Los intervalos así construidos deben interpretarse como cotas optimistas de
+la incertidumbre real. Brill \textit{et al.} reportan que el remuestreo que
+ignora la agrupación alcanza una cobertura muy inferior a la nominal, y que
+incluso el que la respeta permanece por debajo del nivel declarado
+\cite{brill_winprob_2026}.
 
 \subsection{Plan de modelos de referencia}
 \label{subsec:planbaselines}
@@ -490,153 +520,129 @@ explicar.
 \midrule
 B0 & Clasificador de probabilidad a priori & ¿Cuál es el piso? Lo que quede
 por debajo es ruido\\
-B1 & Heurística de dominio sobre una diferencia de recursos, definida tras el
-análisis exploratorio & ¿Hace falta aprendizaje automático en absoluto?\\
-B2 & Regresión logística regularizada & ¿Es la relación esencialmente lineal?
-Aporta coeficientes inspeccionables y probabilidades calibrables\\
-B3 & Árbol de decisión y bosques aleatorios & ¿Existen interacciones y no
-linealidades que el modelo lineal pierde?\\
-B4 & Potenciación del gradiente & ¿Cuánto compra la complejidad, y a qué
-costo de interpretabilidad?\\
+B1 & Heurística de dominio sobre una diferencia de recursos, fijada tras el
+análisis exploratorio & ¿Hace falta aprendizaje automático?\\
+B2 & Regresión logística regularizada & ¿Es la relación esencialmente
+lineal? Aporta coeficientes inspeccionables\\
+B3 & Árbol de decisión y bosques aleatorios & ¿Existen interacciones que el
+modelo lineal no captura?\\
+B4 & Potenciación del gradiente por histogramas & ¿Cuánto añade la
+complejidad, y a qué costo de interpretabilidad?\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-La inclusión de los niveles B2 a B4 se fundamenta en la evidencia de que los
-conjuntos de árboles constituyen el estado del arte sobre datos tabulares
+La inclusión de B2 a B4 se apoya en la evidencia de que los conjuntos de
+árboles constituyen el estado del arte sobre datos tabulares
 \cite{borisov_tabular_2024,grinsztajn_trees_2022}.
 
 \noindent\textbf{Sobre B1.} Hodge \textit{et al.} reportan que un modelo
 construido sobre una única característica alcanza un desempeño cercano al
-obtenido con el conjunto completo \cite{hodge_winprediction_2021}. Un
-resultado análogo aquí constituiría un hallazgo y no un fracaso.
-
-\razon{Declarar de antemano que un buen desempeño de la heurística sería un
-resultado válido evita que, ante ese escenario, se busque justificar la
-complejidad del modelo con argumentos posteriores a los datos.}
+del conjunto completo \cite{hodge_winprediction_2021}. Un resultado análogo
+aquí constituiría un hallazgo y no un fracaso, y declararlo de antemano evita
+que, ante ese escenario, se busque justificar la complejidad del modelo con
+argumentos posteriores a los datos.
 
 \noindent\textbf{Sobre B2.} No se incluye por formalidad. Es el modelo que la
 evidencia revisada trata como referencia honesta: fue el algoritmo más común
-en los quince estudios clínicos de cambio temporal
-\cite{guo_temporalshift_2021}, quedó a 0.016 de acierto del mejor modelo en
-SC2EGSet \cite{bialecki_sc2egset_2023}, y estuvo entre los menos inflados por
-un protocolo defectuoso en el banco de pruebas de validación
-\cite{karbalaie_participantaware_2026}.
+en los estudios de cambio temporal revisados \cite{guo_temporalshift_2021},
+quedó a 0.016 de acierto del mejor modelo en el corpus análogo de
+repeticiones \cite{bialecki_sc2egset_2023}, y fue de los menos inflados por
+un protocolo defectuoso \cite{karbalaie_participantaware_2026}.
 
-\noindent\textbf{Sobre B4.} La evidencia revisada fija una expectativa baja
-sobre cuánto añade: la mejor solución de \emph{Hearthstone} superó al
-resultado de referencia de una red de dos capas por menos de un dos por
-ciento de área bajo la curva \cite{janusz_hearthstone_2017}.
-
-\decidir{La familia concreta de potenciación del gradiente permanece por
-fijar. La elección debe considerar el manejo nativo de variables categóricas
-de alta cardinalidad y el costo de inferencia, dado que el modelo será
-consumido por un agente en la etapa final.}
-
-\noindent\textbf{Tercera referencia.} La banda de $0.78$ a $0.80$ declarada
-en la Sección~\ref{sec:baseline} se arrastra como referencia externa
-parcialmente comparable, con sus límites declarados
-\cite{janusz_hearthstone_2017}.
+\noindent\textbf{Sobre B4.} Se emplea la implementación por histogramas
+disponible en la biblioteca de aprendizaje automático que sostiene el resto
+de la escalera. La elección atiende a dos criterios. Maneja de forma nativa
+los valores ausentes, que en este corpus abundan por razones estructurales
+descritas en la Sección~\ref{subsec:imputacion}. Y comparte interfaz con B2 y
+B3, de modo que los cinco niveles se ejecutan bajo el mismo procedimiento sin
+código específico por modelo, lo que reduce la superficie donde puede
+introducirse una inconsistencia entre ejecuciones.
 
 \subsubsection{Ablaciones por familia de características}
 
-Las ablaciones por familia, progreso, recursos, tablero, energía, estados
-alterados, diferenciales y contexto de mazo, se ejecutan bajo el mismo
-protocolo, de modo que la contribución marginal de cada bloque se mida en
-lugar de afirmarse.
+Las ablaciones eliminan un bloque completo del diccionario ---progreso,
+recursos, tablero, energía, estados alterados, diferenciales o contexto de
+mazo--- y reejecutan el mismo protocolo, de modo que el aporte marginal de
+cada bloque se mida en lugar de afirmarse.
 
 Una ganancia grande del bloque de contexto de mazo se interpreta como
 evidencia de memorización del conjunto de estrategias dominante y no de
-comprensión, que es la lectura que Bertram \textit{et al.} justifican: una
-representación que identifica el contenido en lugar de describirlo puede ser
-excelente dentro de la distribución e inútil fuera de ella
-\cite{bertram_cardrepresentations_2024}.
+comprensión del estado: una representación que identifica el contenido en
+lugar de describirlo puede ser excelente dentro de la distribución e inútil
+fuera de ella \cite{bertram_cardrepresentations_2024}.
 
 \subsubsection{Recalibración}
+\label{subsec:recalibracion}
 
-El procedimiento no aplica recalibración de forma uniforme. Niculescu-Mizil y
-Caruana reportan que los métodos de máximo margen presentan distorsión
-sistemática, mientras que la regresión logística y los conjuntos por
-agregación resultan bien calibrados sin corrección, y que recalibrar estos
-últimos puede deteriorarlos \cite{niculescumizil_probabilities_2005}. En
-consecuencia, se mide la calibración de cada modelo antes de decidir si
-aplicar corrección, y se reportan ambas mediciones.
+La corrección de probabilidades no se aplica de forma uniforme.
+Niculescu-Mizil y Caruana reportan que los métodos de máximo margen presentan
+distorsión sistemática, mientras que la regresión logística resulta bien
+calibrada sin corrección y puede deteriorarse si se la recalibra
+\cite{niculescumizil_probabilities_2005}. El procedimiento mide por tanto la
+calibración de cada modelo antes de decidir si corregirla, y reporta ambas
+mediciones, porque los mismos autores muestran que el ordenamiento de los
+modelos según la calidad de sus probabilidades difiere antes y después de la
+corrección.
 
-\razon{Los mismos autores reportan que el ordenamiento de los modelos según
-la calidad de sus probabilidades difiere antes y después de la recalibración.
-Reportar una sola de las dos mediciones ofrecería una comparación
-incompleta.}
-
-\decidir{La elección del método permanece abierta. Niculescu-Mizil y Caruana
-establecen un criterio basado en el tamaño del conjunto de calibración
-\cite{niculescumizil_probabilities_2005}, mientras que Ojeda \textit{et al.}
-evalúan sistemáticamente los métodos atendiendo a la generalización hacia
-poblaciones externas \cite{ojeda_calibrating_2023}. Dado que el protocolo B
-constituye un escenario de transferencia a una población distinta,
-corresponde determinar cuál de las dos recomendaciones aplica.}
+Se adopta la regresión isotónica, siguiendo el criterio de tamaño de conjunto
+de calibración que esos autores establecen: por encima del orden del millar
+de casos, la isotónica iguala o supera a la alternativa paramétrica, y el
+subconjunto reservado en la partición $60/15/10/15$ excede holgadamente ese
+umbral. Ojeda \textit{et al.} recomiendan métodos basados en regresión
+cuando el objetivo es transferir a poblaciones externas
+\cite{ojeda_calibrating_2023}; dado que el escenario B constituye
+precisamente ese caso, se reporta la calibración bajo ambos escenarios y se
+contrasta si su recomendación aplica aquí.
 
 \subsection{Plan de explicabilidad}
 \label{subsec:explicabilidad}
 
-La contribución no puede ser una puntuación aislada; la pregunta sustantiva
+La contribución no puede ser una puntuación aislada: la pregunta sustantiva
 es cuáles características del estado transportan información sobre la
-victoria. Se proponen cuatro instrumentos, cada uno ligado a una pregunta
+victoria. Se emplean cuatro instrumentos, cada uno ligado a una pregunta
 distinta.
 
 Los \textbf{coeficientes de la regresión logística} responden si la
 asociación de una característica con la victoria tiene la dirección que el
-conocimiento del dominio predice.
+conocimiento del juego predice.
 
-La \textbf{importancia por permutación agrupada}, permutando dentro de los
-episodios, nunca entre ellos, responde cuánto aporta una característica una
-vez respetada la dependencia. Karbalaie \textit{et al.} señalan
-explícitamente que las estimaciones de importancia dependen del diseño de
-validación y pueden ser inestables bajo particiones a nivel de fila
-\cite{karbalaie_participantaware_2026}, razón por la cual la agrupación forma
-parte de la medición y no es un detalle de ella.
+La \textbf{importancia por permutación agrupada} ---permutando dentro de cada
+partida y nunca entre partidas--- responde cuánto aporta una característica
+una vez respetada la dependencia. La agrupación forma parte de la medición y
+no es un detalle de ella, porque las estimaciones de importancia dependen del
+diseño de validación y resultan inestables bajo particiones por fila
+\cite{karbalaie_participantaware_2026}.
 
-Las \textbf{ablaciones por familia} responden cuánto vale cada bloque.
+Las \textbf{ablaciones por familia} responden cuánto vale cada bloque del
+diccionario.
 
-Los \textbf{valores SHAP} se emplean únicamente cuando el modelo elegido es
-un conjunto de árboles y la pregunta es la atribución por instancia, por
-qué \emph{esta} posición recibió esta puntuación, puesto que esa es la
-pregunta que los tres instrumentos anteriores no pueden responder.
-
-\razon{Los instrumentos se eligen por la pregunta que responden y no por
-disponibilidad. Incluir un método de atribución sin una pregunta asociada
-produce material que no se puede interpretar.}
+Los \textbf{valores de atribución por instancia} se emplean solo cuando el
+modelo seleccionado es un conjunto de árboles y la pregunta es por qué una
+posición concreta recibió una puntuación concreta, que es lo que los tres
+instrumentos anteriores no pueden responder.
 
 \subsection{Contrato de reproducibilidad}
 \label{subsec:reproducibilidad}
 
-La auditoría se ejecuta bajo una única semilla declarada. La etapa de
-modelado mantendrá las semillas y configuraciones en ficheros versionados y
-no en banderas de línea de comandos, fijará las dependencias, registrará cada
-ejecución junto con su identificador de revisión, y almacenará tablas
-comparables de parámetros y métricas.
+Las semillas y configuraciones se mantienen en ficheros versionados y no en
+argumentos de línea de comandos; las dependencias quedan fijadas con
+versiones explícitas; cada ejecución se registra junto con el identificador
+de la revisión del código que la produjo; y se almacenan tablas comparables
+de parámetros y métricas.
 
-La representación tabular se materializa una sola vez en formato columnar,
-puesto que el cuello de botella computacional es el análisis sintáctico y no
-el entrenamiento. Los datos crudos nunca se versionan; el repositorio lleva
-los \emph{scripts} y las instrucciones para obtenerlos.
+Los datos crudos no se versionan: se distribuyen las instrucciones y el
+código para obtenerlos y reconstruir la tabla. Esto sigue la práctica del
+descriptor de corpus análogo, que publica sus herramientas de extracción y
+sus registros de procesamiento junto a los datos
+\cite{bialecki_sc2egset_2023}, y atiende una debilidad documentada de la
+literatura sobre cambio temporal, donde el código estaba disponible en solo
+dos de quince estudios revisados \cite{guo_temporalshift_2021}.
 
-Esto refleja la práctica del descriptor SC2EGSet, que publica sus
-herramientas de extracción, sus registros de procesamiento y sus estadísticas
-resumidas junto a los datos \cite{bialecki_sc2egset_2023}, y atiende una
-debilidad documentada de la literatura sobre cambio temporal, donde el código
-estaba disponible en solo dos de quince estudios revisados
-\cite{guo_temporalshift_2021}.
-
-Se adopta además la práctica de repetir cada experimento sobre múltiples
-semillas y reportar la dispersión resultante. Grinsztajn \textit{et al.}
-varían el orden de las evaluaciones para separar el efecto del método de la
-variabilidad del procedimiento \cite{grinsztajn_trees_2022}; Figueiredo y
-Mendes ejecutan múltiples ciclos por estrategia de partición
-\cite{figueiredo_leakage_2024}; Brill \textit{et al.} generan múltiples
-conjuntos de entrenamiento por configuración \cite{brill_winprob_2026}.
-
-\pc{Nombres definitivos de los ficheros de configuración y comandos de
-reproducción, una vez implementada la tubería.}
+Cada experimento se repite sobre múltiples semillas y se reporta la
+dispersión resultante, práctica que los tres trabajos metodológicos de
+referencia adoptan por razones equivalentes
+\cite{grinsztajn_trees_2022,figueiredo_leakage_2024,brill_winprob_2026}.
 
 \subsection{Riesgos y mitigación}
 \label{subsec:riesgos}
@@ -648,70 +654,63 @@ reproducción, una vez implementada la tubería.}
 \footnotesize
 \begin{tabularx}{\columnwidth}{@{}P{1.8cm} c Y@{}}
 \toprule
-\textbf{Riesgo} & \textbf{Impacto} & \textbf{Mitigación o disparador}\\
+\textbf{Riesgo} & \textbf{Impacto} & \textbf{Mitigación}\\
 \midrule
-Instantáneas de un mismo episodio repartidas entre particiones & Alto &
-Agrupación por identificador de episodio en toda partición y todo pliegue;
-prueba automatizada de intersección vacía\\[2pt]
-Un campo prohibido alcanza el vector de características & Alto &
-Lista negra explícita; la construcción falla si una columna prohibida está
-presente\\[2pt]
-Fuga introducida por decisiones de diseño & Medio &
-Reglas de exclusión y ventanas de turno declaradas antes de tocar el conjunto
-de prueba \cite{kaufman_leakage_2011}\\[2pt]
-Preprocesamiento ajustado sobre el conjunto completo & Medio &
+Observaciones de una misma partida repartidas entre subconjuntos & Alto &
+Agrupación por partida en toda partición y todo pliegue; prueba automática
+de intersección vacía\\[2pt]
+Un campo excluido alcanza el vector de características & Alto &
+Lista explícita; la construcción de la tabla falla si una columna prohibida
+está presente\\[2pt]
+Preprocesamiento ajustado sobre el conjunto completo & Alto &
 Todas las transformaciones se ajustan dentro del pliegue de entrenamiento
 \cite{sasse_leakage_2025}\\[2pt]
-Cambio de distribución entre días tempranos y tardíos & Medio &
-Reportar el protocolo temporal por separado y declarar cualquier caída como
+Cartas ausentes del entrenamiento tras particionar & Medio &
+Auditoría de cobertura ejecutada después de particionar y antes de
+entrenar\\[2pt]
+Fuga por decisiones de diseño & Medio &
+Reglas de exclusión y ventanas de turno declaradas antes de tocar el
+conjunto de prueba \cite{kaufman_leakage_2011}\\[2pt]
+Cambio de población entre días tempranos y tardíos & Medio &
+Escenario B reportado por separado; cualquier caída se declara como
 resultado y no como fallo \cite{guo_temporalshift_2021}\\[2pt]
-Memorización de composiciones en lugar de comprensión del estado & Medio &
-Protocolo C y ablación del bloque de contexto de mazo
+Memorización de mazos en lugar de lectura del estado & Medio &
+Escenario C y ablación del bloque de contexto de mazo
 \cite{bertram_cardrepresentations_2024}\\[2pt]
-Características trivialmente predictivas cerca del final & Medio &
-Análisis por ventana de turno; las conclusiones tempranas se sostienen solo
-sobre la ventana temprana\\[2pt]
-Versión del motor confundida con el tiempo de calendario & Medio &
-Registrar la versión como covariable de auditoría y declarar la confusión\\[2pt]
-Sesgo del estimador en turnos tempranos & Medio &
-Reporte del soporte por ventana de turno junto a las métricas
-\cite{brill_winprob_2026}\\[2pt]
-Lectura optimista de una puntuación no calibrada & Medio &
-Reportar una regla de puntuación propia y curvas de fiabilidad junto al área
-bajo la curva \cite{guo_temporalshift_2021}\\
+Versión del motor confundida con el tiempo & Medio &
+Registrar la versión como covariable de auditoría y declarar la
+confusión\\[2pt]
+Lectura optimista de una probabilidad no calibrada & Medio &
+Reportar calidad probabilística junto a la capacidad de ordenar\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\noindent\textbf{Expectativa sobre el efecto del protocolo.} Se anticipa que
-la partición agrupada produzca métricas inferiores y mayor dispersión entre
-ejecuciones que una partición aleatoria. Figueiredo y Mendes documentan este
-comportamiento \cite{figueiredo_leakage_2024}, y Karbalaie \textit{et al.}
-cuantifican su magnitud sobre datos con estructura comparable
-\cite{karbalaie_participantaware_2026}. Dicho comportamiento corresponde al
-funcionamiento correcto del protocolo y no a un defecto de su calibración.
-
-\razon{Esta declaración debe redactarse antes de disponer de resultados. Ante
-métricas inferiores a las esperadas, la expectativa documentada previamente
-protege la decisión de mantener el protocolo.}
+\noindent\textbf{Expectativa declarada sobre el efecto del protocolo.} Se
+anticipa que la partición agrupada produzca métricas inferiores y mayor
+dispersión entre ejecuciones que una partición por fila. Ese comportamiento
+está documentado \cite{figueiredo_leakage_2024} y su magnitud cuantificada
+sobre datos de estructura comparable \cite{karbalaie_participantaware_2026},
+y corresponde al funcionamiento correcto del protocolo y no a un defecto de
+su ajuste. Declararlo antes de disponer de resultados protege la decisión de
+mantener el protocolo ante métricas inferiores a las esperadas.
 
 \subsection{Integración prevista con el agente}
 \label{subsec:agente}
 
-En la etapa final del proyecto el estimador entrenado es consumido por un
+En la etapa final del proyecto, el estimador entrenado es consumido por un
 agente inteligente como evaluador de posiciones. La interfaz es
 deliberadamente estrecha: el agente entrega un estado, el mismo extractor de
-características usado en entrenamiento produce $x$, y el modelo devuelve
+características empleado en entrenamiento produce $x$, y el modelo devuelve
 $f(x) \in [0,1]$.
 
 El agente no entrena el modelo, no lo actualiza mediante interacción y no lo
 sustituye, de modo que el proyecto no se convierte en aprendizaje por
-refuerzo en ninguna etapa. El consumo se verificará mostrando que el
+refuerzo en ninguna etapa. El consumo se verifica mostrando que el
 ordenamiento de posiciones candidatas por parte del agente cambia cuando el
-estimador se reemplaza por el modelo trivial B0, es decir, que el agente está
-efectivamente usando la predicción.
+estimador se reemplaza por el modelo trivial B0.
 
-\razon{La calibración importa precisamente por esta razón: un evaluador que
-ordena correctamente las posiciones pero está sistemáticamente sobreconfiado
-engañará a cualquier regla de decisión que compare sus salidas contra un
-umbral fijo.}
+Esa integración es la razón última por la que la calibración importa: un
+evaluador que ordena bien las posiciones pero está sistemáticamente
+sobreconfiado engañará a cualquier regla de decisión que compare sus salidas
+contra un umbral fijo.

@@ -1,133 +1,115 @@
 % ============================================================
-% sec/05analisis_tecnico.tex — VERSIÓN INTEGRADA, TRES EJES
-% TRACK A — datos tabulares
+% sec/05analisis_tecnico.tex
 %
-% OBLIGATORIO: análisis exploratorio profundo, diccionario de
-% datos, calidad y estrategias de imputación justificadas,
-% detección de valores atípicos, desbalance de clases, y
-% prevención explícita de fuga de información.
+% Análisis exploratorio, diccionario de datos, calidad e
+% imputación justificadas, valores atípicos, desbalance de
+% clases y prevención explícita de fuga de información.
 % ============================================================
-\section{Análisis Técnico del Track}
+\section{Análisis Técnico}
 \label{sec:analisistecnico}
 
-El \textit{track} aprobado es el Track A, aprendizaje automático clásico
-sobre datos tabulares. \pc{Fecha de aprobación comunicada por el docente.}
+El enfoque adoptado es el aprendizaje automático clásico sobre datos
+tabulares, según la justificación desarrollada en la
+Sección~\ref{subsec:ejeb}. Esa elección impone un conjunto específico de
+análisis previos al modelado: caracterizar la calidad de los datos, definir
+el tratamiento de los valores ausentes y de los extremos, medir el balance
+de clases, y demostrar que la fuga de información está controlada. Esta
+sección desarrolla esos análisis.
 
-El análisis que sigue se apoya en una auditoría del corpus realizada antes de
-cualquier modelado. Produjo un registro por episodio para cada episodio
-auditado, un censo de campos a nivel de instantánea y un conjunto de
-compuertas de decisión, todo reproducible bajo una única semilla fija.
-
-\razon{\textbf{Regla epistémica de esta sección.} Toda cifra que aparece a
-continuación fue medida por la auditoría propia del corpus y es reproducible
-a partir de sus \emph{scripts}. Las magnitudes que no han sido medidas se
-nombran como pendientes, nunca se estiman.}
+Todas las cifras que siguen proceden de una auditoría del corpus ejecutada
+antes de cualquier modelado, bajo una semilla fija y reproducible. Las
+magnitudes que aún no han sido medidas se nombran como pendientes y no se
+estiman.
 
 \subsection{Análisis exploratorio}
 \label{subsec:eda}
 
 \subsubsection{Alcance de lo medido}
 
-El corpus publica 67 entregas diarias que abarcan del 2026-06-16 al
-2026-08-21, declarando 329\,336 episodios y 1.29~TB sin comprimir. La
-auditoría cubre una muestra temporal de diez de esos días, el 14.9\,\% de
-los días y el 15.8\,\% de los episodios declarados, elegidos para abarcar
-las fases inicial, media y tardía de la competencia, con tres días
-consecutivos al comienzo de modo que pudiera medirse la deriva día a día.
+El corpus completo abarca aproximadamente dos meses de publicaciones
+diarias, con un volumen del orden de cientos de miles de partidas y más de
+un terabyte sin comprimir. La auditoría cubre una muestra temporal de diez
+días, elegidos para abarcar las fases inicial, media y tardía de la
+competencia, con tres días consecutivos al comienzo de modo que pudiera
+medirse la variación entre días contiguos.
 
-Dentro de esa muestra se analizaron 52\,085 episodios a partir de 182.6~GiB
-de JSON con cero errores de análisis sintáctico, produciendo 7\,038\,378
-instantáneas utilizables.
+Dentro de esa muestra se analizaron 52\,085 partidas a partir de unos
+180~GiB de datos, sin errores de lectura, y se obtuvieron 7\,038\,378
+observaciones utilizables. Toda afirmación de esta sección está acotada a esa
+muestra y no caracteriza los días no auditados.
 
-\razon{Toda afirmación de esta sección está acotada a esa muestra. Nada de lo
-aquí escrito caracteriza a los 57 días no auditados, y presentarlo de otro
-modo excedería el alcance de lo medido.}
-
-\subsubsection{Tamaño, estructura y unidad de observación}
+\subsubsection{Estructura y unidad de observación}
 
 La duración de las partidas está fuertemente sesgada a la derecha. El número
-de pasos por episodio tiene mediana 140 y media 137.1, con cuartiles 101 y
-171, percentil 95 de 221 y máximo 6\,900. El recuento de turnos es mucho
-menor, mediana 13, media 14.3, percentil 95 de 27, máximo 1\,035,
-porque un solo turno se descompone en muchas acciones atómicas.
+de pasos por partida tiene mediana 140, percentil 95 de 221 y máximo 6\,900.
+El recuento de turnos es mucho menor ---mediana 13, percentil 95 de 27,
+máximo 1\,035--- porque un solo turno se descompone en muchas acciones
+atómicas.
 
-Esa brecha gobierna cómo debe definirse una ventana de turno: fijar el juego
-temprano en los turnos uno a ocho sería una elección arbitraria contra una
-distribución cuya mediana es 13, de modo que la ventana se define a partir de
-la distribución empírica y se declara antes de tocar el conjunto de prueba.
+Esa brecha determina cómo debe definirse una etapa de la partida. Fijar el
+juego temprano en los turnos uno a ocho sería arbitrario contra una
+distribución cuya mediana es 13, de modo que los cortes se derivan de la
+distribución empírica y se declaran antes de examinar el conjunto de prueba.
 
-La unidad de observación es un estado fresco del asiento que actúa, y esta es
-una decisión medida antes que estilística. En un sondeo de 139\,672 estados
-frescos, la observación perteneciente al asiento que no actúa resultó
-idéntica a su propio estado anterior en 137\,989 casos, el 98.8\,\%. Tratar
-cada asiento de cada paso como una fila duplicaría por tanto casi todas las
-observaciones sin añadir información, y repesaría silenciosamente los
-episodios por su duración. Restringirse al asiento activo da una razón medida
-entre estados activos y pasos de 0.9854, que es de donde procede la cifra de
-7\,038\,378.
+La unidad de observación es el estado del jugador que actúa, y la decisión es
+medida antes que estilística. En un sondeo de 139\,672 estados, la
+observación correspondiente al jugador que no actúa resultó idéntica a su
+propio estado anterior en el 98.8\,\% de los casos. Tratar ambos lados de
+cada paso como filas separadas duplicaría casi todas las observaciones sin
+añadir información, y repesaría las partidas por su duración.
 
-\razon{Siete millones de filas y cincuenta y dos mil unidades independientes
-es el hecho más consecuente de esta sección, y la
-Sección~\ref{subsec:leakage} está construida sobre él.}
+Siete millones de observaciones frente a cincuenta y dos mil partidas es el
+hecho estructural del que depende todo lo que sigue.
 
-\subsubsection{Distribución del objetivo a nivel de episodio}
+\subsubsection{Distribución del desenlace}
 
-El desenlace se deriva del campo de recompensas, que resuelve el 99.86\,\%
-de los episodios. Las combinaciones observadas son $(1,-1)$ en 27\,135
-episodios, $(-1,1)$ en 24\,844, $(0,0)$ en 33, y una recompensa no numérica
-en 73. A nivel de episodio esto da un 52.10\,\% de victorias para el asiento
-P0, un 47.70\,\% para P1, un 0.063\,\% de empates y un 0.140\,\% de
-abandonos, sin episodios sin resolver.
+El desenlace se resuelve en el 99.86\,\% de las partidas auditadas. A nivel
+de partida, el primer jugador vence en el 52.10\,\% de los casos y el
+segundo en el 47.70\,\%, con un 0.063\,\% de empates y un 0.140\,\% de
+partidas abandonadas. Restringido a las partidas con ganador decidido, la
+tasa de victoria del jugador que mueve primero es 0.5287.
 
-Restringido a los 51\,979 episodios con ganador decidido, la tasa de victoria
-de P0 es 0.5220 y la del jugador que mueve primero es 0.5287.
-
-\subsubsection{Estructura temporal y deriva}
+\subsubsection{Variación entre días}
 
 Los diez días auditados no son intercambiables. Medida con la divergencia de
-Jensen--Shannon en base 2 entre el primer y el último día auditado, la
-distribución de mazos es esencialmente disjunta, 1.0000, la población de
-agentes casi tanto, 0.9723, la distribución de cartas se ha desplazado
-hasta 0.4889, mientras que la duración de las partidas apenas se ha movido, 0.1221.
+Jensen-Shannon entre el primer y el último día, la distribución de mazos es
+esencialmente disjunta ---1.0000--- y la de agentes casi tanto ---0.9723---,
+mientras que la duración de las partidas apenas varía ---0.1221.
 
 La diversidad no decae de forma suave: los mazos distintos por día van de
-1\,268 el 2026-06-23 a 48 el 2026-07-17, y los equipos distintos de 2\,309 a
-79 en esos mismos dos días. La mediana de la puntuación media de los
-episodios sube de 628 el primer día a 1\,141 el 2026-07-17.
+1\,268 a 48 entre dos días concretos de la muestra, y los agentes distintos
+de 2\,309 a 79 en esos mismos días. La mediana de la puntuación de los
+agentes seleccionados sube de 628 el primer día a 1\,141 en un día tardío.
 
-Seis versiones del motor coexisten en la muestra, de la 1.30.1 a la 1.32.4, y
-están ordenadas en el tiempo, lo que significa que tiempo de calendario y
-versión del motor están confundidos en la muestra auditada.
-
-\razon{La auditoría no puede separar la deriva del conjunto de estrategias
-dominante del cambio del motor, y este trabajo reportará esa confusión en
+Varias versiones del motor coexisten en la muestra y están ordenadas en el
+tiempo, lo que significa que el tiempo de calendario y la versión del motor
+están confundidos. La auditoría no puede separar la evolución de las
+estrategias del cambio del simulador, y este trabajo reporta esa confusión en
 lugar de resolverla. Tres corpus comparables controlaron esa variable de
 forma explícita
 \cite{hodge_winprediction_2021,xenopoulos_winprob_2022,saravanan_metadiscovery_2024};
-no poder hacerlo es una limitación nuestra que debe declararse con esas
-palabras.}
+no poder hacerlo aquí es una limitación propia.
 
-Un hallazgo de deriva constituye una amenaza directa a una característica
-concreta: la probabilidad de que el jugador que mueve primero sea el asiento
-P0 era 0.5089 el 2026-06-29 y es 0.9991 desde el 2026-07-17 en adelante. En
-los días tardíos, identidad de asiento y orden de turno son casi la misma
-variable.
+Una consecuencia de esa variación amenaza a una característica concreta: la
+probabilidad de que el jugador que mueve primero ocupe la primera posición
+en la mesa era 0.5089 en un día temprano y 0.9991 desde un día intermedio en
+adelante. En los días tardíos, posición y orden de turno son casi la misma
+variable, y de ahí la normalización de perspectiva descrita en la
+Sección~\ref{subsec:pipeline}.
 
 \subsection{Diccionario de datos}
 \label{subsec:diccionario}
 
-Un censo de campos sobre 139\,672 estados frescos encontró 34 campos de
-estado presentes en el 100\,\% de las instantáneas inspeccionadas: 11 campos
-globales, 13 por jugador y 10 por Pok\'emon sobre 1\,118\,776 instancias.
-
-El diccionario es preliminar y está sujeto a revisión tras el análisis
+Un censo sobre 139\,672 estados encontró 34 campos presentes en la totalidad
+de las observaciones inspeccionadas: 11 globales, 13 por jugador y 10 por
+Pok\'emon. El diccionario es preliminar y se revisará tras el análisis
 exploratorio de la tabla materializada.
 
 \begin{table*}[!t]
 \centering
-\caption{Diccionario de datos por familia de características. La presencia es
-la proporción medida de instantáneas inspeccionadas en las que el campo de
-origen existe.}
+\caption{Diccionario de datos por familia de características. La presencia
+es la proporción medida de observaciones inspeccionadas en las que el campo
+de origen existe.}
 \label{tab:diccionario}
 \begin{threeparttable}
 \footnotesize
@@ -144,66 +126,63 @@ origen existe.}
 \midrule
 
 Progreso & entero, binario &
-Índice de turno y contador de acciones, directos; indicador de jugador
-inicial derivado del orden y del índice de asiento; indicadores de energía
-adjuntada y de retirada &
-Presencia 100\,\%. El indicador de jugador inicial requiere investigación:
-asiento y orden de turno están casi perfectamente confundidos desde el
-2026-07-17
+Número de turno y contador de acciones, directos; indicador de jugador
+inicial; indicadores de energía asignada y de retirada &
+Presencia 100\,\%. El indicador de jugador inicial requiere atención:
+posición y orden de turno están casi perfectamente confundidos en los días
+tardíos
 \\
 \addlinespace[3pt]
 
 Recursos & entero &
-Recuentos de mazo y de mano, directos; tamaño de la mano derivado de la lista
-propia; tamaño del descarte derivado &
+Cartas restantes en mazo y en mano, directas; tamaño del descarte, derivado &
 Presencia 100\,\%
 \\
 \addlinespace[3pt]
 
 Premios & entero &
-Ranuras de premio restantes, derivadas contando las ranuras no vacías &
+Cartas de premio restantes, derivadas contando las ranuras no vacías &
 Presencia 100\,\%; el contenido está siempre oculto
 \\
 \addlinespace[3pt]
 
 Tablero & entero, continuo, binario &
-Tamaño de banca frente a su máximo; puntos de vida actuales, máximos y su
-razón; totales visibles; recuento de Pok\'emon dañados; energías, cartas de
-energía y herramientas; indicadores de pre-evolución y de aparición en el
-turno &
+Ocupación de la banca; puntos de vida actuales, máximos y su razón; totales
+visibles; Pok\'emon dañados; energías, cartas de energía y herramientas;
+indicadores de evolución y de aparición en el turno &
 Presencia 100\,\%. La razón de puntos de vida debe respetar
-$0 \leq hp \leq hp_{\max}$; la verificación forma parte del control de
+$0 \leq hp \leq hp_{\max}$, y esa verificación forma parte del control de
 calidad
 \\
 \addlinespace[3pt]
 
 Estados alterados & binario &
-Envenenado, quemado, dormido, paralizado y confundido por jugador; estadio,
-estadio jugado y partidario jugado, globales &
+Envenenado, quemado, dormido, paralizado y confundido, por jugador; estadio
+en juego y cartas de apoyo ya jugadas, globales &
 Presencia 100\,\%
 \\
 \addlinespace[3pt]
 
 Diferenciales & entero, continuo &
-Propio menos oponente para recuentos de mano, premios, banca, puntos de vida,
-energía y mazo &
-Derivados. Construcción siguiendo el precedente de Hodge \textit{et al.}
+Valor propio menos valor del oponente para cartas en mano, premios, banca,
+puntos de vida, energía y mazo &
+Derivados. Construcción análoga a la empleada por Hodge \textit{et al.}
 \cite{hodge_winprediction_2021}
 \\
 \addlinespace[3pt]
 
 Contexto de mazo & categórico &
-Huella del mazo sobre un catálogo de 2\,376 mazos distintos &
-Cardinalidad elevada y riesgo alto de memorización del conjunto de
-estrategias dominante. Se admite únicamente en la ablación declarada, con
-retención por composición
+Identificador del mazo sobre un catálogo de 2\,376 mazos distintos &
+Cardinalidad elevada y riesgo alto de memorizar el conjunto de estrategias
+dominante. Se admite únicamente en la ablación declarada, con mazos
+reservados
 \\
 \midrule
 
 Agrupación \newline \textit{(nunca características)} & --- &
-Identificador de episodio, fecha e índice de turno &
-Se arrastran para agrupación, estratificación y reporte por ventana; excluidos
-del vector predictivo por construcción
+Identificador de partida, fecha y número de turno &
+Se conservan para agrupar, estratificar y reportar por etapa; excluidos del
+vector predictivo por construcción
 \\
 
 \bottomrule
@@ -211,390 +190,356 @@ del vector predictivo por construcción
 \begin{tablenotes}[flushleft]
 \footnotesize
 \item \textit{Nota.} Dos campos se excluyen sobre bases medidas antes de
-cualquier modelado. El campo de resultado del estado actual contiene el valor
-$-1$ en el 100\,\% de los 139\,672 estados frescos inspeccionados: es
-constante y no transporta información en el momento de la predicción. El
-campo de observación en curso es nulo en 137\,029 de esos estados, el
-98.1\,\%, y su nulidad es una propiedad del juego y no un defecto, según se
-argumenta en la Sección~\ref{subsec:imputacion}.
+cualquier modelado. El campo de resultado del estado actual es constante en
+la totalidad de las observaciones inspeccionadas y no transporta información
+en el momento de la predicción. El campo de observación en curso es nulo en
+el 98.1\,\% de ellas, y esa nulidad es una propiedad del juego y no un
+defecto, según argumenta la Sección~\ref{subsec:imputacion}.
 \end{tablenotes}
 \end{threeparttable}
 \end{table*}
 
-\decidir{Hodge \textit{et al.} incorporan además, para cada característica, el
-cambio respecto del instante inmediatamente anterior
-\cite{hodge_winprediction_2021}. El diccionario actual no contempla variables
-de esa naturaleza, que permitirían representar la variación reciente del
-estado y no únicamente su valor. Su incorporación debe evaluarse antes de
-materializar la tabla, verificando que la información del instante anterior
-sea efectivamente anterior al instante de predicción y no constituya, por
-tanto, una fuga.}
+Hodge \textit{et al.} incorporan además, para cada característica, el cambio
+respecto del instante anterior \cite{hodge_winprediction_2021}. Este trabajo
+no adopta esa construcción. La pregunta planteada concierne a la información
+contenida en un estado aislado, y añadir variación temporal introduciría un
+vector de fuga adicional ---verificar que el instante anterior sea
+estrictamente anterior--- cuya comprobación excede el alcance de esta etapa.
+Queda declarada como extensión natural.
 
 \subsection{Calidad de los datos}
 \label{subsec:calidad}
 
-\subsubsection{Qué ha sido verificado}
+\subsubsection{Verificaciones realizadas}
 
-Los 52\,085 episodios auditados se analizaron sin error. Una única firma de
-esquema de nivel superior cubre el 100\,\% de ellos y la versión de esquema
-vale 1 en todos, de modo que el corpus es estructuralmente homogéneo pese a
-las seis versiones del motor. Los índices de turno fueron monótonos en todos
-los episodios inspeccionados, con cero violaciones.
+Las 52\,085 partidas auditadas se leyeron sin error. Una única firma de
+esquema cubre la totalidad de ellas, de modo que el corpus es
+estructuralmente homogéneo pese a las varias versiones del motor. Los
+índices de turno resultaron monótonos en todas las partidas inspeccionadas.
 
-Todos los episodios auditados aparecen en el manifiesto de su día; a la
-inversa, cinco episodios declarados en el manifiesto del 2026-08-04 están
-ausentes de los ficheros, de 4\,816 declarados.
+Tres comprobaciones independientes de duplicidad devolvieron cero: ningún
+identificador de partida repetido, ningún resumen criptográfico repetido
+sobre los ficheros, y ninguna huella canónica repetida, calculada esta
+última sobre la semilla de configuración, ambos mazos en orden, la secuencia
+completa de acciones y el desenlace. Tampoco se registró ninguna partida de
+un agente contra sí mismo.
 
-\subsubsection{Duplicados}
+La duplicación exacta no es, por tanto, una preocupación. La duplicación
+funcional dentro de una partida es otra cuestión: las observaciones
+consecutivas son casi idénticas por construcción. Eso no es un defecto que
+deba eliminarse ---es la estructura de dependencia de los datos--- y se
+aborda agrupando, no deduplicando.
 
-Tres comprobaciones independientes devolvieron cero: ningún identificador de
-episodio repetido, ningún resumen criptográfico repetido sobre los bytes del
-fichero, y ninguna huella canónica repetida, esta última calculada sobre la
-semilla de configuración, ambos mazos en orden, la secuencia completa de
-acciones y las recompensas, excluyendo deliberadamente los metadatos
-volátiles. Ningún identificador aparece en más de un día. El juego contra uno
-mismo ocurre en cero de los 52\,085 episodios.
+\subsubsection{Verificaciones pendientes}
 
-\razon{La duplicación exacta no es una preocupación a nivel de episodio. La
-duplicación funcional dentro de un episodio es una cuestión distinta: en la
-muestra sondeada los 139\,672 estados frescos fueron distintos, pero las
-cuasi duplicadas son la norma antes que la excepción. Esto no es un defecto
-que deba eliminarse, es la estructura de dependencia de los datos, y se
-aborda mediante agrupación y no mediante deduplicación.}
-
-\subsubsection{Comprobaciones pendientes sobre la representación tabular}
-
-La auditoría verificó el corpus crudo. Lo siguiente debe reverificarse sobre
-la tabla materializada, y se consigna aquí como pendiente antes que como
-supuesto: la ausencia de valores por columna; los rangos imposibles, puntos
-de vida negativos o por encima del máximo, recuentos negativos, tamaño de
-banca por encima de su máximo; la consistencia lógica entre campos
-relacionados; las filas duplicadas dentro y entre episodios; y la cardinalidad
-efectiva de las columnas categóricas.
+La auditoría verificó el corpus crudo. Sobre la tabla materializada deben
+reverificarse, y se consignan aquí como pendientes antes que como supuestos:
+la ausencia de valores por columna; los rangos imposibles ---puntos de vida
+negativos o superiores al máximo, recuentos negativos, ocupación de banca
+por encima de su límite---; la consistencia lógica entre campos
+relacionados; las filas duplicadas; y la cardinalidad efectiva de las
+columnas categóricas.
 
 \subsection{Valores ausentes e imputación}
 \label{subsec:imputacion}
 
-Emmanuel \textit{et al.} distinguen los mecanismos de ausencia y muestran que
-la eficacia de un método de imputación depende de las características del
-conjunto: en su experimento, la superioridad relativa entre procedimientos se
-invierte según el conjunto evaluado \cite{emmanuel_missing_2021}. Por ello la
-política es medir y caracterizar la ausencia antes de imputar, en lugar de
-aplicar una técnica por omisión.
+La política distingue dos mecanismos, porque tratarlos por igual sería un
+error. Emmanuel \textit{et al.} muestran que la eficacia relativa de los
+métodos de imputación se invierte según el conjunto evaluado
+\cite{emmanuel_missing_2021}: no existe una técnica universalmente superior,
+y la estrategia debe derivarse del mecanismo de ausencia y no de la
+costumbre.
 
-\noindent\textbf{Ausencia estructural.} Un campo es nulo porque el juego lo
-define así: no hay Pok\'emon activo, no hay estadio en juego, la carta está
-oculta. El caso más claro es el campo de observación en curso, nulo en el
-98.1\,\% de los estados inspeccionados, y el segundo es la mano del oponente,
-nula en el 100\,\%.
+\noindent\textbf{Ausencia estructural.} Un campo es nulo porque las reglas
+del juego determinan que no exista un valor en ese estado: no hay Pok\'emon
+activo, no hay estadio en juego, o la carta está oculta al jugador. El caso
+más frecuente es el campo de observación en curso, nulo en el 98.1\,\% de
+las observaciones inspeccionadas, y el segundo es la mano del oponente, nula
+en la totalidad de ellas.
 
-No son valores estadísticamente ausentes y no se imputan. Se codifican
-semánticamente, con un indicador binario de presencia más un centinela
-explícito.
+Estos casos no son valores estadísticamente ausentes y no se imputan. Se
+codifican con un indicador binario de presencia más un valor centinela
+explícito. Imputar una media aquí fabricaría un estado de juego que no puede
+ocurrir, y destruiría además la señal que el propio campo transporta: que no
+haya nada que observar es información sobre la situación.
 
-\razon{Imputar una media aquí fabricaría un estado de juego que no puede
-ocurrir, y además destruiría la señal misma que el campo transporta: el hecho
-de que no se esté mirando nada es información.}
+\noindent\textbf{Ausencia inesperada.} Un campo requerido falta porque una
+partida está malformada o porque el procesamiento es incompleto. El
+procedimiento mide primero la frecuencia. Si resulta residual, se excluye la
+observación o la partida dejando constancia del criterio y del recuento. Si
+resulta sistemática, se trata como defecto del procesamiento o cambio de
+esquema y se corrige la tubería, en lugar de parchear los datos.
 
-\razon{La referencia de Emmanuel \textit{et al.} no formaliza por sí sola la
-categoría de ausencia estructural y no debe citarse como si lo hiciera.
-Sostener esa terminología en la versión final requiere una referencia
-específica sobre ausencia por diseño.}
-
-\pc{Incorporar una referencia arbitrada específica sobre ausencia por diseño
-o ausencia estructural que sustente la terminología empleada.}
-
-\noindent\textbf{Ausencia inesperada.} Un campo requerido está ausente porque
-un episodio está malformado o el analizador es incompleto. El procedimiento
-es medir primero la frecuencia; si es residual, excluir la observación o el
-episodio dejando constancia del criterio y del recuento; si es sistemática,
-tratarla como defecto del analizador o cambio de esquema y corregir la
-tubería en lugar de parchear los datos.
-
-Ninguna variable numérica se imputa automáticamente antes de haber estudiado
-su mecanismo de ausencia. Sea cual sea el mecanismo elegido, el estimador se
-ajusta dentro del pliegue de entrenamiento: Sasse \textit{et al.} nombran
-explícitamente la imputación entre los pasos de preprocesamiento que producen
-fuga cuando se estiman sobre el conjunto completo antes de particionar
+Ninguna variable numérica se imputa de forma automática antes de haber
+caracterizado su mecanismo de ausencia. Sea cual sea el mecanismo, el
+estimador de imputación se ajusta dentro del pliegue de entrenamiento: la
+imputación figura entre los pasos de preprocesamiento que producen fuga
+cuando se estiman sobre el conjunto completo antes de particionar
 \cite{sasse_leakage_2025}.
 
-Borisov \textit{et al.} señalan, de forma complementaria, que los algoritmos
-modernos basados en árboles manejan internamente los valores faltantes y los
-rangos extremos \cite{borisov_tabular_2024}, lo que reduce la dependencia del
-resultado respecto de la estrategia adoptada.
+El modelo B4 seleccionado maneja además los valores ausentes de forma nativa
+\cite{borisov_tabular_2024}, lo que reduce la dependencia del resultado
+respecto de la estrategia adoptada.
 
 \subsection{Valores atípicos}
 \label{subsec:atipicos}
 
 En este corpus un valor extremo suele ser un atípico válido antes que un
-error. Los pasos por episodio alcanzan 6\,900 frente a una mediana de 140, y
-el recuento de turnos alcanza 1\,035 frente a una mediana de 13 y un
-percentil 95 de 27.
+error. El recuento de turnos alcanza 1\,035 frente a una mediana de 13, y
+una partida de esa duración merece investigación y no borrado: puede
+corresponder a un tiempo agotado, a un ciclo de acciones, a una interacción
+inusual de cartas, a un fallo del simulador o a una partida genuinamente
+larga, y esos cinco casos exigen respuestas distintas.
 
-Una partida de 1\,035 turnos merece investigación, no borrado: puede ser un
-tiempo agotado, un bucle de acciones, una interacción inusual de cartas, un
-fallo del simulador o una partida genuinamente larga, y esos cinco casos
-exigen respuestas distintas.
+El procedimiento es diagnóstico antes que correctivo. Los candidatos se
+marcan por dos vías separadas, que significan cosas distintas: distancia
+distribucional sobre las características de duración y recuento, y rangos
+imposibles según las reglas del juego. Las partidas marcadas se inspeccionan
+caso por caso, y solo se eliminan los registros demostrablemente corruptos.
 
-El procedimiento propuesto es diagnóstico antes que correctivo. Los
-candidatos se marcan por distancia distribucional, una regla intercuartil o
-de puntuación robusta sobre las características de duración y recuento, y
-por rangos imposibles en el dominio, que es una prueba distinta con un
-significado distinto. Los episodios marcados se inspeccionan caso por caso.
-Solo se eliminan los registros demostrablemente corruptos.
+Cualquier regla de exclusión se declara antes de examinar el conjunto de
+prueba. Una regla elegida después de observar su efecto sobre la puntuación
+de prueba constituiría fuga por decisión de diseño
+\cite{kaufman_leakage_2011}.
 
-\razon{Cualquier regla de exclusión se declara antes de examinar la partición
-de prueba. Una regla elegida después de ver su efecto sobre la puntuación de
-prueba es una fuga por decisión de diseño en el sentido de Kaufman
-\textit{et al.} \cite{kaufman_leakage_2011}.}
-
-\noindent\textbf{Contraste declarado con un corpus comparable.} Los autores
-de SC2EGSet reemplazaron por la mediana los valores que excedían tres
-desviaciones estándar en sus propios experimentos
-\cite{bialecki_sc2egset_2023}. No se adopta esa regla aquí, porque en un
-juego por turnos la cola de la distribución de duración puede ser exactamente
-donde vive el comportamiento interesante.
-
-\razon{Declarar el desacuerdo con la práctica de un corpus comparable, y su
-razón, es preferible a divergir en silencio. La decisión queda expuesta y
-puede discutirse.}
+Cabe declarar un desacuerdo con la práctica de un corpus comparable: los
+autores de SC2EGSet reemplazaron por la mediana los valores que excedían
+tres desviaciones estándar \cite{bialecki_sc2egset_2023}. No se adopta esa
+regla aquí, porque en un juego por turnos la cola de la distribución de
+duración puede ser exactamente donde reside el comportamiento interesante.
 
 \subsection{Desbalance de clases}
 \label{subsec:desbalance}
 
-A nivel de episodio el objetivo está cerca del equilibrio: 52.10\,\% frente a
-47.70\,\%, con empates en 0.063\,\% y abandonos en 0.140\,\%.
+A nivel de partida el desenlace está cerca del equilibrio: 52.10\,\% frente
+a 47.70\,\%. Esa no es, sin embargo, la distribución que verá el modelo. La
+etiqueta se define desde la perspectiva del jugador que actúa, y cada
+partida aporta un número distinto de observaciones desde cada lado, de modo
+que la prevalencia sobre la tabla final es función de la tabularización y
+aún no ha sido medida. Debe recalcularse sobre la tabla materializada antes
+de tomar decisión alguna; presentar la proporción por partida como si fuera
+la proporción por fila reportaría como medido algo que no lo está.
 
-Esa no es, sin embargo, la distribución que verá el modelo. La etiqueta se
-define desde la perspectiva del jugador que actúa, y cada partida aporta un
-número distinto de instantáneas desde cada bando, de modo que la prevalencia
-de clases de la tabla final es función de la tabularización y \textbf{aún no
-ha sido medida}.
+La regla de decisión queda fijada de antemano, de modo que no pueda elegirse
+para acomodar un resultado.
 
-\razon{Debe recalcularse sobre la tabla materializada antes de tomar decisión
-alguna. Presentar la proporción a nivel de episodio como si fuera la
-proporción a nivel de fila reportaría como medido algo que no se ha medido.}
+\noindent\textbf{Si el desbalance resulta leve, no se corrige.} Corregir un
+desbalance que no lo necesita distorsiona las probabilidades predichas, y
+esas probabilidades son la salida de este trabajo y no un subproducto. Van
+den Goorbergh \textit{et al.} muestran que el submuestreo, el sobremuestreo
+y la generación sintética no mejoran de forma sistemática la capacidad de
+ordenar, y sí sobreestiman de manera pronunciada la probabilidad de la clase
+minoritaria \cite{vandenGoorbergh_imbalance_2022}. Conviene precisar el
+alcance de esa referencia: no evalúa la ponderación de clases, de modo que
+no puede invocarse para preferir esa técnica.
 
-\pc{Prevalencia de clases medida sobre la tabla materializada.}
+\noindent\textbf{Si resulta apreciable, se comparan alternativas} dentro del
+pliegue de entrenamiento, y se reporta su efecto tanto sobre la capacidad de
+ordenar como sobre la calidad de las probabilidades, dado que el desbalance
+afecta a ambas \cite{silvafilho_calibration_2023}. No se emplea
+sobremuestreo sintético sin justificación explícita, y en ningún caso fuera
+del pliegue de entrenamiento \cite{sasse_leakage_2025}.
 
-La regla de decisión queda no obstante fijada de antemano, de modo que no
-pueda elegirse para acomodar un resultado.
-
-\noindent\textbf{Si el desbalance resultante es leve, no se corrige.} Corregir
-un desbalance que no necesita corrección distorsiona las probabilidades
-predichas, y esas probabilidades son la salida de este proyecto y no un
-subproducto. Van den Goorbergh \textit{et al.} muestran que, para regresión
-logística estándar y regularizada, el submuestreo aleatorio, el sobremuestreo
-aleatorio y la generación sintética no mejoran de forma sistemática el área
-bajo la curva, y pueden sobreestimar de manera pronunciada la probabilidad de
-la clase minoritaria \cite{vandenGoorbergh_imbalance_2022}.
-
-\razon{Esta referencia \textbf{no} avala preferir la ponderación de clases:
-dicha técnica no fue evaluada en el estudio, y no se adoptará por cita
-indirecta. Atribuirle esa recomendación excedería lo que la fuente sostiene.}
-
-\noindent\textbf{Si es apreciable, se comparan alternativas dentro del pliegue
-de entrenamiento} y se reporta su efecto tanto sobre la discriminación como
-sobre la calibración. Silva Filho \textit{et al.} señalan que el desbalance
-afecta las probabilidades predichas y, en consecuencia, la calibración
-\cite{silvafilho_calibration_2023}. No se usará sobremuestreo sintético sin
-justificación explícita, y bajo ninguna circunstancia fuera del pliegue de
-entrenamiento: Sasse \textit{et al.} enumeran el sobremuestreo aplicado antes
-de particionar entre sus casos documentados de fuga
-\cite{sasse_leakage_2025}.
-
-\noindent\textbf{Empates y abandonos.} Los 33 empates se excluyen del
-objetivo binario y se documentan; su volumen no puede sostener una tercera
-clase. Los 73 abandonos tienen ganador identificable, pero el final no procede
-de la dinámica del juego, de modo que se excluyen del entrenamiento y se
-reservan para un análisis de sensibilidad.
-
-\subsection{Dependencia entre muestras y prevención de la fuga de datos}
+\subsection{Prevención de la fuga de información}
 \label{subsec:leakage}
 
-Esta es la subsección de la que depende la validez de todo lo demás, y el
-enunciado del curso penaliza la fuga confirmada más severamente que cualquier
-otro fallo aislado.
+De esta subsección depende la validez de todo lo demás.
 
 \subsubsection{La estructura de dependencia, medida}
 
-Cada episodio aporta en promedio unas 135 instantáneas, e instantáneas
-consecutivas difieren en una única acción atómica. Las filas son por tanto
-fuertemente dependientes dentro de un episodio e independientes solo entre
-episodios.
+Cada partida aporta en promedio unas 135 observaciones, y dos observaciones
+consecutivas difieren en una sola acción atómica. Las filas son por tanto
+fuertemente dependientes dentro de una partida e independientes solo entre
+partidas.
 
-Medimos la consecuencia directamente: bajo una partición aleatoria 70/30 a
-nivel de instantánea, la fracción esperada de episodios presentes en ambas
-particiones es 0.999945.
+La consecuencia se midió directamente: bajo una partición aleatoria por
+observación, la fracción esperada de partidas presentes en ambos
+subconjuntos es 0.999945. El protocolo ingenuo contaminaría, en la práctica,
+la totalidad del corpus.
 
-Karbalaie \textit{et al.} midieron un acierto de 0.91 bajo validación cruzada
-estratificada frente a 0.66 dejando un participante fuera sobre los mismos
-datos, e identificaron la causa en que el tamaño muestral efectivo es el
-número de participantes y no el de ensayos
-\cite{karbalaie_participantaware_2026}. Sasse \textit{et al.} clasifican
-precisamente este caso como vía primaria de fuga de prueba a entrenamiento
-\cite{sasse_leakage_2025}.
+\subsubsection{Qué campos pueden usarse}
 
-\razon{Nuestro corpus es una instancia más extrema de la misma estructura: no
-dos muestras relacionadas, sino 135.}
+Un campo puede existir en los datos y aun así ser inválido como
+característica. El criterio que gobierna es que el modelo solo puede emplear
+información de un instante no posterior al de la predicción
+\cite{kaufman_leakage_2011}, afinado por la pregunta que Sasse \textit{et
+al.} recomiendan hacerle a cada columna: si ese campo estaría disponible en
+el momento real de la decisión \cite{sasse_leakage_2025}. Aplicar esa prueba
+campo por campo produce cuatro clases, representadas en la
+Figura~\ref{fig:clasescampos}.
 
-\subsubsection{El momento de la predicción}
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  ok/.style={draw=tecsteel, fill=boxbg, rounded corners=2pt,
+             text width=3.3cm, align=center, inner sep=4pt,
+             minimum height=7mm},
+  duda/.style={draw=decisionambar, fill=decisionambar!8, rounded corners=2pt,
+               text width=3.3cm, align=center, inner sep=4pt,
+               minimum height=7mm},
+  mal/.style={draw=red!60!black, fill=red!5, rounded corners=2pt,
+              text width=3.3cm, align=center, inner sep=4pt,
+              minimum height=7mm},
+  det/.style={font=\tiny\itshape, text=labelgray, align=left,
+              text width=3.9cm},
+  eje/.style={font=\tiny\bfseries, text=tecnavy}
+]
 
-Un campo puede existir en el JSON y aun así ser inválido como característica.
-La prueba que gobierna es el requisito de la no máquina del tiempo de Kaufman
-\textit{et al.}: un modelo legítimo solo puede usar información de un
-instante no posterior al del objetivo \cite{kaufman_leakage_2011}, afinada
-por la pregunta que Sasse \textit{et al.} recomiendan hacer de cada
-columna, si ese campo estaría disponible en el despliegue
-\cite{sasse_leakage_2025}.
+\node[eje] at (-2.05,2.1) {CLASE};
+\node[eje] at ( 1.85,2.1) {EJEMPLOS Y DESTINO};
 
-Aplicar esa prueba campo por campo produce cuatro clases.
+\node[ok]   (a) at (-2.05,1.55) {Seguras};
+\node[det]  at ( 1.85,1.55) {estado propio en el turno $\tau$ y sus
+                             derivados $\rightarrow$ entran};
 
-\noindent\textbf{Seguras.} Los campos de estado presentes en el 100\,\% de
-las instantáneas, leídos de la observación propia del asiento activo en el
-turno $\tau$, junto con los recuentos, razones y diferenciales derivados de
-ellos. Son lo que el propio agente vio cuando decidió.
+\node[duda] (b) at (-2.05,0.75) {Requieren investigación};
+\node[det]  at ( 1.85,0.75) {indicador de jugador inicial; registro de
+                             acciones $\rightarrow$ solo si se trunca
+                             antes de $\tau$};
 
-\noindent\textbf{Requieren investigación.} El indicador de jugador inicial,
-porque asiento y orden de turno están casi perfectamente confundidos desde el
-2026-07-17 y el modelo podría aprender el asiento en lugar del tempo; y el
-registro acumulado de acciones, legítimo únicamente si se trunca estrictamente
-antes de $\tau$.
+\node[mal]  (c) at (-2.05,-0.15) {Fuga directa};
+\node[det]  at ( 1.85,-0.15) {desenlace; mazo restante ordenado; marcas de
+                              tiempo; nombres de agente $\rightarrow$
+                              excluidas};
 
-\noindent\textbf{Fuga directa, excluidas por construcción.} El campo de
-recompensas y el resultado final; cualquier recompensa por paso, no nula
-únicamente en el último; la carga útil de visualización, presente en el
-100\,\% de los episodios, que expone el mazo restante de cada jugador en
-orden, información perfecta que nunca aparece en la observación; las
-marcas de tiempo y los identificadores derivados del fichero; y los nombres
-de equipo o de agente, que actúan como sustituto de la habilidad.
+\node[mal]  (d) at (-2.05,-1.05) {Constantes};
+\node[det]  at ( 1.85,-1.05) {campo de resultado del estado actual, fijo en
+                              todas las observaciones $\rightarrow$
+                              excluida};
 
-\razon{Lo último no es hipotético: la mediana de la puntuación media de los
-episodios seleccionados cada día sube de 628 a más de 1\,100 a lo largo de la
-muestra, de modo que un identificador de agente codifica parcialmente el
-desenlace.}
+\draw[draw=tecrule, dashed] (-0.05,2.0) -- (-0.05,-1.5);
 
-\noindent\textbf{Excluidas por constantes.} El campo de resultado del estado
-actual, fijo en $-1$ en todos los estados frescos.
+\end{tikzpicture}
+\caption{Clasificación de los campos según la prueba de disponibilidad en el
+momento de la decisión. Solo la primera clase alimenta el vector de
+características; la segunda requiere verificación adicional antes de
+admitirse.}
+\label{fig:clasescampos}
+\end{figure}
 
-\subsubsection{Información oculta, verificada antes que supuesta}
+Dos exclusiones merecen justificación explícita. El campo que expone el mazo
+restante de cada jugador en orden está presente en la totalidad de las
+partidas y constituye información perfecta que ningún jugador posee en el
+momento de decidir. Y los nombres de agente actúan como sustituto de la
+habilidad: la mediana de puntuación de los agentes seleccionados sube de 628
+a más de 1\,100 a lo largo de la muestra, de modo que un identificador de
+agente codifica parcialmente el desenlace.
 
-El entorno ya retiene lo que debe retener, y lo comprobamos en lugar de
-confiar. A lo largo de 139\,672 estados inspeccionados, la mano del oponente
-fue nula en el 100\,\% de los casos con cero fugas detectadas, mientras que
-el recuento de cartas del oponente estuvo siempre disponible como entero. Las
-1\,281\,678 ranuras de premio inspeccionadas, propias y del oponente por
-igual, fueron todas nulas.
+\subsubsection{La información oculta ya está protegida}
 
-\razon{La fuga de información oculta no es, por tanto, un riesgo que debamos
-mitigar; es una propiedad que no debemos destruir, razón por la cual las
-características se extraen exclusivamente de la observación propia del
-asiento y nunca de la carga útil de visualización.}
+El entorno retiene lo que debe retener, y se comprobó en lugar de suponerlo.
+Sobre 139\,672 observaciones inspeccionadas, la mano del oponente fue nula
+en la totalidad de los casos, mientras que su recuento de cartas estuvo
+siempre disponible como entero. Las 1\,281\,678 ranuras de premio
+inspeccionadas ---propias y del oponente por igual--- fueron todas nulas.
 
-\subsubsection{Vectores de riesgo, evidencia y contramedidas}
+La fuga de información oculta no es, por tanto, un riesgo que deba
+mitigarse: es una propiedad que no debe destruirse. De ahí que las
+características se extraigan exclusivamente de la observación propia del
+jugador activo.
+
+\subsubsection{Vectores de riesgo y contramedidas}
 
 \begin{table}[!t]
 \centering
-\caption{Vectores de fuga, la evidencia de auditoría que establece cada uno
-como riesgo real, y el control aplicado.}
+\caption{Vectores de fuga, evidencia de auditoría que establece cada uno
+como riesgo real, y control aplicado.}
 \label{tab:leakage}
 \footnotesize
 \begin{tabularx}{\columnwidth}{@{}P{1.5cm} P{2.3cm} Y@{}}
 \toprule
 \textbf{Vector} & \textbf{Evidencia medida} & \textbf{Control}\\
 \midrule
-Por episodio &
-Una partición aleatoria 70/30 por filas sitúa 0.999945 de los episodios en
-ambas particiones &
-Partición y pliegues agrupados por identificador; prueba de intersección
+Por partida &
+Una partición aleatoria por fila sitúa 0.999945 de las partidas en ambos
+subconjuntos &
+Partición y pliegues agrupados por partida; prueba de intersección
 vacía\\[2pt]
 Información futura &
-Carga útil de visualización presente en el 100\,\% de los episodios, que
-expone el mazo restante ordenado &
-Características extraídas solo de la observación del asiento en $\tau$; carga
-útil en lista negra\\[2pt]
+El mazo restante ordenado está presente en el 100\,\% de las partidas &
+Características extraídas solo del estado propio en $\tau$; campo
+excluido\\[2pt]
 Sustituto de habilidad &
-La mediana de la puntuación media sube de 628 a más de 1\,100 a lo largo de
-la muestra &
-Metadatos de agente y equipo usados solo para auditoría y agrupación\\[2pt]
-Memorización de composiciones &
-2\,376 mazos, pero los diez primeros cubren el 39.94\,\% de las instancias;
-un día tiene solo 48 &
-Protocolo C; contexto de mazo confinado a una única ablación declarada\\[2pt]
+La mediana de puntuación de los agentes sube de 628 a más de 1\,100 &
+Metadatos de agente usados solo para auditoría y agrupación\\[2pt]
+Memorización de mazos &
+2\,376 mazos, pero los diez más frecuentes cubren el 39.94\,\%; un día
+contiene solo 48 &
+Escenario C; contexto de mazo confinado a una ablación declarada\\[2pt]
 Información oculta &
-Cero fugas en 139\,672 estados; 1\,281\,678 ranuras de premio todas nulas &
-Analizador que lee solo la observación propia, con aserción automatizada de
-privacidad\\[2pt]
-Metadatos &
-52\,085 identificadores distintos sobre 52\,085 filas &
-Columnas de agrupación excluidas del vector por construcción\\[2pt]
+Cero fugas en 139\,672 observaciones; 1\,281\,678 ranuras de premio todas
+nulas &
+Lectura restringida a la observación propia, con verificación
+automática\\[2pt]
 Preprocesamiento &
---- (riesgo de diseño, no propiedad del corpus) &
-Todas las transformaciones se ajustan dentro del pliegue de entrenamiento
+Riesgo de diseño, no propiedad del corpus &
+Transformaciones ajustadas dentro del pliegue de entrenamiento
 \cite{sasse_leakage_2025}\\[2pt]
 Temporal &
 Divergencia de mazos de 1.0000 entre el primer y el último día auditado &
-El protocolo temporal corta por fecha, nunca al azar
+El escenario B corta por fecha, nunca al azar
 \cite{kaufman_leakage_2011}\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\razon{Figueiredo y Mendes cuantifican la contaminación entre subconjuntos
-antes de entrenar modelo alguno \cite{figueiredo_leakage_2024}. Acompañar
-cada vector con evidencia medida sobre este corpus, y no únicamente con la
-descripción del riesgo, es lo que distingue una prevención verificada de una
-precaución declarada.}
+Acompañar cada vector con evidencia medida sobre este corpus, y no solo con
+la descripción del riesgo, es lo que distingue una prevención verificada de
+una precaución declarada.
 
 \subsubsection{Verificación automática}
 
-El pipeline incluirá al menos dos invariantes que deben fallar antes de
-cualquier entrenamiento: primero, ninguna columna de la lista negra puede
-aparecer en el conjunto de características; segundo, la intersección de
-identificadores de episodio entre cualquier par de particiones debe ser
-vacía.
+La tubería incorpora invariantes que deben fallar antes de cualquier
+entrenamiento. Primero, ninguna columna excluida puede aparecer en el
+conjunto de características. Segundo, la intersección de identificadores de
+partida entre cualquier par de subconjuntos debe ser vacía. Tercero, toda
+carta del corpus debe estar presente en el conjunto de entrenamiento, según
+el procedimiento de la Sección~\ref{subsec:protocolo}. Y cuarto, ninguna
+transformación puede haberse ajustado con datos de validación, calibración o
+prueba.
 
-Se añadirá además una prueba del analizador que confirme que la información
-privada del oponente permanece oculta, y que ninguna transformación se ajusta
-con datos de validación o de prueba.
+Una política de prevención sin una prueba que la verifique constituye una
+intención y no una mitigación.
 
-\razon{Una política de prevención sin una prueba que la verifique constituye
-una intención y no una mitigación. La verificación automática es la forma
-operativa de la separación aprender--predecir de Kaufman \textit{et al.}
-\cite{kaufman_leakage_2011}.}
+\subsubsection{Medición de la inflación atribuible a la fuga}
 
-\decidir{Figueiredo y Mendes comparan explícitamente el desempeño obtenido
-bajo distintas estrategias de partición, lo que permite cuantificar la
-inflación atribuible a la fuga \cite{figueiredo_leakage_2024}. Un
-procedimiento equivalente sobre este corpus, ejecutar el modelo de
-referencia bajo partición aleatoria y bajo partición agrupada, y reportar la
-diferencia, convertiría la prevención de fuga en un resultado medido. Su
-incorporación debe decidirse en la Etapa 2, y en caso de adoptarse debe
-declararse de forma inequívoca que la partición aleatoria se emplea
-únicamente como demostración del sesgo y no para reportar resultados.}
+Se ejecutará el modelo B2 bajo dos particiones ---aleatoria por fila y
+agrupada por partida--- y se reportará la diferencia. Ese procedimiento
+convierte la prevención de fuga en un resultado medido sobre los propios
+datos, siguiendo el diseño con que Figueiredo y Mendes cuantifican el efecto
+en su dominio \cite{figueiredo_leakage_2024}.
+
+Se emplea únicamente B2 porque el punto que se demuestra no depende del
+modelo, y porque Karbalaie \textit{et al.} encuentran que los modelos
+lineales son los menos inflados por un protocolo defectuoso
+\cite{karbalaie_participantaware_2026}: si B2 muestra inflación, el valor
+obtenido es una cota inferior del efecto.
+
+La partición aleatoria se emplea exclusivamente como demostración del sesgo.
+Ningún resultado del trabajo se reporta bajo ella.
 
 \subsection{Representatividad}
 \label{subsec:representatividad}
 
-El corpus no es una muestra aleatoria del juego, y el editor lo dice: las
-repeticiones se seleccionan a diario, ordenadas por puntuación media de los
-agentes, y se truncan a 20~GiB por día \cite{ptcg_dataset_2026}.
+El corpus no es una muestra aleatoria del juego. Las repeticiones se
+seleccionan a diario ordenadas por puntuación de los agentes y se truncan a
+un volumen fijo \cite{ptcg_dataset_2026}, y de ahí se siguen tres
+consecuencias, las tres medidas.
 
-De ahí se siguen tres consecuencias, y las tres están medidas. La población
-es de agentes artificiales, no de humanos. Es la franja alta de la escalera
-de clasificación, con la mediana de la puntuación media ascendiendo a lo
+La población es de agentes automáticos y no de personas. Corresponde a la
+franja alta de la clasificación, con la puntuación mediana ascendiendo a lo
 largo de la muestra. Y está concentrada: los diez mazos más frecuentes suman
 el 39.94\,\% de las instancias y los cien más frecuentes el 74.76\,\%, con
-días individuales que caen a 48 mazos distintos.
+días individuales que descienden a 48 mazos distintos.
 
-Esto refleja la limitación que los autores de SC2EGSet declaran para su
-propio corpus \cite{bialecki_sc2egset_2023}, y es una versión más aguda del
-problema de población al que Janusz \textit{et al.} se enfrentan desde la
-dirección opuesta, pues sus estados fueron generados por agentes que actúan
-al azar \cite{janusz_hearthstone_2017}.
-
-\razon{Leídos en conjunto, ambos acotan nuestro caso: un corpus procede de la
-población más débil posible y el otro de la más fuerte, y ninguno es la
-población general. Cualquier afirmación de este proyecto es, por tanto, una
-afirmación sobre agentes artificiales competitivos de una franja de
-puntuación específica durante una muestra específica de diez días.}
+Los dos corpus análogos acotan este caso desde direcciones opuestas. SC2EGSet
+contiene únicamente repeticiones de nivel de torneo y sus autores declaran
+que no admite análisis entre niveles de habilidad
+\cite{bialecki_sc2egset_2023}; el certamen sobre \emph{Hearthstone} generó
+sus estados con agentes que actúan al azar
+\cite{janusz_hearthstone_2017}. Uno procede de la población más fuerte
+posible y el otro de la más débil, y ninguno es la población general.
+Cualquier afirmación de este trabajo es, en consecuencia, una afirmación
+sobre agentes automáticos competitivos de una franja de puntuación
+específica durante una muestra específica de diez días.
