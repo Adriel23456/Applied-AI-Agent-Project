@@ -196,7 +196,8 @@ tanto, del problema de investigación y no de sus preliminares.
 El problema metodológico central consiste entonces en estimar
 $P(\mathrm{victoria}\mid\mathrm{estado})$ empleando exclusivamente
 información observable hasta el instante de predicción, y manteniendo
-intactas las unidades independientes durante la evaluación.
+cada partida completa dentro de un único subconjunto durante la evaluación,
+sin repartir sus estados entre entrenamiento, validación y prueba.
 
 \subsection{Pregunta de investigación}
 \label{subsec:pregunta}
@@ -215,8 +216,8 @@ quedaría sustancialmente debilitada, si el intervalo de confianza del área
 bajo la curva ROC en la ventana temprana incluyera el valor 0.5; si el
 desempeño no mejorara al avanzar la partida una vez controlada su longitud;
 si el modelo no superara a una heurística de dominio sobre partidas no
-vistas; o si la señal desapareciera bajo el protocolo temporal o el de
-reserva de mazos.
+vistas; o si su capacidad predictiva se redujera al evaluarlo en periodos
+posteriores o con mazos no observados durante el entrenamiento.
 
 \noindent\textbf{Condiciones de medición.} La discriminación se mide mediante
 el área bajo la curva ROC, y la calidad de la probabilidad mediante la
@@ -264,22 +265,27 @@ Xenopoulos \textit{et al.} observan el mismo patrón en un juego competitivo:
 un modelo evaluado fuera de su entorno presenta un incremento moderado en la
 pérdida logarítmica acompañado de una degradación considerablemente mayor en
 el error de calibración esperado \cite{xenopoulos_winprob_2022}. Silva Filho
-\textit{et al.} ofrecen la explicación formal: las reglas de puntuación
-propias se descomponen en un componente de calibración y uno de refinamiento,
-y las métricas basadas exclusivamente en el ordenamiento son invariantes ante
-transformaciones monótonas de las probabilidades predichas
+\textit{et al.} explican que las métricas probabilísticas evalúan dos aspectos
+distintos: si los porcentajes predichos corresponden a las frecuencias
+observadas (calibración) y si el modelo distingue correctamente entre estados
+con mayor o menor probabilidad de victoria (refinamiento). En cambio, las
+métricas basadas solo en el ordenamiento, como el área bajo la curva ROC, no
+cambian cuando se transforman las probabilidades sin alterar su orden
 \cite{silvafilho_calibration_2023}.
 
-Que esa asimetría se sostenga en un dominio de juegos es una pregunta
-empírica abierta, y enunciarla como hipótesis la vuelve falsable aquí.
+Todavía no sabemos si este patrón también aparece en los juegos de cartas.
+Por eso, este trabajo comprobará si en Pokémon TCG la calibración se deteriora
+antes y en mayor medida que la capacidad del modelo para distinguir entre
+victorias y derrotas.
 
-\noindent\textbf{Criterios de falsación.} La componente temprana de H1 se
-debilita si el intervalo de confianza del área bajo la curva en esa ventana
-incluye 0.5, y su componente dinámica queda refutada si el valor por ventana
-no crece una vez controlada la duración de la partida. H2 queda refutada si un
-modelo restringido al orden de turno y a la identidad del mazo iguala al
-conjunto completo de características, lo que indicaría un artefacto de
-emparejamiento y no señal del estado de juego. H3 queda refutada si el puntaje
+\noindent\textbf{Criterios para evaluar las hipótesis.} H1 se debilita si,
+durante los primeros turnos, el modelo no obtiene un rendimiento claramente
+superior al azar. También se debilita si su capacidad predictiva no mejora
+conforme avanza la partida. H2 se refuta si un modelo que solo utiliza el
+número de turno y la identidad del mazo funciona tan bien como el modelo que
+utiliza todas las características del estado. En ese caso, la capacidad
+predictiva podría deberse al turno y al mazo, y no a la información específica
+de la situación de juego. H3 queda refutada si el puntaje
 de Brier y las curvas de fiabilidad no se degradan más rápido que el área bajo
 la curva bajo la partición temporal. Una caída hasta el nivel del azar en el
 protocolo temporal se interpretará como ausencia de generalización y no como
@@ -291,13 +297,13 @@ inventado.
 
 \noindent\textbf{Advertencia sobre H1.} Brill \textit{et al.} documentan que
 el sesgo del estimador es considerablemente mayor al comienzo de la partida,
-por dos razones estructurales: los estados tempranos con desequilibrios
-marcados son infrecuentes, y resulta más difícil vincular un estado temprano
-con un desenlace determinado al final \cite{brill_winprob_2026}. En
-consecuencia, un desempeño reducido en la ventana temprana admite dos
-interpretaciones que este diseño debe procurar distinguir: ausencia genuina
-de señal, o sesgo del estimador por escasez de observaciones en esa región
-del espacio de estados.
+por dos razones estructurales: los estados tempranos con ventajas muy claras
+son infrecuentes, y resulta más difícil relacionar un estado inicial con el
+resultado final de la partida \cite{brill_winprob_2026}. En consecuencia, un
+rendimiento reducido durante los primeros turnos puede tener dos explicaciones:
+que el estado inicial realmente no contenga suficiente información para
+predecir el resultado, o que el modelo no haya aprendido a interpretarlo bien
+porque existen pocos ejemplos de esos estados.
 
 \razon{Declarar esta ambigüedad antes de obtener resultados es obligatorio.
 Sin ella, un desempeño bajo en turnos tempranos se interpretaría como
@@ -340,9 +346,11 @@ mazo y periodo temporal.
         trivial hasta potenciación del gradiente, bajo tres protocolos de
         partición, reportando discriminación y calibración con intervalos de
         confianza calculados sobre episodios.
-  \item Analizar explicabilidad y generalización: ablaciones por familia de
-        características, importancia por permutación agrupada, curvas de
-        fiabilidad y la curva de capacidad predictiva por turno.
+  \item Analizar la explicabilidad y la capacidad de generalización mediante
+        la eliminación de grupos de características para medir su aporte, el
+        desordenamiento controlado de cada característica dentro de las
+        partidas, las curvas de fiabilidad y la capacidad predictiva según el
+        turno de la partida.
 \end{enumerate}
 
 \razon{Los objetivos deben poder verificarse al final del semestre. Se
@@ -363,10 +371,12 @@ incluyendo el perfil por turno de la capacidad predictiva que Janusz
 \textit{et al.} reportan para \emph{Hearthstone} pero que no existe para el
 \emph{Pok\'emon TCG} \cite{janusz_hearthstone_2017}.
 
-La segunda es un protocolo de evaluación cuyos controles de fuga están
-medidos y no solo afirmados: la auditoría cuantifica la contaminación que
-produciría el protocolo ingenuo, de modo que el diseño agrupado se justifica
-con una cifra de este corpus y no por analogía.
+La segunda contribución es demostrar con datos del propio corpus por qué las
+partidas deben mantenerse completas en un solo subconjunto. La auditoría mide
+cuántas partidas quedarían divididas entre entrenamiento y prueba si los
+estados se repartieran por filas al azar. Por tanto, la partición agrupada se
+justifica con una medición directa del corpus, y no solo con una afirmación
+general.
 
 La tercera es un análisis explícito de la diferencia entre discriminación y
 calidad probabilística, dimensión que Grinsztajn \textit{et al.} identifican

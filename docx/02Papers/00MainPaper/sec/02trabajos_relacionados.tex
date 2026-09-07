@@ -49,14 +49,14 @@ clasificación binaria supervisada sobre una instantánea de la posición, con
 la etiqueta tomada del resultado registrado de la partida completa. El
 AAIA'17 Data Mining Challenge lo enuncia exactamente en esos términos para
 \emph{Hearthstone}: los participantes recibían la descripción de un estado de
-juego y entregaban la verosimilitud de que el jugador uno venciera, puntuada
+juego y entregaban la probabilidad de que el jugador uno venciera, puntuada
 mediante el área bajo la curva ROC \cite{janusz_hearthstone_2017}. El
 descriptor SC2EGSet aplica el mismo encuadre a \emph{StarCraft~II},
 derivando indicadores económicos de las repeticiones y clasificando el
 desenlace a partir de ellos \cite{bialecki_sc2egset_2023}. Ninguna de las dos
 formulaciones requiere un simulador en el momento de la predicción, y ninguna
-trata la trayectoria como un problema de control. Esta es la formulación que
-se adopta aquí.
+trata la secuencia completa de estados y acciones de la partida como un
+problema de control. Esta es la formulación que se adopta aquí.
 
 La revisión sistemática de Kamal \textit{et al.} sitúa estos trabajos en un
 campo más amplio: incluye treinta y cinco estudios sobre juegos de arena
@@ -96,11 +96,11 @@ bien el resumen del artículo menciona 84.7\,\% \cite{tian_hero_2022}.
 consignarse. Reportar únicamente la cifra más alta sin señalar la divergencia
 constituiría una lectura selectiva de la fuente.}
 
-Todas estas curvas señalan el mismo punto metodológico: una única cifra
-agregada promedia un régimen en el que el estado dice poco con otro en el que
-lo dice casi todo. Ninguno de estos trabajos reporta intervalos de confianza
-sobre esas curvas, y ninguno reporta cómo cambia su forma cuando cambia la
-población de jugadores.
+Estos trabajos muestran que una única métrica general puede ocultar diferencias
+importantes entre las etapas de la partida: el modelo puede aportar poca
+información al inicio y mucha al final. Sin embargo, no reportan la
+incertidumbre de sus curvas ni analizan si el rendimiento cambia cuando cambia
+la población de jugadores.
 
 Hodge \textit{et al.} organizan las características empleadas en la
 literatura según el momento en que están disponibles, previas al juego,
@@ -136,19 +136,21 @@ profesionales.
 
 \subsubsection{Generalización ante contenido cambiante}
 
-El contenido de estos juegos no se queda quieto. Bertram \textit{et al.} lo
-abordan directamente para \emph{Magic: The Gathering}, evaluando mediante la
-reserva de un conjunto de cartas completo. Sus resultados separan dos
-capacidades que una única puntuación dentro de la distribución confunde: una
-codificación por identidad alcanza un 67.80\,\% de acierto sobre datos
-reservados del mismo conjunto y no puede producir predicción alguna para
-cartas nunca vistas, mientras que las representaciones construidas a partir
-de atributos alcanzan un 68.00\,\% dentro de la distribución y un 42.87\,\%
-sobre conjuntos no vistos; escalado a un corpus de 2\,990 cartas, el mismo
-modelo alcanza un 55.44\,\% sobre un conjunto enteramente reservado
-\cite{bertram_cardrepresentations_2024}. La lección trasciende su tarea: una
-codificación del contenido basada en la identidad puede ser indistinguible de
-una semántica dentro de la distribución y no valer nada fuera de ella.
+El contenido de estos juegos cambia con el tiempo. Bertram \textit{et al.}
+estudian este problema en \emph{Magic: The Gathering} reservando un conjunto
+completo de cartas para la evaluación. Sus resultados muestran una diferencia
+importante: un modelo que representa cada carta únicamente por su identidad
+obtiene un 67.80\,\% de acierto cuando evalúa cartas del mismo conjunto, pero
+no puede hacer predicciones sobre cartas que nunca vio durante el
+entrenamiento. En cambio, las representaciones construidas a partir de
+características de las cartas obtienen un 68.00\,\% dentro de la distribución
+y un 42.87\,\% cuando se evalúan conjuntos no vistos. Al ampliar el experimento
+a un corpus de 2\,990 cartas, el mismo modelo alcanza un 55.44\,\% sobre un
+conjunto reservado por completo \cite{bertram_cardrepresentations_2024}.
+La lección es que un modelo puede memorizar las identidades de las cartas
+conocidas y funcionar bien con ellas, pero fallar cuando aparecen cartas
+nuevas. Usar características compartidas entre cartas puede ayudarle a
+generalizar a contenido que no vio durante el entrenamiento.
 
 Chitayat \textit{et al.} proponen una representación de personajes basada en
 atributos y habilidades de diseño en lugar de identificadores; un modelo que
@@ -533,8 +535,8 @@ supervisada de desenlace, y el hecho de que los datos fueron producidos por
 competencia y no por experimento. Difiere en género, en tanto
 \emph{StarCraft~II} es un juego de estrategia en tiempo real y no un juego de
 cartas por turnos con recursos discretos, y difiere en unidad de observación,
-puesto que sus modelos consumen agregados por partida y no estados
-instantáneos.
+puesto que sus modelos utilizan resúmenes de cada partida completa y no
+estados individuales registrados durante la partida.
 
 El conjunto de la competencia de \emph{Hearthstone} es el análogo más cercano
 en género: un juego de cartas coleccionables con mazos, mano, tablero e

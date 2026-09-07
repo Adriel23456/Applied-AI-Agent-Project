@@ -215,26 +215,34 @@ agente inteligente con la probabilidad estimada.}
 
 Dos decisiones de diseño merecen justificación.
 
-\noindent\textbf{Normalización de la perspectiva.} Cada fila se proyecta a
-propio frente a oponente usando el índice de asiento, de modo que el modelo
-aprenda relaciones entre magnitudes y no la identidad de un asiento. La
-auditoría encontró que asiento y orden de turno están casi perfectamente
-confundidos en los días tardíos, lo que de otro modo convertiría la identidad
-del asiento en un atajo atractivo.
+\noindent\textbf{Normalización de la perspectiva.} Para cada jugador, los
+datos se reorganizan distinguiendo entre ``mi información'' y la información
+de cada oponente, en lugar de identificarlos por su número de asiento. Así,
+el modelo aprende a comparar las características de los jugadores y no a
+asociar el resultado con un asiento específico. Esta transformación es
+importante porque, en los últimos días, el asiento y el orden de turno
+coincidían casi siempre. Sin ella, el modelo podría usar el número de asiento
+como un atajo para predecir el resultado.
 
-\noindent\textbf{Ajuste del preprocesamiento dentro del pliegue.} Los
-parámetros de escalado, codificación de variables categóricas, cualquier
-imputación y cualquier ponderación de clases se estiman dentro del pliegue de
-entrenamiento y después se aplican a los datos reservados. Sasse \textit{et
-al.} clasifican la alternativa, estimarlos sobre el conjunto completo antes
-de particionar, como fuga de prueba a entrenamiento, aunque el modelo en sí
-se ajuste después de la partición \cite{sasse_leakage_2025}.
+\noindent\textbf{Ajuste del preprocesamiento dentro del pliegue.} Primero se
+separan los datos en un conjunto de entrenamiento y otro reservado para la
+evaluación. Los parámetros de escalado, la codificación de variables
+categóricas, la imputación de valores faltantes y la ponderación de clases se
+calculan únicamente con los datos de entrenamiento. Después, esas mismas
+reglas se aplican a los datos reservados. De este modo se evita que la
+información del conjunto de evaluación se filtre al entrenamiento y haga que
+el rendimiento del modelo parezca mejor de lo que realmente es. Sasse
+\textit{et al.} denominan fuga de prueba a entrenamiento a la alternativa de
+calcular esos parámetros usando todos los datos antes de particionarlos,
+incluso si el modelo se entrena después de la partición
+\cite{sasse_leakage_2025}.
 
-Xenopoulos \textit{et al.} y Hodge \textit{et al.} describen procedimientos
-análogos, en los cuales las repeticiones se procesan mediante un analizador
-sintáctico que produce estados a intervalos regulares, y dichos estados
-constituyen la entrada de los modelos
-\cite{xenopoulos_winprob_2022,hodge_winprediction_2021}.
+Xenopoulos \textit{et al.} y Hodge \textit{et al.} describen un procedimiento
+relacionado para transformar las repeticiones en datos utilizables por un
+modelo: un analizador sintáctico recorre cada repetición y genera una
+representación del estado a intervalos regulares. Esos estados, que describen
+la situación del proceso en distintos momentos, constituyen la entrada de los
+modelos \cite{xenopoulos_winprob_2022,hodge_winprediction_2021}.
 
 \razon{Citar ambos precedentes evita que el procedimiento parezca una
 construcción improvisada. La estructura repetición--analizador--tabla es la
@@ -254,14 +262,14 @@ aleatoria 70/30 de instantáneas colocaría el 99.9945\,\% de los episodios a
 ambos lados simultáneamente. El protocolo ingenuo contaminaría, por tanto,
 esencialmente todo el corpus.
 
-Tres evidencias convergen sobre esta decisión. Brill \textit{et al.} muestran
-que la dependencia entre observaciones que comparten desenlace incrementa el
-sesgo y la varianza del estimador \cite{brill_winprob_2026}. Karbalaie
-\textit{et al.} cuantifican la inflación resultante: 0.91 de acierto bajo
-validación estratificada frente a 0.66 bajo validación agrupada sobre los
-mismos datos \cite{karbalaie_participantaware_2026}. Figueiredo y Mendes
-reportan el mismo fenómeno sobre conjuntos con alta correlación
-espaciotemporal \cite{figueiredo_leakage_2024}.
+Esta decisión se basa en evidencia previa de que dividir observaciones
+relacionadas entre entrenamiento y prueba puede inflar artificialmente las
+métricas, porque el modelo termina evaluándose sobre información vinculada a
+la que ya vio durante el entrenamiento. En particular, Karbalaie
+\textit{et al.} reportan una caída del acierto de 0.91 bajo validación
+estratificada a 0.66 bajo validación agrupada sobre los mismos datos
+\cite{karbalaie_participantaware_2026}. Por ello, la partición se realiza por
+episodio y no por observación.
 
 \razon{Se citan las tres referencias y no una, porque miden cosas distintas:
 la primera sobre las propiedades del estimador, la segunda sobre la magnitud

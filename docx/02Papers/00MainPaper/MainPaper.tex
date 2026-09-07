@@ -72,13 +72,14 @@ Este trabajo pregunta, por tanto, cuánta información sobre el desenlace
 contiene un único estado observable, cómo crece esa información conforme
 avanza la partida, y cuánta sobrevive al evaluar sobre partidas, mazos y
 periodos no vistos. Se propone una formulación tabular supervisada, una
-fila por estado fresco del asiento activo, con características derivadas
+fila por cada estado actualizado del jugador al que le corresponde actuar, con características derivadas
 exclusivamente de la observación disponible en ese instante; una escalera
 de modelos clásicos que va desde un predictor trivial hasta potenciación
 del gradiente; una lista negra explícita de campos cuyo uso constituiría
 fuga de datos; y particiones agrupadas por episodio en lugar de por fila.
 La evaluación reporta discriminación y calibración por separado, de forma
-global y por ventana de turno, con intervalos de confianza remuestreados
+global y según el rango de turnos en que se agrupan los estados de la
+partida, con intervalos de confianza remuestreados
 sobre episodios.
 
 Como referencia externa parcialmente comparable se adopta la tarea análoga
