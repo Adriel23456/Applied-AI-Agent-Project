@@ -30,8 +30,8 @@ nombran como pendientes, nunca se estiman.}
 
 El corpus publica 67 entregas diarias que abarcan del 2026-06-16 al
 2026-08-21, declarando 329\,336 episodios y 1.29~TB sin comprimir. La
-auditoría cubre una muestra temporal de diez de esos días ---el 14.9\,\% de
-los días y el 15.8\,\% de los episodios declarados--- elegidos para abarcar
+auditoría cubre una muestra temporal de diez de esos días, el 14.9\,\% de
+los días y el 15.8\,\% de los episodios declarados, elegidos para abarcar
 las fases inicial, media y tardía de la competencia, con tres días
 consecutivos al comienzo de modo que pudiera medirse la deriva día a día.
 
@@ -48,7 +48,7 @@ modo excedería el alcance de lo medido.}
 La duración de las partidas está fuertemente sesgada a la derecha. El número
 de pasos por episodio tiene mediana 140 y media 137.1, con cuartiles 101 y
 171, percentil 95 de 221 y máximo 6\,900. El recuento de turnos es mucho
-menor ---mediana 13, media 14.3, percentil 95 de 27, máximo 1\,035---
+menor, mediana 13, media 14.3, percentil 95 de 27, máximo 1\,035,
 porque un solo turno se descompone en muchas acciones atómicas.
 
 Esa brecha gobierna cómo debe definirse una ventana de turno: fijar el juego
@@ -86,10 +86,9 @@ de P0 es 0.5220 y la del jugador que mueve primero es 0.5287.
 
 Los diez días auditados no son intercambiables. Medida con la divergencia de
 Jensen--Shannon en base 2 entre el primer y el último día auditado, la
-distribución de mazos es esencialmente disjunta ---1.0000---, la población de
-agentes casi tanto ---0.9723---, la distribución de cartas se ha desplazado
-hasta 0.4889, mientras que la duración de las partidas apenas se ha movido
----0.1221.
+distribución de mazos es esencialmente disjunta, 1.0000, la población de
+agentes casi tanto, 0.9723, la distribución de cartas se ha desplazado
+hasta 0.4889, mientras que la duración de las partidas apenas se ha movido, 0.1221.
 
 La diversidad no decae de forma suave: los mazos distintos por día van de
 1\,268 el 2026-06-23 a 48 el 2026-07-17, y los equipos distintos de 2\,309 a
@@ -250,7 +249,7 @@ ausentes de los ficheros, de 4\,816 declarados.
 
 Tres comprobaciones independientes devolvieron cero: ningún identificador de
 episodio repetido, ningún resumen criptográfico repetido sobre los bytes del
-fichero, y ninguna huella canónica repetida ---esta última calculada sobre la
+fichero, y ninguna huella canónica repetida, esta última calculada sobre la
 semilla de configuración, ambos mazos en orden, la secuencia completa de
 acciones y las recompensas, excluyendo deliberadamente los metadatos
 volátiles. Ningún identificador aparece en más de un día. El juego contra uno
@@ -260,16 +259,16 @@ mismo ocurre en cero de los 52\,085 episodios.
 duplicación funcional dentro de un episodio es una cuestión distinta: en la
 muestra sondeada los 139\,672 estados frescos fueron distintos, pero las
 cuasi duplicadas son la norma antes que la excepción. Esto no es un defecto
-que deba eliminarse ---es la estructura de dependencia de los datos--- y se
+que deba eliminarse, es la estructura de dependencia de los datos, y se
 aborda mediante agrupación y no mediante deduplicación.}
 
 \subsubsection{Comprobaciones pendientes sobre la representación tabular}
 
 La auditoría verificó el corpus crudo. Lo siguiente debe reverificarse sobre
 la tabla materializada, y se consigna aquí como pendiente antes que como
-supuesto: la ausencia de valores por columna; los rangos imposibles ---puntos
+supuesto: la ausencia de valores por columna; los rangos imposibles, puntos
 de vida negativos o por encima del máximo, recuentos negativos, tamaño de
-banca por encima de su máximo---; la consistencia lógica entre campos
+banca por encima de su máximo; la consistencia lógica entre campos
 relacionados; las filas duplicadas dentro y entre episodios; y la cardinalidad
 efectiva de las columnas categóricas.
 
@@ -338,8 +337,8 @@ fallo del simulador o una partida genuinamente larga, y esos cinco casos
 exigen respuestas distintas.
 
 El procedimiento propuesto es diagnóstico antes que correctivo. Los
-candidatos se marcan por distancia distribucional ---una regla intercuartil o
-de puntuación robusta sobre las características de duración y recuento--- y
+candidatos se marcan por distancia distribucional, una regla intercuartil o
+de puntuación robusta sobre las características de duración y recuento, y
 por rangos imposibles en el dominio, que es una prueba distinta con un
 significado distinto. Los episodios marcados se inspeccionan caso por caso.
 Solo se eliminan los registros demostrablemente corruptos.
@@ -446,7 +445,7 @@ La prueba que gobierna es el requisito de la no máquina del tiempo de Kaufman
 \textit{et al.}: un modelo legítimo solo puede usar información de un
 instante no posterior al del objetivo \cite{kaufman_leakage_2011}, afinada
 por la pregunta que Sasse \textit{et al.} recomiendan hacer de cada
-columna ---si ese campo estaría disponible en el despliegue
+columna, si ese campo estaría disponible en el despliegue
 \cite{sasse_leakage_2025}.
 
 Aplicar esa prueba campo por campo produce cuatro clases.
@@ -466,7 +465,7 @@ antes de $\tau$.
 recompensas y el resultado final; cualquier recompensa por paso, no nula
 únicamente en el último; la carga útil de visualización, presente en el
 100\,\% de los episodios, que expone el mazo restante de cada jugador en
-orden ---información perfecta que nunca aparece en la observación---; las
+orden, información perfecta que nunca aparece en la observación; las
 marcas de tiempo y los identificadores derivados del fichero; y los nombres
 de equipo o de agente, que actúan como sustituto de la habilidad.
 
@@ -484,8 +483,8 @@ El entorno ya retiene lo que debe retener, y lo comprobamos en lugar de
 confiar. A lo largo de 139\,672 estados inspeccionados, la mano del oponente
 fue nula en el 100\,\% de los casos con cero fugas detectadas, mientras que
 el recuento de cartas del oponente estuvo siempre disponible como entero. Las
-1\,281\,678 ranuras de premio inspeccionadas ---propias y del oponente por
-igual--- fueron todas nulas.
+1\,281\,678 ranuras de premio inspeccionadas, propias y del oponente por
+igual, fueron todas nulas.
 
 \razon{La fuga de información oculta no es, por tanto, un riesgo que debamos
 mitigar; es una propiedad que no debemos destruir, razón por la cual las
@@ -567,9 +566,9 @@ operativa de la separación aprender--predecir de Kaufman \textit{et al.}
 \decidir{Figueiredo y Mendes comparan explícitamente el desempeño obtenido
 bajo distintas estrategias de partición, lo que permite cuantificar la
 inflación atribuible a la fuga \cite{figueiredo_leakage_2024}. Un
-procedimiento equivalente sobre este corpus ---ejecutar el modelo de
+procedimiento equivalente sobre este corpus, ejecutar el modelo de
 referencia bajo partición aleatoria y bajo partición agrupada, y reportar la
-diferencia--- convertiría la prevención de fuga en un resultado medido. Su
+diferencia, convertiría la prevención de fuga en un resultado medido. Su
 incorporación debe decidirse en la Etapa 2, y en caso de adoptarse debe
 declararse de forma inequívoca que la partición aleatoria se emplea
 únicamente como demostración del sesgo y no para reportar resultados.}

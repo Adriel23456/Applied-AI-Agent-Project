@@ -37,9 +37,8 @@ Grinsztajn \textit{et al.} enuncian criterios explícitos de inclusión de
 conjuntos de datos \cite{grinsztajn_trees_2022}; ambas prácticas son el
 precedente de exigir transparencia en el procedimiento.}
 
-% ------------------------------------------------------------
 % EJE A
-% ------------------------------------------------------------
+
 \subsection{Eje A: el problema y su dominio}
 \label{subsec:ejea}
 
@@ -104,8 +103,8 @@ sobre esas curvas, y ninguno reporta cómo cambia su forma cuando cambia la
 población de jugadores.
 
 Hodge \textit{et al.} organizan las características empleadas en la
-literatura según el momento en que están disponibles ---previas al juego,
-durante el juego y posteriores al juego--- y recogen la observación de que
+literatura según el momento en que están disponibles, previas al juego,
+durante el juego y posteriores al juego, y recogen la observación de que
 las disponibles durante el juego concentran la información más útil para la
 predicción \cite{hodge_winprediction_2021}. Su revisión reúne dieciséis
 trabajos previos y advierte que la variación en tamaño, composición y versión
@@ -209,9 +208,9 @@ en juegos de arena multijugador, en el videojuego competitivo de Pok\'emon o
 en \emph{Hearthstone} se transfieren de forma directa, dado que difieren las
 reglas, las unidades de observación, los protocolos y la población.
 
-% ------------------------------------------------------------
+% 
 % EJE B
-% ------------------------------------------------------------
+% 
 \subsection{Eje B: las técnicas del \textit{track} seleccionado}
 \label{subsec:ejeb}
 
@@ -246,9 +245,8 @@ La evidencia procedente del propio dominio de juegos apunta en la misma
 dirección, y lo hace con cifras. En la competencia de \emph{Hearthstone} se
 registraron 296 equipos y 188 enviaron solución; todos los equipos mejor
 clasificados usaron redes neuronales, y aun así la puntuación ganadora de
-0.8019 supera al resultado de referencia de los organizadores, 0.7846
----una red totalmente conectada de dos capas ocultas sobre la representación
-tabular---, por menos de un dos por ciento, y los organizadores lo hacen
+0.8019 supera al resultado de referencia de los organizadores, 0.7846, una red totalmente conectada de dos capas ocultas sobre la representación
+tabular, por menos de un dos por ciento, y los organizadores lo hacen
 notar explícitamente \cite{janusz_hearthstone_2017}. En SC2EGSet, tres
 clasificadores convencionales con hiperparámetros próximos a los
 predeterminados quedan a menos de 0.016 de acierto unos de otros: máquina de
@@ -321,7 +319,7 @@ mecanismos de atención supera a los métodos clásicos
 \cite{borisov_tabular_2024}. Esta observación resulta pertinente dado el
 volumen de observaciones disponible aquí. Sin embargo, la condición relevante
 no es el número de filas sino el número de unidades estadísticamente
-independientes ---52\,085 episodios frente a 7\,038\,378 filas---, y las
+independientes, 52\,085 episodios frente a 7\,038\,378 filas, y las
 variables del estado son heterogéneas y no predominantemente continuas.
 
 Por su parte, Grinsztajn \textit{et al.} excluyen de su comparación los
@@ -377,9 +375,9 @@ observación se etiqueta con la información necesaria para decidir su
 legitimidad y el conjunto de entrenamiento se construye después de modo que
 solo entren entradas legítimas.
 
-Advierten además que la fuga entra por las decisiones de diseño ---diseño de
+Advierten además que la fuga entra por las decisiones de diseño, diseño de
 características, selección de modelo, elección de hiperparámetros informada
-por conocimiento que el modelo desplegado no tendría---, a la que llaman la
+por conocimiento que el modelo desplegado no tendría, a la que llaman la
 forma más peligrosa porque un evaluador no puede detectarla ni siquiera
 buscándola, y señalan que eliminar las fugas evidentes puede no sellar el
 resto.
@@ -396,7 +394,7 @@ sobre el conjunto completo antes de particionar constituyen por sí mismos
 fuga de datos. Y su categoría de característica a objetivo cubre el caso que
 aquí más importa: variables informativas y disponibles durante el aprendizaje
 pero ausentes en el despliegue, cuya prescripción es una pregunta antes que
-una regla ---comprobar si cada característica estaría disponible tras el
+una regla, comprobar si cada característica estaría disponible tras el
 despliegue.
 
 Figueiredo y Mendes complementan esa formalización con una medición. Estudian
@@ -405,7 +403,7 @@ correlación espaciotemporal, y reportan que produce una inflación apreciable
 de las métricas respecto de una partición que asigna agrupaciones completas
 \cite{figueiredo_leakage_2024}. Su trabajo pertenece al dominio de la visión
 por computador y se considera aquí un análogo metodológico; el mecanismo
-subyacente ---observaciones casi idénticas a ambos lados de la partición---
+subyacente, observaciones casi idénticas a ambos lados de la partición,
 es independiente del dominio. Cabe destacar que su contribución central
 consiste en un procedimiento para inferir las agrupaciones, dado que las
 imágenes no vienen etiquetadas por escena; en este corpus la agrupación viene
@@ -452,8 +450,8 @@ diagramas reproducibles junto con una medida numérica de descalibración
 \decidir{Las recomendaciones de Ojeda \textit{et al.} y las de
 Niculescu-Mizil y Caruana no coinciden de forma inmediata respecto del método
 de recalibración preferible. La resolución requiere revisar si el escenario
-evaluado por Ojeda \textit{et al.} ---transferencia a poblaciones
-externas--- corresponde al protocolo temporal de este trabajo, en cuyo caso
+evaluado por Ojeda \textit{et al.}, transferencia a poblaciones
+externas, corresponde al protocolo temporal de este trabajo, en cuyo caso
 su recomendación tendría precedencia. La decisión debe tomarse antes de la
 Etapa 2.}
 
@@ -505,9 +503,9 @@ descarta porque el objeto de estudio es la función de valor de forma aislada,
 aprendida \emph{offline} a partir de desenlaces registrados, y no una
 política.
 
-% ------------------------------------------------------------
+%
 % EJE C
-% ------------------------------------------------------------
+% 
 \subsection{Eje C: el conjunto de datos y sus análogos}
 \label{subsec:ejec}
 
@@ -530,9 +528,8 @@ SC2EGSet es el análogo estructural más cercano: un corpus de repeticiones
 competitivas de un juego de dos jugadores, procesado en registros de estado
 por partida, publicado junto con sus herramientas de extracción y acompañado
 de experimentos de predicción de victoria sobre características tabulares
-\cite{bialecki_sc2egset_2023}. Comparte la forma de la tubería
----repetición cruda, estado analizado, características tabulares, etiqueta
-supervisada de desenlace--- y el hecho de que los datos fueron producidos por
+\cite{bialecki_sc2egset_2023}. Comparte la forma de la tubería, repetición cruda, estado analizado, características tabulares, etiqueta
+supervisada de desenlace, y el hecho de que los datos fueron producidos por
 competencia y no por experimento. Difiere en género, en tanto
 \emph{StarCraft~II} es un juego de estrategia en tiempo real y no un juego de
 cartas por turnos con recursos discretos, y difiere en unidad de observación,
@@ -621,13 +618,13 @@ coexistir.
 \razon{Brecha de dominio, declarada de forma explícita: se trata de
 predicción clínica, citada por la asimetría que mide y por la terminología
 que estandariza, no como hallazgo del dominio de juegos. Sus propias
-limitaciones declaradas ---barrido incompleto de actas de congresos y
-ausencia de tratamiento del cambio geográfico--- no afectan a ninguno de los
+limitaciones declaradas, barrido incompleto de actas de congresos y
+ausencia de tratamiento del cambio geográfico, no afectan a ninguno de los
 dos usos.}
 
-% ------------------------------------------------------------
+% 
 % TABLA COMPARATIVA
-% ------------------------------------------------------------
+% 
 \subsection{Análisis comparativo}
 \label{subsec:comparativo}
 
@@ -636,8 +633,7 @@ dos usos.}
 De la Tabla~\ref{tab:comparativa} emergen cuatro patrones.
 
 \noindent\textbf{Una división de métricas que bloquea la comparación
-directa.} Los estudios sobre estados de juego reportan escalares distintos
----área bajo la curva en unos casos, exactitud en otros--- y ninguno reporta
+directa.} Los estudios sobre estados de juego reportan escalares distintos, área bajo la curva en unos casos, exactitud en otros, y ninguno reporta
 una regla de puntuación propia ni una curva de fiabilidad, con la excepción
 de Xenopoulos \textit{et al.}, que sí incorporan una medida de error de
 calibración \cite{xenopoulos_winprob_2022}. Cualquier afirmación de que uno
@@ -663,8 +659,8 @@ independiente, y los trabajos difieren en si actúan en consecuencia.} Janusz
 de modo que su protocolo está agrupado aunque no lo formulen así. Karbalaie
 \textit{et al.} convierten la agrupación en el objeto de estudio. Bia\l ecki
 \textit{et al.} reportan validación cruzada de cinco pliegues sobre 22\,230
-muestras promediadas derivadas de 11\,115 partidas únicas ---dos filas por
-partida, una por jugador--- sin describir restricción alguna de agrupación a
+muestras promediadas derivadas de 11\,115 partidas únicas, dos filas por
+partida, una por jugador, sin describir restricción alguna de agrupación a
 nivel de partida.
 
 \razon{Lo siguiente es una inferencia nuestra y no una afirmación de los
@@ -683,9 +679,7 @@ mismos. Ello obliga a declarar los límites de extrapolación y a evitar
 presentar un resultado obtenido sobre agentes artificiales como evidencia
 acerca de jugadores humanos.
 
-% ------------------------------------------------------------
 % BRECHAS
-% ------------------------------------------------------------
 \subsection{Brechas identificadas}
 \label{subsec:brechas}
 
@@ -750,8 +744,8 @@ al área bajo la curva, y poniendo a prueba la hipótesis H3 de forma
 explícita. La quinta, agrupando por identificador de episodio toda partición,
 todo intervalo de confianza y todo pliegue de validación cruzada, y
 reportando la contaminación medida que produciría la alternativa ingenua. La
-sexta, evaluando bajo tres cambios declarados ---episodios no vistos, mazos
-no vistos y periodos posteriores--- y reportando cada uno por separado en
+sexta, evaluando bajo tres cambios declarados, episodios no vistos, mazos
+no vistos y periodos posteriores, y reportando cada uno por separado en
 lugar de promediarlos.
 
 \noindent\textbf{Brechas que quedan fuera del alcance.} La primera se
@@ -764,8 +758,8 @@ alcance por las razones enumeradas en la Sección~\ref{sec:baseline}: las
 diferencias son estructurales y no pueden eliminarse reejecutando ninguno de
 los dos experimentos. Más allá de estas, no se persigue construir un agente
 competitivo, aprender una política, separar la deriva del conjunto de
-estrategias dominante del cambio de versión del motor ---la muestra auditada
-confunde ambas causas---, ni generalizar ningún hallazgo a jugadores humanos.
+estrategias dominante del cambio de versión del motor, la muestra auditada
+confunde ambas causas, ni generalizar ningún hallazgo a jugadores humanos.
 
 \razon{Reconocer explícitamente las brechas que el trabajo no aborda es un
 requisito del enunciado y no una debilidad. Un apartado que declarara

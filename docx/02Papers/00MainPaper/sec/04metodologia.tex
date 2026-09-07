@@ -104,8 +104,8 @@ resuelve el 99.86\,\% de los episodios auditados: 27\,135 con recompensa
 $(1,-1)$, 24\,844 con $(-1,1)$, 33 empates y 73 desenlaces anómalos.
 
 Los empates se excluyen del objetivo binario; su volumen no puede sostener
-una tercera clase. Los desenlaces anómalos ---por agotamiento de tiempo,
-error o estado inválido--- tienen ganador identificable, pero el final no
+una tercera clase. Los desenlaces anómalos, por agotamiento de tiempo,
+error o estado inválido, tienen ganador identificable, pero el final no
 procede de la dinámica del juego, de modo que se excluyen del entrenamiento
 principal y se reservan para análisis de sensibilidad.
 
@@ -142,8 +142,8 @@ aporta información sobre la estructura del espacio de covariables, pese a la
 dependencia entre las etiquetas \cite{brill_winprob_2026}.
 
 \razon{Esta decisión debe justificarse de forma explícita porque la
-alternativa ---retener un estado por episodio para obtener observaciones
-independientes--- resulta intuitivamente atractiva y es peor. Sin la cita,
+alternativa ,retener un estado por episodio para obtener observaciones
+independientes, resulta intuitivamente atractiva y es peor. Sin la cita,
 parecería una omisión en lugar de una elección informada.}
 
 \subsection{Tubería propuesta}
@@ -226,8 +226,8 @@ del asiento en un atajo atractivo.
 parámetros de escalado, codificación de variables categóricas, cualquier
 imputación y cualquier ponderación de clases se estiman dentro del pliegue de
 entrenamiento y después se aplican a los datos reservados. Sasse \textit{et
-al.} clasifican la alternativa ---estimarlos sobre el conjunto completo antes
-de particionar--- como fuga de prueba a entrenamiento, aunque el modelo en sí
+al.} clasifican la alternativa, estimarlos sobre el conjunto completo antes
+de particionar, como fuga de prueba a entrenamiento, aunque el modelo en sí
 se ajuste después de la partición \cite{sasse_leakage_2025}.
 
 Xenopoulos \textit{et al.} y Hodge \textit{et al.} describen procedimientos
@@ -248,7 +248,7 @@ práctica establecida del dominio.}
 El protocolo primario es una partición 70/15/15 agrupada por episodio, que
 satisface \eqref{eq:agrupacion}.
 
-La alternativa ---una partición aleatoria sobre filas--- se rechaza sobre
+La alternativa, una partición aleatoria sobre filas, se rechaza sobre
 bases medidas y no de principio: en la muestra auditada, una partición
 aleatoria 70/30 de instantáneas colocaría el 99.9945\,\% de los episodios a
 ambos lados simultáneamente. El protocolo ingenuo contaminaría, por tanto,
@@ -332,8 +332,8 @@ $k$ pliegues sobre la partición de entrenamiento, tomando el episodio como
 clave de agrupación. La partición de prueba se toca una sola vez, al final.
 
 Karbalaie \textit{et al.} reportan que la validación cruzada agrupada de $k$
-pliegues coincide con el diseño de dejar un grupo fuera ---mucho más
-costoso--- dentro de 0.02 de acierto y a un costo un orden de magnitud menor,
+pliegues coincide con el diseño de dejar un grupo fuera, mucho más
+costoso, dentro de 0.02 de acierto y a un costo un orden de magnitud menor,
 lo que resulta decisivo cuando la unidad de agrupación se cuenta en decenas
 de miles \cite{karbalaie_participantaware_2026}.
 
@@ -434,8 +434,8 @@ resultan suficientes \cite{niculescumizil_probabilities_2005}.
 Todas las métricas se reportan de forma global y por ventana de turno.
 
 \decidir{Si la distribución de clases de la tabla final resultara marcadamente
-desbalanceada ---magnitud aún no medida, puesto que depende de cuántas
-instantáneas aporta cada bando--- se añadirá el área bajo la curva de
+desbalanceada, magnitud aún no medida, puesto que depende de cuántas
+instantáneas aporta cada bando, se añadirá el área bajo la curva de
 precisión-exhaustividad, con la clase minoritaria declarada explícitamente.}
 
 \noindent\textbf{Construcción de las curvas de fiabilidad.} Silva Filho
@@ -532,8 +532,8 @@ parcialmente comparable, con sus límites declarados
 
 \subsubsection{Ablaciones por familia de características}
 
-Las ablaciones por familia ---progreso, recursos, tablero, energía, estados
-alterados, diferenciales y contexto de mazo--- se ejecutan bajo el mismo
+Las ablaciones por familia, progreso, recursos, tablero, energía, estados
+alterados, diferenciales y contexto de mazo, se ejecutan bajo el mismo
 protocolo, de modo que la contribución marginal de cada bloque se mida en
 lugar de afirmarse.
 
@@ -579,8 +579,8 @@ Los \textbf{coeficientes de la regresión logística} responden si la
 asociación de una característica con la victoria tiene la dirección que el
 conocimiento del dominio predice.
 
-La \textbf{importancia por permutación agrupada} ---permutando dentro de los
-episodios, nunca entre ellos--- responde cuánto aporta una característica una
+La \textbf{importancia por permutación agrupada}, permutando dentro de los
+episodios, nunca entre ellos, responde cuánto aporta una característica una
 vez respetada la dependencia. Karbalaie \textit{et al.} señalan
 explícitamente que las estimaciones de importancia dependen del diseño de
 validación y pueden ser inestables bajo particiones a nivel de fila
@@ -590,8 +590,8 @@ parte de la medición y no es un detalle de ella.
 Las \textbf{ablaciones por familia} responden cuánto vale cada bloque.
 
 Los \textbf{valores SHAP} se emplean únicamente cuando el modelo elegido es
-un conjunto de árboles y la pregunta es la atribución por instancia ---por
-qué \emph{esta} posición recibió esta puntuación---, puesto que esa es la
+un conjunto de árboles y la pregunta es la atribución por instancia, por
+qué \emph{esta} posición recibió esta puntuación, puesto que esa es la
 pregunta que los tres instrumentos anteriores no pueden responder.
 
 \razon{Los instrumentos se eligen por la pregunta que responden y no por
