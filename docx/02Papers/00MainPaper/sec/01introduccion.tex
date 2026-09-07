@@ -232,26 +232,13 @@ el Pok\'emon Trading Card Game a partir de las características observables
 del estado de la partida?
 \end{quote}
 
-La pregunta se descompone en tres dimensiones, que estructuran los objetivos
-específicos y el protocolo experimental:
-
-\begin{enumerate}
-  \item \textbf{Evolución.} Cómo cambia la calidad de la estimación conforme
-        avanza la partida.
-  \item \textbf{Generalización estructural.} Si la estimación se sostiene
-        sobre partidas y mazos que el modelo no vio durante el
-        entrenamiento.
-  \item \textbf{Estabilidad temporal.} Si el desempeño se mantiene cuando la
-        población de agentes y de mazos cambia con el tiempo.
-\end{enumerate}
-
 La pregunta admite respuesta negativa. Quedaría refutada, o sustancialmente
 debilitada, si el modelo no superara a una heurística de dominio sobre
 partidas nuevas; si su capacidad predictiva no mejorara al avanzar la
 partida; o si esa capacidad se redujera al nivel del azar bajo cualquiera de
 los dos escenarios de generalización.
 
-Puede además responderse dentro del semestre: el corpus está disponible y
+Puede además responderse: el corpus está disponible y
 auditado, y definir el protocolo no requiere entrenar ningún modelo.
 
 \subsection{Hipótesis de trabajo}
@@ -335,6 +322,18 @@ interpretable la respuesta.
         escenarios anteriores, con controles de fuga verificados de forma
         automática y análisis de qué características del estado transportan
         información.
+\end{enumerate}
+
+Los objetivos se descompone en tres dimensiones:
+
+\begin{enumerate}
+  \item \textbf{Evolución.} Cómo cambia la calidad de la estimación conforme
+        avanza la partida.
+  \item \textbf{Generalización estructural.} Si la estimación se sostiene
+        sobre partidas y mazos que el modelo no vio durante el
+        entrenamiento.
+  \item \textbf{Estabilidad temporal.} Si el desempeño se mantiene cuando la
+        población de agentes y de mazos cambia con el tiempo.
 \end{enumerate}
 
 \subsection{Contribución esperada}
