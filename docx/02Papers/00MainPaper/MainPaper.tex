@@ -1,13 +1,7 @@
 % ============================================================
 % MainPaper.tex — Artículo IEEE, Etapa 1 (preliminar)
 % IC-6200 Inteligencia Artificial · II Semestre 2026
-% VERSIÓN INTEGRADA — Ejes A, B y C
-%
 % Build: latexmk -pdf MainPaper.tex
-%
-% ANTES DE ENTREGAR: apagar los marcadores de redacción según se
-% describe en preamble.tex, y recompilar. Todo lo que desaparezca
-% del PDF nunca se escribió.
 % ============================================================
 \documentclass[conference]{IEEEtran}
 
@@ -43,63 +37,38 @@ Cartago, Costa Rica \\
 
 \maketitle
 
-% ------------------------------------------------------------
-% RESUMEN PRELIMINAR
-%
-% \razon: el enunciado exige marcarlo explícitamente como
-% preliminar y prohíbe reportar resultados en esta etapa. Las
-% únicas cifras admisibles son propiedades medidas del corpus,
-% no desempeño de modelo.
-% ------------------------------------------------------------
 \begin{abstract}
-\textbf{Resumen preliminar.} Este resumen describe el problema, la
-motivación y el enfoque propuesto. No reporta resultados experimentales,
-puesto que en esta etapa no se ha entrenado ningún modelo.
-
-Evaluar una posición es una competencia central en los juegos de cartas
-competitivos y, sin embargo, en el Pok\'emon Trading Card Game no existe
-trabajo publicado que estime la probabilidad de victoria a partir de un
-estado de juego intermedio y parcialmente observable. El corpus de
-repeticiones del PTCG AI Battle Challenge, publicado recientemente, vuelve
-tratable la pregunta, pero su estructura hace que sea fácil responderla
-mal: una sola partida genera cientos de estados fuertemente
-correlacionados, de modo que una partición aleatoria a nivel de fila
-coloca estados de la misma partida a ambos lados de la división. En una
-auditoría de 52\,085 episodios medimos que tal partición situaría el
-99.995\,\% de los episodios en ambas particiones de forma simultánea.
-
-Este trabajo pregunta, por tanto, cuánta información sobre el desenlace
-contiene un único estado observable, cómo crece esa información conforme
-avanza la partida, y cuánta sobrevive al evaluar sobre partidas, mazos y
-periodos no vistos. Se propone una formulación tabular supervisada, una
-fila por estado fresco del asiento activo, con características derivadas
-exclusivamente de la observación disponible en ese instante; una escalera
-de modelos clásicos que va desde un predictor trivial hasta potenciación
-del gradiente; una lista negra explícita de campos cuyo uso constituiría
-fuga de datos; y particiones agrupadas por episodio en lugar de por fila.
-La evaluación reporta discriminación y calibración por separado, de forma
-global y por ventana de turno, con intervalos de confianza remuestreados
-sobre episodios.
-
-Como referencia externa parcialmente comparable se adopta la tarea análoga
-sobre estados de juego de Hearthstone, cuyo resultado oficial de
-referencia alcanzó un área bajo la curva ROC de 0.7846 y cuya mejor
-solución alcanzó 0.8019; las diferencias de juego, protocolo y población
-de agentes que impiden una comparación estricta se declaran de forma
-explícita.
+El Pok\'emon Trading Card Game es un juego de cartas por turnos en el que
+cada jugador observa el tablero completo y su propia mano, pero no la mano
+del oponente ni el contenido de las cartas de premio; determinar quién lleva
+ventaja en un instante dado exige integrar premios restantes, puntos de
+vida, energías y estados alterados, y no resulta evidente para un observador
+no experto. Este trabajo formula esa determinación como aprendizaje
+supervisado, estimar, desde un único estado observable, la probabilidad de
+que el jugador que actúa termine venciendo, y la aborda sobre un corpus
+público de repeticiones de partidas entre agentes automáticos. La dificultad
+central no es de modelado sino de evaluación: una partida produce del orden
+de un centenar de estados sucesivos que difieren en una sola acción y
+comparten la misma etiqueta final, de modo que repartirlos al azar entre
+entrenamiento y prueba haría que el modelo se evaluara sobre situaciones
+casi idénticas a las que ya vio; sobre la muestra auditada medimos que una
+partición por fila colocaría prácticamente todas las partidas a ambos lados
+de la división. Se propone en consecuencia una representación tabular con
+una fila por estado y características restringidas a la información
+disponible en ese instante, una escalera de modelos clásicos desde un
+predictor trivial hasta potenciación del gradiente, una lista explícita de
+campos cuyo uso constituiría fuga de información, y particiones que
+mantienen cada partida completa dentro de un único subconjunto. La
+evaluación reporta por separado la capacidad de ordenar posiciones y la
+calidad de las probabilidades, de forma global y por etapa de la partida,
+bajo tres escenarios: partidas nuevas, mazos no vistos y periodos
+posteriores.
 \end{abstract}
 
-% ------------------------------------------------------------
-% PALABRAS CLAVE
-%
-% \razon: cuatro a seis términos por los que alguien buscaría
-% este trabajo. Deben cubrir el dominio, la tarea y el riesgo
-% metodológico central.
-% ------------------------------------------------------------
 \begin{IEEEkeywords}
 estimación de probabilidad de victoria, juegos de cartas coleccionables,
-aprendizaje automático tabular, fuga de datos, validación cruzada
-agrupada, calibración de clasificadores
+aprendizaje automático tabular, fuga de datos, validación cruzada agrupada,
+calibración de clasificadores, machine learning
 \end{IEEEkeywords}
 
 \safeinput{sec/01introduccion}

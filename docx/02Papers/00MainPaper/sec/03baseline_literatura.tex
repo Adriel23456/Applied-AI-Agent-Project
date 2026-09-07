@@ -1,151 +1,146 @@
 % ============================================================
-% sec/03baseline_literatura.tex — VERSIÓN INTEGRADA, TRES EJES
+% sec/03baseline_literatura.tex
 %
-% OBLIGATORIO: un número objetivo con su fuente, declaración
-% explícita de qué se busca igualar o superar, y las diferencias
-% de protocolo que impiden una comparación justa.
+% Un número objetivo con su fuente, declaración explícita de qué
+% se busca igualar, y las diferencias de protocolo que impiden
+% una comparación justa.
 % ============================================================
 \section{Baseline de Literatura}
 \label{sec:baseline}
 
-\subsection{Ausencia de resultado publicado sobre este corpus}
-\label{subsec:ausencialiteratura}
-
-No existe resultado publicado sobre el corpus objetivo, de modo que el punto
-de referencia se toma del trabajo análogo cuya tarea, unidad de observación y
-métrica son las más cercanas a las nuestras.
-
-\razon{Esta declaración debe abrir la sección y no ocultarse. El enunciado
-prevé explícitamente la sustitución cuando el conjunto carece de literatura
-previa, de modo que declararla constituye cumplir el requisito y no eludirlo.
-La ausencia se recoge además como brecha en la
-Sección~\ref{subsec:brechas}.}
-
-\subsection{Origen y protocolo del punto de referencia}
+\subsection{Origen del punto de referencia}
 \label{subsec:origenbaseline}
+
+No existe resultado publicado sobre el corpus empleado en este trabajo, de
+modo que el punto de referencia se toma del trabajo análogo cuya tarea,
+unidad de observación y métrica son las más cercanas: el AAIA'17 Data Mining
+Challenge sobre \emph{Hearthstone} \cite{janusz_hearthstone_2017}.
+
+Se elige ese antecedente y no otro porque es el único que coincide
+simultáneamente en las tres condiciones que hacen posible una comparación
+siquiera parcial. Es un juego de cartas coleccionables con información
+oculta; su tarea es predecir el ganador desde un único estado intermedio; y
+su métrica es el área bajo la curva ROC, que es la métrica principal
+adoptada aquí.
 
 \begin{quote}
 \textbf{Objetivo de referencia:} área bajo la curva ROC en la banda
-$0.78$--$0.80$, proveniente del AAIA'17 Data Mining Challenge sobre
-\emph{Hearthstone} \cite{janusz_hearthstone_2017}.
+$0.78$ a $0.80$.
 
-\textbf{Tarea:} predecir el ganador a partir de un único estado de juego.
-\textbf{Unidad de observación:} un estado de juego. \textbf{Métrica:} área
-bajo la curva ROC.
+\textbf{Resultado oficial de la organización:} $0.7846$, obtenido por una
+red totalmente conectada de dos capas ocultas sobre la representación
+tabular. \textbf{Mejor solución enviada:} $0.8019$.
 
-\textbf{Resultado oficial de referencia:} $0.7846$, obtenido por una red
-totalmente conectada con dos capas ocultas sobre la representación tabular,
-que quedó en el puesto 94. \textbf{Mejor solución enviada:} $0.8019$, un
-ensamble construido sobre redes convolucionales.
-
-\textbf{Protocolo:} 3\,250\,000 estados de entrenamiento provenientes de
-aproximadamente 65\,000 partidas frente a 750\,000 estados de prueba
-provenientes de más de 180\,000 partidas distintas, con 9 mazos en
-entrenamiento y 27 en prueba, de modo que el conjunto de prueba contiene
-cartas nunca vistas en entrenamiento; puntuaciones preliminares sobre un
-5\,\% aleatorio fijo del conjunto de prueba y puntuaciones finales sobre el
-resto.
+\textbf{Protocolo de origen:} conjuntos de entrenamiento y prueba separados
+por partida y por mazo, con mazos presentes en prueba que no aparecían en
+entrenamiento, de modo que el conjunto de evaluación contenía cartas nunca
+vistas \cite{janusz_hearthstone_2017}.
 \end{quote}
 
-\subsection{Qué pretende hacer este trabajo con esa cifra}
+\subsection{Qué se declara respecto de esa cifra}
 \label{subsec:objetivobaseline}
 
 El objetivo operativo es que el modelo clásico más fuerte alcance esa banda
-de $0.78$--$0.80$ bajo nuestro propio protocolo primario en la ventana
-tardía de la partida, y establecer en qué punto de la partida se alcanza por
-primera vez esa banda.
+bajo el protocolo primario de este trabajo en la ventana tardía de la
+partida, y establecer en qué punto del juego se alcanza por primera vez.
 
-No se afirma que superaremos $0.8019$, porque las dos cifras no están
-medidas sobre el mismo objeto. Este trabajo declara el rango como referencia
-de orden de magnitud y no como umbral obligatorio.
-
-\razon{Declarar el número como cifra a batir cuando procede de otro juego
-constituiría una comparación no legítima. Declararlo como orden de magnitud
-cumple el requisito de la sección y respeta a la vez el criterio de
-comparabilidad.}
+No se declara que se superará $0.8019$. Las dos cifras no están medidas
+sobre el mismo objeto, y el rango se adopta como referencia de orden de
+magnitud antes que como umbral. Un resultado inferior puede ser
+metodológicamente sólido si se obtiene bajo un protocolo más estricto, y uno
+superior no probaría de forma automática un mejor desempeño.
 
 \subsection{Comparabilidad del protocolo}
 \label{subsec:comparabilidad}
 
-La comparación se considera \textbf{parcialmente comparable}. Coinciden la
-naturaleza binaria del desenlace, el uso de información intra-partida y la
-evaluación mediante área bajo la curva. No coinciden el juego, las reglas, la
-representación del estado ni la población que genera las partidas.
+La comparación es \textbf{parcialmente comparable}. La
+Figura~\ref{fig:comparabilidad} resume qué coincide y qué no.
 
-\noindent\textbf{Diferencias que impiden una comparación justa.}
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  coincide/.style={draw=tecsteel, fill=boxbg, rounded corners=2pt,
+                   text width=3.15cm, align=center, inner sep=3pt,
+                   minimum height=6mm},
+  difiere/.style={draw=labelgray, dashed, fill=white, rounded corners=2pt,
+                  text width=3.15cm, align=center, inner sep=3pt,
+                  minimum height=6mm, text=labelgray},
+  cab/.style={font=\tiny\bfseries, text=tecnavy}
+]
+
+\node[cab] at (-1.85,2.35) {COINCIDE};
+\node[coincide] at (-1.85,1.9) {desenlace binario};
+\node[coincide] at (-1.85,1.25) {estado intra-partida};
+\node[coincide] at (-1.85,0.6) {área bajo la curva ROC};
+\node[coincide] at (-1.85,-0.05) {juego de cartas con información oculta};
+
+\node[cab] at (1.85,2.35) {DIFIERE};
+\node[difiere] at (1.85,1.9) {reglas y recursos del juego};
+\node[difiere] at (1.85,1.25) {población de agentes};
+\node[difiere] at (1.85,0.6) {regla de partición};
+\node[difiere] at (1.85,-0.05) {prevalencia de clases};
+\node[difiere] at (1.85,-0.7) {construcción del vector de características};
+
+\draw[draw=tecrule, thick, dashed] (0,2.15) -- (0,-1.05);
+
+\end{tikzpicture}
+\caption{Comparabilidad del punto de referencia externo. La coincidencia en
+tarea y métrica permite usar la cifra como orden de magnitud; las
+diferencias impiden tratarla como umbral a superar.}
+\label{fig:comparabilidad}
+\end{figure}
+
+\noindent\textbf{Diferencias que impiden una comparación estricta.}
+
 \begin{itemize}
-  \item \textbf{Juego distinto.} \emph{Hearthstone} y el \emph{Pok\'emon TCG}
-        difieren en sistemas de recursos, condiciones de victoria y
-        estructura de tablero, de modo que el contenido informativo de un
-        estado no es la misma magnitud.
-  \item \textbf{Población de agentes distinta.} Sus estados provienen de
-        agentes que actúan al azar; los nuestros, de agentes que compiten y
-        son seleccionados por puntuación. Su propio experimento de
-        transferencia muestra que esto importa, y cuesta aproximadamente
-        $0.04$ de área bajo la curva en la dirección de agentes aleatorios a
-        agentes fuertes \cite{janusz_hearthstone_2017}.
-  \item \textbf{Partición distinta.} Su separación es por partida y por mazo
-        entre dos conjuntos fijos; la nuestra es una partición agrupada por
-        episodio, con protocolos adicionales temporal y de reserva de mazos.
-  \item \textbf{Prevalencia de clases distinta.} Su conjunto de entrenamiento
-        tiene $50.46\%$ de victorias y el de prueba $57.27\%$, de modo que
-        las dos mitades de su propio banco de pruebas no provienen de la
-        misma distribución \cite{janusz_hearthstone_2017}.
-  \item \textbf{Descripción del estado distinta.} Su representación tabular
-        fue suministrada por los organizadores, y las mejores participaciones
-        reconstruyeron características a partir del JSON crudo; nuestro
-        conjunto de características lo construimos nosotros y está
-        restringido por una lista negra de fuga.
-  \item \textbf{Conjunto de métricas distinto.} Aunque ambos reportan área
-        bajo la curva, este trabajo añade pérdida logarítmica, puntaje de
-        Brier y curvas de fiabilidad, de modo que la evaluación no se reduce
-        a la misma métrica.
+  \item \textbf{Juego distinto.} Los sistemas de recursos, las condiciones
+        de victoria y la estructura del tablero difieren, de modo que el
+        contenido informativo de un estado no es la misma magnitud en ambos
+        juegos.
+  \item \textbf{Población de agentes distinta.} Los estados de referencia
+        provienen de agentes que eligen acciones al azar; los de este
+        trabajo, de agentes que compiten y son seleccionados por puntuación.
+        El propio experimento de transferencia de esa competencia muestra
+        que la diferencia importa, y cuesta aproximadamente $0.04$ de área
+        bajo la curva \cite{janusz_hearthstone_2017}.
+  \item \textbf{Regla de partición distinta.} Su separación es por partida y
+        por mazo entre dos conjuntos fijos. La de este trabajo es una
+        partición agrupada por partida con escenarios adicionales temporal y
+        de mazos reservados.
+  \item \textbf{Prevalencia de clases distinta.} Su conjunto de
+        entrenamiento presenta $50.46\%$ de victorias y el de prueba
+        $57.27\%$, de modo que las dos mitades de su propio banco de pruebas
+        no provienen de la misma distribución
+        \cite{janusz_hearthstone_2017}.
+  \item \textbf{Construcción del vector distinta.} Su representación tabular
+        fue provista por los organizadores. La de este trabajo se construye
+        desde la repetición y está restringida por una lista explícita de
+        campos excluidos.
 \end{itemize}
 
-\razon{Esta enumeración es la exigencia central del criterio de baseline.
-Hodge \textit{et al.} ofrecen el precedente: publican una tabla comparativa
-de dieciséis trabajos y advierten en nota al pie que la variación en tamaño,
-composición y versión del juego obliga a tratar con cautela la comparación de
-las exactitudes reportadas \cite{hodge_winprediction_2021}.}
+Hodge \textit{et al.} ofrecen el precedente de dominio para declarar esta
+limitación en lugar de omitirla: publican una comparación de dieciséis
+trabajos y advierten que la variación en tamaño, composición y versión del
+juego obliga a tratar con cautela las cifras reportadas
+\cite{hodge_winprediction_2021}.
 
-\noindent\textbf{Interpretación del número.} El intervalo de $0.7846$ a
-$0.8019$ se emplea como referencia externa del nivel de discriminación
-alcanzado en una tarea análoga. No constituye una cifra que este proyecto
-deba superar para considerarse válido: un resultado inferior puede ser
-metodológicamente sólido si se obtiene bajo un protocolo más estricto, y uno
-superior no probaría de forma automática un mejor desempeño, dadas las
-diferencias enumeradas.
+\subsection{Criterio propio de éxito}
+\label{subsec:criteriopropio}
 
-\subsection{Anclajes secundarios de orden de magnitud}
-\label{subsec:referenciasadicionales}
+Dado que la referencia externa no es un umbral legítimo, este trabajo
+declara además un criterio interno, medido sobre los propios datos y bajo el
+propio protocolo:
 
-Se dispone de un segundo anclaje, más débil. SC2EGSet reporta $0.9071$ de
-acierto en predicción de victoria con dos jugadores y $0.8488$ con un solo
-jugador \cite{bialecki_sc2egset_2023}. Se registra aquí por completitud y no
-se adopta como objetivo: la métrica es acierto y no área bajo la curva, la
-unidad es una partida completa y no un instante, las características son
-promedios sobre la partida, y la cuestión de la agrupación planteada en la
-Sección~\ref{subsec:comparativo} queda sin resolver.
+\begin{quote}
+El trabajo se considera exitoso si el mejor modelo supera a la heurística de
+dominio descrita en la Sección~\ref{subsec:planbaselines}, sobre partidas no
+vistas, con intervalos de confianza construidos sobre partidas que no se
+solapen.
+\end{quote}
 
-Hodge \textit{et al.} reportan exactitudes sobre datos mixtos y profesionales
-de un videojuego de arena multijugador, evaluando en el punto medio de la
-partida \cite{hodge_winprediction_2021}. Xenopoulos \textit{et al.} reportan
-valores de pérdida logarítmica y de error de calibración esperado para
-modelos evaluados dentro y fuera de su entorno de entrenamiento
-\cite{xenopoulos_winprob_2022}.
-
-\pc{Consignar los valores exactos de la Tabla III de Hodge \textit{et al.} y
-de la Tabla 1 de Xenopoulos \textit{et al.} tras verificación directa en el
-artículo.}
-
-\razon{Estas referencias se incluyen con su métrica original y sin
-convertirla. Traducir una exactitud a un área bajo la curva, o una pérdida
-logarítmica a una exactitud, produciría cifras que ninguno de los artículos
-reporta.}
-
-\decidir{Queda pendiente definir si el trabajo declara además un umbral
-propio de éxito, independiente de la literatura, formulado sobre los modelos
-de referencia internos descritos en la Sección~\ref{subsec:planbaselines}. Un
-umbral de esa naturaleza sería comparable de forma legítima, a diferencia del
-número de literatura. La decisión afecta la redacción de la discusión final y
-conviene tomarla antes de la Etapa 2.}
+Ese criterio es comparable de forma legítima, porque emplea el mismo
+conjunto de datos, el mismo protocolo y la misma métrica. Y protege el
+resultado en ambas direcciones: si el modelo supera la heurística, el
+criterio se cumple; si no la supera, el hallazgo queda declarado de antemano
+como tal y no como un fracaso de ejecución.

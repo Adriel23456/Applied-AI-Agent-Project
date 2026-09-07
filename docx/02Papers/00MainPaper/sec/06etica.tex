@@ -1,189 +1,97 @@
 % ============================================================
-% sec/06etica.tex — VERSIÓN INTEGRADA, TRES EJES
+% sec/06etica.tex
 %
-% OBLIGATORIO: riesgos identificados y forma prevista de
-% mitigarlos. La detección corresponde al momento previo al
-% entrenamiento.
+% Riesgos identificados y forma prevista de mitigarlos, en el
+% momento previo al entrenamiento.
 % ============================================================
 \section{Consideraciones Éticas Preliminares}
 \label{sec:etica}
 
-\subsection{Sensibilidad de los datos}
+\subsection{Naturaleza de los datos}
 \label{subsec:sensibilidad}
 
 El corpus no contiene datos clínicos, biométricos ni conductuales sobre
-individuos identificados: sus registros son partidas simuladas entre agentes
-de software, publicadas bajo una licencia CC0-1.0
-\cite{ptcg_dataset_2026}. En la auditoría realizada no se identificaron datos
-personales sensibles de jugadores humanos.
+personas: sus registros son partidas simuladas entre agentes de software,
+publicadas bajo licencia abierta \cite{ptcg_dataset_2026}.
 
-Cabe una salvedad. Cada episodio lleva los nombres de equipo y de agente de
-los competidores, y en la muestra auditada esos nombres son seudónimos
-elegidos por sus dueños que en algunos casos se asemejan a nombres
-personales. Identifican a participantes de una competencia pública y no a
-sujetos de estudio, pero siguen siendo atribuibles a personas.
+Cabe una salvedad. Cada partida lleva los nombres de agente de sus
+participantes, que son seudónimos elegidos por sus autores e identifican a
+competidores de un certamen público. Se tratan como metadatos y no como
+material de modelado: se emplean para auditoría y agrupación, quedan
+excluidos del vector de características, y no se publicará ningún
+ordenamiento ni comparación de competidores nombrados.
 
-Se tratan por tanto como metadatos y no como material: se usan para
-auditoría, agrupación y la comprobación de juego contra uno mismo, quedan
-excluidos del vector de características por la lista negra descrita en la
-Sección~\ref{subsec:leakage}, y no se publicará ningún ordenamiento ni
-comparación agregada de competidores nombrados.
-
-\razon{Esta decisión coincide con el control de fuga, lo cual es conveniente
-pero no es la razón de la decisión. Declararlo así evita presentar una
-precaución técnica como si fuera una consideración ética, o viceversa.}
-
-\subsection{Riesgo de sesgo y representatividad}
+\subsection{Riesgo principal: la sobreafirmación}
 \label{subsec:sesgo}
 
-El principal riesgo de este proyecto no es el daño a un sujeto de datos: es
-la sobreafirmación.
+El riesgo dominante de este trabajo no es el daño a un sujeto de datos, sino
+atribuir a sus resultados un alcance que no tienen.
 
-Los episodios se seleccionan a diario por puntuación media de los agentes y
-se truncan a un volumen diario fijo \cite{ptcg_dataset_2026}, de modo que el
-corpus es la franja alta de una escalera de agentes artificiales y no una
-muestra del juego. La auditoría cuantifica la concentración que se sigue de
-ello: los diez mazos más frecuentes cubren el 39.94\,\% de las instancias, un
-día auditado contiene solo 48 mazos distintos, y el conjunto de mazos del
-último día auditado es esencialmente disjunto del del primero. Un modelo
-ajustado aquí aprende un conjunto de estrategias estrecho y en movimiento.
+El corpus corresponde a la franja alta de una clasificación de agentes
+automáticos, y su composición cambia de forma medible en diez días: el
+conjunto de mazos del último día auditado es esencialmente disjunto del del
+primero, y los diez mazos más frecuentes concentran el 39.94\,\% de las
+instancias. Un modelo ajustado sobre estos datos aprende un conjunto de
+estrategias estrecho y en movimiento.
 
-La literatura revisada refuerza que el riesgo no es hipotético. Angliss
-\textit{et al.} encuentran diferencias entre el rendimiento sobre
-composiciones vistas y la generalización a composiciones no vistas
-\cite{angliss_vgcbench_2026}. Chitayat \textit{et al.} separan la evaluación
-entre versiones conocidas y posteriores \cite{chitayat_meta_2023}. Xenopoulos
-\textit{et al.} muestran que la importancia relativa de las características
-difiere entre poblaciones de distinto nivel de habilidad, y que un modelo
-entrenado sobre una no necesariamente se extiende a otra sin pérdida de
-desempeño \cite{xenopoulos_winprob_2022}.
-
-Saravanan y Guzdial orientan deliberadamente su agente a aproximar un nivel
-de habilidad promedio, argumentando que el conjunto de estrategias dominante
-constituye una medida de popularidad determinada mayoritariamente por
-jugadores de habilidad media \cite{saravanan_metadiscovery_2024}. Un corpus
-restringido a la franja superior observa, en consecuencia, una población
-distinta de aquella que determina el comportamiento agregado del juego.
-
-\subsubsection{Tres lecturas erróneas, cada una fácil de cometer}
-
-\noindent\textbf{Extrapolar a jugadores humanos} carecería de respaldo: no
-aparece ninguna partida humana en el corpus, y los dos corpus comparables de
-deportes electrónicos revisados declaran exactamente esta limitación para sí
-mismos \cite{bialecki_sc2egset_2023,janusz_hearthstone_2017}.
-
-\noindent\textbf{Extrapolar al juego completo} tampoco tendría respaldo,
-puesto que un modelo que nunca vio un arquetipo de mazo carece de base para
-juzgar posiciones construidas en torno a él. Bertram \textit{et al.} muestran
-cómo se ve ese fallo cuando el contenido se codifica por identidad en lugar
-de por descripción \cite{bertram_cardrepresentations_2024}.
-
-\noindent\textbf{Tratar la salida como una propiedad estable de una posición}
-tampoco tendría respaldo a lo largo del tiempo, porque la población cambia de
-forma medible en diez días.
+De ahí se siguen tres lecturas erróneas que conviene nombrar. Extrapolar a
+jugadores humanos carecería de respaldo, pues ninguna partida humana aparece
+en el corpus. Extrapolar al juego completo tampoco lo tendría, porque un
+modelo que nunca vio un arquetipo de mazo carece de base para juzgar
+posiciones construidas en torno a él. Y tratar la salida como una propiedad
+estable de una posición carecería de respaldo a lo largo del tiempo, dado
+que la población cambia con rapidez.
 
 \subsection{Interpretación de la probabilidad}
 \label{subsec:interpretacionprob}
 
 Una estimación de probabilidad de victoria invita a un mal uso específico:
 leer un número entre cero y uno como una posibilidad bien fundada cuando
-puede ser solo una puntuación bien ordenada.
-
-La distinción no es pedante. Guo \textit{et al.} encontraron deterioro de la
-calibración en todos los estudios que la midieron bajo cambio temporal,
-frente a deterioro de la discriminación en solo tres de doce
-\cite{guo_temporalshift_2021}, lo que significa que un modelo puede seguir
+puede ser solo una puntuación bien ordenada. Un modelo puede seguir
 ordenando posiciones correctamente mucho después de que sus probabilidades
-declaradas hayan dejado de ser ciertas. La mayoría de los estudios
-comparables sobre estados de juego no reporta calibración en absoluto
-\cite{janusz_hearthstone_2017,bialecki_sc2egset_2023}.
+declaradas hayan dejado de ser ciertas \cite{guo_temporalshift_2021}.
 
-\razon{Reportar una regla de puntuación propia y curvas de fiabilidad junto
-al área bajo la curva es por tanto un compromiso ético tanto como
-metodológico: es lo que permite a un lector saber cuál de las dos cosas es
-nuestro número.}
+Reportar la calidad de las probabilidades junto a la capacidad de ordenar es,
+por tanto, un compromiso ético además de metodológico: es lo que permite al
+lector saber cuál de las dos cosas está midiendo el número.
 
 \subsection{Límites de generalización declarados}
 \label{subsec:limitesgeneralizacion}
 
-Los resultados de este trabajo no deben extrapolarse a:
+Los resultados no deben extrapolarse a partidas entre personas, al juego en
+formato físico, a estrategias no representadas en la muestra, a agentes de
+otra franja de puntuación, a versiones del motor ausentes de los datos, ni a
+periodos posteriores más allá de lo que el escenario B permita evaluar.
 
-\begin{itemize}
-  \item Partidas entre personas. El corpus procede de agentes artificiales,
-        cuyo comportamiento no se asume equivalente al humano.
-  \item El \emph{Pok\'emon TCG} en su formato físico.
-  \item El conjunto de estrategias posibles del juego, más allá de las
-        composiciones observadas.
-  \item Poblaciones de agentes con nivel de puntuación distinto del
-        observado.
-  \item Versiones del motor de simulación distintas de las presentes en los
-        datos.
-  \item Periodos posteriores a los cubiertos por la muestra auditada, más
-        allá de lo que el protocolo B permita evaluar.
-  \item Los 57 días no auditados del corpus publicado.
-\end{itemize}
-
-Dos precisiones adicionales sobre el alcance de las afirmaciones. Un buen
-resultado bajo la partición agrupada no implica robustez temporal: esa
-afirmación solo podrá sostenerse si el modelo mantiene su desempeño bajo el
-protocolo cronológico. Y un buen valor global de área bajo la curva no
-implica que la probabilidad esté calibrada, ni que el modelo se comporte de
-igual manera en las etapas tempranas y tardías de la partida.
-
-\razon{Este apartado existe para impedir que los resultados se empleen fuera
-del ámbito en el cual fueron validados. Su omisión trasladaría al lector la
-responsabilidad de inferir los límites.}
-
-\subsection{Riesgos de calidad no aislables}
-\label{subsec:calidadnoaislable}
-
-La auditoría identificó 73 episodios con desenlace anómalo, cinco episodios
-declarados en un manifiesto pero ausentes de los ficheros, y episodios de
-duración extrema ---hasta 1\,035 turnos--- cuya causa no puede determinarse
-sin inspección individual. Estos casos se documentan y se reservan para
-análisis de sensibilidad, pero no puede descartarse la presencia de
-comportamientos degenerados de los agentes que no resulten identificables por
-completo.
-
-Xenopoulos \textit{et al.} reconocen una limitación análoga al señalar que no
-les resulta posible identificar a los jugadores que incurren en trampa
-\cite{xenopoulos_winprob_2022}. Bia\l ecki \textit{et al.} declaran que
-deliberadamente no filtraron repeticiones terminadas de forma prematura, con
-el fin de preservar las distribuciones originales
-\cite{bialecki_sc2egset_2023}.
-
-\razon{Declarar las anomalías que se sabe que existen pero no se pueden
-aislar por completo es preferible a presentar el corpus como libre de
-contaminación. Los precedentes citados establecen que esta declaración es
-práctica aceptada en el dominio.}
+Dos precisiones adicionales. Un buen resultado bajo la partición agrupada no
+implica robustez temporal, afirmación que solo puede sostenerse si el
+desempeño se mantiene bajo el escenario cronológico. Y un buen valor global
+de capacidad de ordenar no implica que las probabilidades estén calibradas
+ni que el modelo se comporte igual en las etapas tempranas y tardías de la
+partida.
 
 \subsection{Mitigaciones previstas antes del entrenamiento}
 \label{subsec:mitigacionetica}
 
 \begin{itemize}
-  \item Toda cifra reportada lleva su alcance: los diez días auditados, la
-        franja de puntuación y las versiones del motor presentes.
-  \item La discriminación y la calibración se reportan por separado, y los
-        resultados bajo los protocolos temporal y de reserva de composiciones
-        se reportan aparte del protocolo primario en lugar de promediarse con
-        él.
-  \item Los identificadores de agente y equipo quedan excluidos del vector de
+  \item Toda cifra reportada lleva su alcance: los días auditados, la franja
+        de puntuación y las versiones del motor presentes.
+  \item Los tres escenarios de evaluación se reportan por separado, sin
+        promediar el primario con los de generalización.
+  \item Los identificadores de agente quedan fuera del vector de
         características, y no se publican resultados por competidor.
-  \item Los intervalos de confianza se calculan sobre episodios, de modo que
-        la incertidumbre no se subestime contando filas correlacionadas como
-        evidencia independiente.
-  \item El resumen, las conclusiones y cualquier síntesis pública declaran la
-        población sobre la que se ajustó el modelo, de modo que la limitación
-        viaje con el resultado en lugar de quedar confinada a esta sección.
+  \item Los intervalos de confianza se calculan sobre partidas, de modo que
+        la incertidumbre no se subestime contando observaciones
+        correlacionadas como evidencia independiente.
+  \item El resumen y las conclusiones declaran la población sobre la que se
+        ajustó el modelo, para que la limitación viaje con el resultado en
+        lugar de quedar confinada a esta sección.
 \end{itemize}
-
-\razon{Las cinco mitigaciones son verificables en el propio artículo. Una
-mitigación cuya ejecución no puede comprobarse no constituye una mitigación.}
 
 \subsection{Aspectos diferidos}
 \label{subsec:diferido}
 
 La ética del despliegue, los escenarios de uso indebido y los riesgos
-operativos de un agente que consuma este estimador ---en particular el efecto
-de un evaluador sobreconfiado sobre las decisiones del agente--- se abordan en
-la etapa final, cuando exista un agente.
+operativos de un agente que consuma este estimador, en particular el
+efecto de un evaluador sobreconfiado sobre sus decisiones, se abordan en la
+etapa final, cuando exista un agente.
