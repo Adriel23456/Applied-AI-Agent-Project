@@ -324,19 +324,18 @@
 % Solo sustituirla por la de revista si esta última se lee a
 % través de la suscripción institucional.
 %
-% VERIFICAR: páginas y DOI contra el registro de ACM.
 % ------------------------------------------------------------
+
 @inproceedings{kaufman_leakage_2011,
   author    = {Kaufman, Shachar and Rosset, Saharon and Perlich, Claudia},
-  title     = {Leakage in Data Mining: Formulation, Detection, and
-               Avoidance},
+  title     = {Leakage in Data Mining: Formulation, Detection, and Avoidance},
   booktitle = {Proceedings of the 17th ACM SIGKDD International Conference
                on Knowledge Discovery and Data Mining (KDD '11)},
-  pages     = {VERIFICAR},
+  pages     = {556--563},
   year      = {2011},
   address   = {New York, NY, USA},
   publisher = {Association for Computing Machinery},
-  doi       = {VERIFICAR}
+  doi       = {10.1145/2020408.2020496}
 }
 
 % ------------------------------------------------------------
@@ -384,38 +383,40 @@
 % Brecha de dominio: biomecánica. Se cita por su argumento
 % estadístico, no como resultado del dominio de juegos.
 %
-% VERIFICAR: revista, volumen, número, páginas y DOI.
 % ------------------------------------------------------------
+
 @article{karbalaie_participantaware_2026,
-  author  = {VERIFICAR},
+  author  = {Karbalaie, Abdolamir and Abtahi, Farhad and H{\"a}ger, Charlotte K.},
   title   = {Participant-Aware Model Validation for Repeated-Measures Data:
              Comparative Cross-Validation Study},
-  journal = {VERIFICAR},
-  volume  = {VERIFICAR},
-  number  = {VERIFICAR},
-  pages   = {VERIFICAR},
+  journal = {JMIR AI},
+  volume  = {5},
+  number  = {1},
+  pages   = {e87728},
   year    = {2026},
-  doi     = {VERIFICAR}
+  doi     = {10.2196/87728}
 }
 
 % ------------------------------------------------------------
 % Asimetría entre degradación de calibración y de discriminación
 % bajo cambio temporal. Brecha de dominio: predicción clínica.
 %
-% VERIFICAR: lista completa de autores, revista, volumen, páginas
-% y DOI.
 % ------------------------------------------------------------
+
 @article{guo_temporalshift_2021,
-  author  = {Guo, VERIFICAR},
+  author  = {Guo, Lin Lawrence and Pfohl, Stephen R. and Fries, Jason
+             and Posada, Jose and Fleming, Scott Lanyon
+             and Aftandilian, Catherine and Shah, Nigam
+             and Sung, Lillian},
   title   = {Systematic Review of Approaches to Preserve Machine Learning
              Performance in the Presence of Temporal Dataset Shift in
              Clinical Medicine},
-  journal = {VERIFICAR},
-  volume  = {VERIFICAR},
-  number  = {VERIFICAR},
-  pages   = {VERIFICAR},
+  journal = {Applied Clinical Informatics},
+  volume  = {12},
+  number  = {4},
+  pages   = {808--815},
   year    = {2021},
-  doi     = {VERIFICAR}
+  doi     = {10.1055/s-0041-1735184}
 }
 
 % ------------------------------------------------------------
@@ -423,33 +424,44 @@
 % coleccionables. Análogo solo en cuanto a generalización de
 % contenido: su tarea es predecir una elección humana de carta.
 %
-% VERIFICAR: revista o conferencia, volumen, páginas y DOI.
+% Publicación consultada: preprint en arXiv.
+%
 % ------------------------------------------------------------
-@article{bertram_cardrepresentations_2024,
-  author  = {Bertram, VERIFICAR},
-  title   = {Learning With Generalised Card Representations for
-             ``{Magic}: The Gathering''},
-  journal = {VERIFICAR},
-  volume  = {VERIFICAR},
-  number  = {VERIFICAR},
-  pages   = {VERIFICAR},
-  year    = {2024},
-  doi     = {VERIFICAR}
+
+@misc{bertram_cardrepresentations_2024,
+  author       = {Bertram, Timo and F{\"u}rnkranz, Johannes and M{\"u}ller, Martin},
+  title        = {Learning With Generalised Card Representations
+                  for ``{Magic}: The Gathering''},
+  year         = {2024},
+  eprint       = {2407.05879},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.AI},
+  doi          = {10.48550/arXiv.2407.05879},
+  url          = {https://arxiv.org/abs/2407.05879}
 }
 
 
-% ############################################################
-% CONJUNTO DE DATOS
+% ------------------------------------------------------------
+% Conjunto de datos oficial utilizado para las repeticiones de
+% PTCG AI Battle Challenge. Contiene replays JSON de episodios
+% completados en las simulaciones de Kaggle.
 %
-% ############################################################
+% Se cita la versión correspondiente al 2026-06-18, cuya versión
+% publicada del dataset tiene un tamaño de 21.48 GB.
+%
+% Licencia: CC0 1.0 (Public Domain).
+% ------------------------------------------------------------
 
 @misc{ptcg_dataset_2026,
   author       = {{The Pok{\'e}mon Company}},
-  title        = {{PTCG AI} Battle Challenge Simulation Episodes},
+  title        = {{PTCG AI} Battle Challenge Simulation Episodes 2026-06-18},
   year         = {2026},
-  howpublished = {Conjunto de datos en Kaggle, licencia CC0-1.0}
+  howpublished = {Kaggle dataset},
+  note         = {CC0 1.0, version dated 2026-06-18},
+  url          = {URL_EXACTA_DEL_DATASET}
 }
 
+% Simple referencia del Pokémon TCG Pocket Battle
 @misc{SweetGameBuddy2025,
   author       = {{SweetGameBuddy}},
   title        = {Pokémon TCG Pocket Battle \#pokemon},
