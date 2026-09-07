@@ -1,0 +1,91 @@
+% ============================================================
+% Axis2Review.tex — Artículo IEEE, Etapa 1 (preliminar)
+% IC-6200 Inteligencia Artificial · II Semestre 2026
+% Build: latexmk -pdf Axis2Review.tex
+% ============================================================
+\documentclass[conference]{IEEEtran}
+
+\input{preamble}
+
+\begin{document}
+
+\title{Estimación de la Probabilidad de Victoria a partir del Estado
+de Juego en el Pok\'emon Trading Card Game: un Estudio de
+Clasificación Tabular con Control Explícito de Fuga de Información\\
+{\footnotesize \textit{Versión preliminar --- Etapa 1: estado del arte
+y diseño propuesto}}}
+
+\author{
+\IEEEauthorblockN{Adriel S. Chaves Salazar}
+\IEEEauthorblockA{\textit{Escuela de Ingenier\'ia en Computaci\'on} \\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Cartago, Costa Rica \\
+2021031465}
+\and
+\IEEEauthorblockN{Daniel Duarte Cordero}
+\IEEEauthorblockA{\textit{Escuela de Ingenier\'ia en Computaci\'on} \\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Cartago, Costa Rica \\
+{\pc{carné}}}
+\and
+\IEEEauthorblockN{Sebasti\'an Hern\'andez Bonilla}
+\IEEEauthorblockA{\textit{Escuela de Ingenier\'ia en Computaci\'on} \\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Cartago, Costa Rica \\
+{\pc{carné}}}
+}
+
+\maketitle
+
+% ------------------------------------------------------------
+% RESUMEN PRELIMINAR
+% \razon: el enunciado exige marcarlo explícitamente como
+% preliminar y prohíbe reportar resultados en esta etapa.
+% ------------------------------------------------------------
+\begin{abstract}
+\textbf{Resumen preliminar.} Este resumen describe el problema, la
+motivación y el enfoque propuesto. No incorpora resultados de ningún
+tipo, dado que en esta etapa no se ha ejecutado ningún experimento.
+
+La estimación de la probabilidad de victoria a partir del estado
+intermedio de una partida constituye una función de valor canónica en
+la analítica de juegos competitivos, y se ha abordado en videojuegos de
+arena multijugador y de disparos tácticos. En el Pok\'emon Trading Card
+Game no existe, hasta donde alcanza esta revisión, un trabajo arbitrado
+que estime dicha probabilidad a partir del estado de juego. Este trabajo
+formula la tarea como clasificación binaria probabilística sobre datos
+tabulares derivados de repeticiones de partidas entre agentes
+automáticos, publicadas en el marco de una competencia pública. El
+diseño concede prioridad al control explícito de la fuga de información:
+las observaciones extraídas de una misma partida no son independientes,
+por lo que toda partición se realiza agrupando por episodio, y se excluye
+del vector de características toda información no disponible en el
+instante de la decisión. La evaluación reporta de forma separada la
+capacidad de discriminación y la calidad de la calibración, bajo tres
+protocolos de generalización: partidas no vistas, periodos posteriores y
+mazos no observados durante el entrenamiento.
+\end{abstract}
+
+% ------------------------------------------------------------
+% PALABRAS CLAVE
+% \razon: cuatro a seis términos por los que alguien buscaría
+% este trabajo. Deben incluir el dominio, la tarea y el riesgo
+% metodológico central.
+% ------------------------------------------------------------
+\begin{IEEEkeywords}
+estimación de probabilidad de victoria, datos tabulares, calibración
+de clasificadores, fuga de información, juegos de cartas coleccionables,
+aprendizaje supervisado
+\end{IEEEkeywords}
+
+\safeinput{sec/01introduccion}
+\safeinput{sec/02trabajos_relacionados}
+\safeinput{sec/03baseline_literatura}
+\safeinput{sec/04metodologia}
+\safeinput{sec/05analisis_tecnico}
+\safeinput{sec/06etica}
+
+\bibliographystyle{IEEEtran}
+\bibliography{sec/99referencias}
+
+\end{document}

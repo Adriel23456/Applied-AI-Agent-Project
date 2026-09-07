@@ -1,0 +1,381 @@
+% ============================================================
+% sec/02trabajos_relacionados.tex
+%
+% SECCIÓN CENTRAL DE LA ETAPA 1.
+% Tres ejes + tabla comparativa obligatoria + brechas en
+% apartado propio de cierre.
+%
+% ESTADO: el Eje B está desarrollado. Los ejes A y C dependen
+% de los bundles de Daniel y Sebastián.
+% ============================================================
+\section{Trabajos Relacionados}
+\label{sec:relacionados}
+
+\pc{Párrafo de metodología de revisión: bases consultadas, cadenas de
+búsqueda, criterios de inclusión y exclusión, ventana temporal, y cuántos
+trabajos se retuvieron de cuántos revisados. Lo aporta el protocolo de
+búsqueda del Eje C.}
+
+\razon{Este párrafo convierte la revisión en un procedimiento auditable en
+lugar de una lista de lecturas. Hodge \textit{et al.} organizan su revisión
+declarando los temas que la estructuran \cite{hodge_winprediction_2021}, y
+Grinsztajn \textit{et al.} enuncian criterios explícitos de inclusión de
+conjuntos de datos \cite{grinsztajn_trees_2022}; ambas prácticas son el
+precedente de exigir transparencia en el procedimiento de revisión.}
+
+% ------------------------------------------------------------
+% EJE A
+% ------------------------------------------------------------
+\subsection{Eje A: el problema y su dominio}
+\label{subsec:ejea}
+
+\pc{Tres a cinco párrafos sintetizando al menos siete trabajos arbitrados
+sobre predicción de desenlace en juegos competitivos y evaluación de
+estados en juegos de cartas. Corresponde al bundle de Daniel. Debe
+agruparse por familia de enfoque y no por artículo.}
+
+A continuación se resumen los trabajos de este eje que forman parte de la
+revisión desarrollada en el presente documento, sin perjuicio de la
+síntesis completa que corresponde a este apartado.
+
+Hodge \textit{et al.} abordan la predicción del ganador en partidas
+profesionales de un videojuego de arena multijugador utilizando información
+del estado disponible mientras la partida transcurre
+\cite{hodge_winprediction_2021}. Los autores organizan las características
+empleadas en la literatura según el momento en que están disponibles
+---previas al juego, durante el juego y posteriores al juego--- y recogen
+la observación de que las características disponibles durante el juego
+concentran la información más útil para la predicción. Su revisión reúne
+dieciséis trabajos previos y advierte que la variación en tamaño,
+composición y versión del juego entre los conjuntos de datos empleados
+obliga a tratar con cautela la comparación de las exactitudes reportadas.
+
+\razon{Esta advertencia debe recogerse explícitamente porque es el
+precedente de dominio de la declaración de comparabilidad que exige la
+Sección~\ref{sec:baseline}.}
+
+Xenopoulos \textit{et al.} estiman la probabilidad de victoria por ronda en
+un videojuego de disparos tácticos y comparan tres poblaciones de jugadores
+con distinto nivel de habilidad \cite{xenopoulos_winprob_2022}. Su
+representación del estado combina información global de la ronda con
+información agregada por bando, estructura análoga a la que se adopta en
+este trabajo. Los autores reportan que los modelos se encuentran bien
+calibrados dentro de su propio entorno, y que el modelo entrenado sobre la
+población de menor nivel presenta mayor pérdida logarítmica y menor
+calidad de calibración al evaluarse sobre las poblaciones profesionales.
+
+Saravanan y Guzdial estudian la evolución del conjunto de estrategias
+dominantes de una comunidad competitiva ante cambios de balance del juego
+\cite{saravanan_metadiscovery_2024}. El trabajo se sitúa en el videojuego
+competitivo de la franquicia Pok\'emon y no en el juego de cartas
+coleccionables, distinción que debe mantenerse presente al interpretar sus
+resultados. Los autores definen dicho conjunto de estrategias dominantes
+como el conocimiento que excede las reglas del juego y que se manifiesta en
+los personajes y estrategias predominantes dentro de la base de jugadores,
+y observan que cambia de forma continua.
+
+\razon{La aclaración sobre cuál juego de la franquicia estudia este trabajo
+es obligatoria en su primera mención. Presentarlo sin la distinción
+atribuiría al artículo un alcance que no tiene.}
+
+\noindent\textbf{Enfoques predominantes.} \pc{Respuesta directa a partir de
+la síntesis completa del eje.}
+
+\noindent\textbf{Aspectos considerados resueltos.} \pc{Respuesta directa.}
+
+\noindent\textbf{Aspectos abiertos.} \pc{Respuesta directa. Este párrafo
+alimenta el apartado de brechas.}
+
+% ------------------------------------------------------------
+% EJE B
+% ------------------------------------------------------------
+\subsection{Eje B: las técnicas del \textit{track} seleccionado}
+\label{subsec:ejeb}
+
+El \textit{track} seleccionado corresponde al aprendizaje automático
+clásico sobre datos tabulares. Este apartado establece el estado actual de
+dichos métodos, los supuestos bajo los cuales operan, y las condiciones que
+determinan la calidad de las probabilidades que producen.
+
+\subsubsection{Estado actual de los métodos tabulares}
+
+Borisov \textit{et al.} presentan una revisión sistemática de los enfoques
+de aprendizaje profundo para datos tabulares heterogéneos, junto con una
+comparación experimental frente a métodos clásicos bajo un protocolo
+uniforme \cite{borisov_tabular_2024}. Los autores organizan la literatura
+en tres familias: métodos de transformación de datos, arquitecturas
+especializadas ---modelos híbridos y basados en mecanismos de atención--- y
+modelos de regularización. Su evaluación reporta que los conjuntos de
+árboles con potenciación del gradiente obtienen los mejores resultados en
+la mayoría de los conjuntos de datos considerados, y concluye que la
+conveniencia de emplear técnicas actuales de aprendizaje profundo sobre
+datos tabulares admite en general una respuesta negativa, particularmente
+para conjuntos heterogéneos de tamaño reducido.
+
+Grinsztajn \textit{et al.} amplían la evidencia con una comparación sobre
+cuarenta y cinco conjuntos de datos, contabilizando el costo de la
+selección de hiperparámetros, y reportan que los modelos basados en árboles
+resultan superiores para todo presupuesto de búsqueda considerado
+\cite{grinsztajn_trees_2022}.
+
+\subsubsection{Supuestos bajo los que operan estos métodos}
+
+Grinsztajn \textit{et al.} no se limitan a constatar la diferencia de
+desempeño, sino que identifican tres propiedades de los datos tabulares que
+la explican \cite{grinsztajn_trees_2022}. En primer lugar, las funciones
+objetivo asociadas a estos conjuntos no son suaves, mientras que las redes
+neuronales presentan un sesgo hacia soluciones suaves; los modelos basados
+en árboles, que aprenden funciones constantes por tramos, no exhiben dicho
+sesgo. En segundo lugar, los conjuntos tabulares contienen una proporción
+apreciable de características no informativas, ante las cuales los modelos
+neuronales de tipo perceptrón multicapa resultan menos robustos. En tercer
+lugar, las características de un conjunto tabular poseen significado
+individual, propiedad que los procedimientos invariantes ante rotaciones no
+pueden aprovechar.
+
+Estas tres propiedades resultan aplicables al problema abordado en este
+trabajo. \pc{Un párrafo argumentando cada una sobre el dominio concreto:
+la irregularidad de la función objetivo asociada a los umbrales duros del
+juego, la presencia previsible de características poco informativas en el
+diccionario, y el significado individual de las variables del estado. La
+redacción de este párrafo requiere el diccionario de datos definitivo, que
+corresponde a la Sección~\ref{sec:analisistecnico}.}
+
+\razon{El enunciado exige que la justificación técnica del \textit{track}
+se sostenga con literatura y no con opinión. Citar el resultado de Borisov
+sin el mecanismo de Grinsztajn dejaría la justificación en el nivel de
+«los árboles funcionan mejor»; incluir el mecanismo permite argumentar por
+qué funcionan mejor en este problema en particular.}
+
+\noindent\textbf{Límites del alcance de esta evidencia.} Borisov
+\textit{et al.} reportan que, en el mayor de los conjuntos evaluados, con
+características predominantemente continuas, una arquitectura basada en
+mecanismos de atención supera a los métodos clásicos, y sugieren que para
+conjuntos tabulares de gran tamaño con dichas características las
+arquitecturas neuronales podrían presentar ventaja
+\cite{borisov_tabular_2024}. Esta observación resulta pertinente dado el
+volumen de observaciones disponible en el presente trabajo. Sin embargo, la
+condición relevante no es el número de filas sino el número de unidades
+estadísticamente independientes, distinción que se desarrolla en la
+Sección~\ref{sec:metodologia}, y las variables del estado de juego son
+heterogéneas y no predominantemente continuas.
+
+Por su parte, Grinsztajn \textit{et al.} excluyen de su comparación los
+conjuntos con datos faltantes, aquellos con variables categóricas de
+cardinalidad superior a veinte, los conjuntos cuyas observaciones no son
+independientes, y los conjuntos deterministas procedentes de juegos, por
+considerar que estos últimos difieren de los conjuntos tabulares habituales
+y ameritan estudio separado \cite{grinsztajn_trees_2022}. El problema
+abordado en este trabajo no es determinista: el desenlace de una partida no
+se deduce del estado intermedio, sino que depende del orden restante del
+mazo, de la información oculta del oponente y de las decisiones
+posteriores de ambos jugadores. Es precisamente esta condición la que
+motiva estimar una probabilidad en lugar de deducir una etiqueta. Respecto
+del supuesto de independencia, este trabajo adopta el episodio como unidad
+independiente, según se detalla en la Sección~\ref{sec:metodologia}.
+
+\razon{Ambos límites deben declararse en el texto y no omitirse. Son las
+dos objeciones más directas que puede recibir la justificación del
+\textit{track}, y responderlas de forma anticipada es preferible a que
+surjan durante la sustentación.}
+
+\subsubsection{Dificultad intrínseca de la tarea}
+
+Brill \textit{et al.} examinan la dificultad de estimar la probabilidad de
+victoria mediante un estudio de simulación en el cual la probabilidad
+verdadera es calculable de forma exacta \cite{brill_winprob_2026}. Los
+autores reportan que la estructura de dependencia propia de los datos
+observacionales, en la cual múltiples observaciones comparten el mismo
+desenlace, incrementa el sesgo y la varianza de los estimadores y reduce el
+tamaño de muestra efectivo respecto del nominal. Reportan asimismo que
+resulta preferible conservar la totalidad de las observaciones por partida
+antes que retener una sola, dado que el conjunto completo aporta
+información sobre la estructura del espacio de covariables. Finalmente,
+observan que los intervalos de confianza construidos mediante remuestreo
+presentan cobertura inferior a la nominal, incluso cuando el remuestreo
+respeta la estructura de agrupamiento.
+
+Los autores declaran de forma explícita que sus hallazgos no son
+exclusivos de la aplicación estudiada, sino que resultan aplicables a
+cualquier conjunto de datos en el cual la variable de resultado
+corresponda al desenlace de una unidad y las observaciones consistan en
+las unidades que conducen a dicho desenlace
+\cite{brill_winprob_2026}. El conjunto de datos empleado en este trabajo
+satisface dicha descripción.
+
+\subsubsection{Fuga de información por dependencia entre observaciones}
+
+Figueiredo y Mendes estudian el efecto de la partición aleatoria sobre
+conjuntos de imágenes extraídas de material audiovisual, en los cuales las
+observaciones procedentes de una misma escena presentan alta correlación
+\cite{figueiredo_leakage_2024}. Los autores comparan la partición
+aleatoria contra una partición que asigna agrupaciones completas a cada
+subconjunto, y reportan que la primera produce una inflación apreciable de
+las métricas de desempeño respecto de la partición agrupada de referencia.
+Su trabajo pertenece al dominio de la visión por computador, por lo que se
+considera aquí un análogo metodológico y no un resultado sobre datos de
+juegos; el mecanismo subyacente ---la presencia de observaciones casi
+idénticas a ambos lados de la partición--- es independiente del dominio.
+
+\razon{La declaración de la brecha de dominio es obligatoria. Presentar un
+resultado de visión por computador como si procediera del dominio de
+juegos constituiría una atribución incorrecta.}
+
+Cabe destacar una diferencia favorable al presente trabajo. La
+contribución central de Figueiredo y Mendes consiste en un procedimiento
+para inferir las agrupaciones, dado que las imágenes no vienen etiquetadas
+por escena \cite{figueiredo_leakage_2024}. En el conjunto de datos
+empleado aquí, la agrupación viene dada de forma explícita por el
+identificador de episodio, lo que permite aplicar la partición agrupada de
+manera exacta y verificable.
+
+\subsubsection{Evaluación de la calidad de las probabilidades}
+
+Silva Filho \textit{et al.} presentan una revisión de los métodos para
+evaluar y mejorar las probabilidades predichas por un clasificador
+\cite{silvafilho_calibration_2023}. Un modelo se considera calibrado
+cuando las probabilidades que predice se corresponden con las frecuencias
+observadas. Los autores exponen que las reglas de puntuación propias se
+descomponen en un componente de calibración y uno de refinamiento,
+descomposición que fundamenta el conjunto de métricas adoptado en este
+trabajo: las métricas basadas en ordenamiento informan sobre el
+refinamiento, las medidas de error de calibración sobre el componente
+homónimo, y las reglas de puntuación propias agregan ambos. Los autores
+señalan asimismo que los estimadores del error de calibración basados en
+discretización dependen del número y la construcción de los intervalos
+empleados.
+
+Niculescu-Mizil y Caruana examinan las probabilidades producidas por
+distintas familias de algoritmos y reportan que los métodos de máximo
+margen, entre ellos los conjuntos de árboles con potenciación, desplazan la
+masa de probabilidad alejándola de los extremos, produciendo una distorsión
+de forma sigmoidea \cite{niculescumizil_probabilities_2005}. Reportan
+igualmente que la regresión logística y los conjuntos por agregación
+resultan bien calibrados sin corrección posterior, y que aplicar
+recalibración sobre modelos ya calibrados puede deteriorar su desempeño.
+Su análisis de curvas de aprendizaje establece que el método de
+recalibración apropiado depende del tamaño del conjunto disponible para
+dicho ajuste.
+
+\razon{Esta referencia debe aparecer porque convierte la calibración de una
+preocupación general en una predicción concreta sobre los modelos que este
+trabajo va a emplear. Sin ella, la sección de métricas carecería de
+justificación específica.}
+
+Ojeda \textit{et al.} comparan de forma sistemática los enfoques de
+recalibración disponibles para la estimación de probabilidades de dos
+clases, evaluando entre otros aspectos su capacidad de generalizar
+estimaciones precisas a poblaciones externas
+\cite{ojeda_calibrating_2023}. Dimitriadis \textit{et al.} abordan la
+inestabilidad de los diagramas de fiabilidad construidos mediante
+discretización, y proponen un procedimiento que genera diagramas
+reproducibles junto con una medida numérica de descalibración
+\cite{dimitriadis_reliability_2021}.
+
+\decidir{Las recomendaciones de Ojeda \textit{et al.} y las de
+Niculescu-Mizil y Caruana no coinciden de forma inmediata respecto del
+método de recalibración preferible. La resolución de esta diferencia
+requiere revisar si el escenario evaluado por Ojeda \textit{et al.}
+---transferencia a poblaciones externas--- corresponde al protocolo
+temporal de este trabajo, en cuyo caso su recomendación tendría
+precedencia. La decisión debe tomarse antes de la Etapa 2.}
+
+% ------------------------------------------------------------
+% EJE C
+% ------------------------------------------------------------
+\subsection{Eje C: el conjunto de datos}
+\label{subsec:ejec}
+
+\pc{Tres a cinco párrafos correspondientes al bundle de Sebastián. El
+conjunto de datos empleado carece de literatura arbitrada, por lo que este
+apartado debe aplicar la sustitución prevista: revisar trabajos con
+conjuntos análogos del mismo dominio y justificar en qué medida son
+comparables.}
+
+\razon{La ausencia de literatura sobre el conjunto de datos debe declararse
+de forma explícita en este apartado y recogerse después como brecha, en
+lugar de omitirse. Declararla convierte una carencia en un hallazgo de la
+revisión.}
+
+\noindent\textbf{Métricas y protocolos reportados.} \pc{Qué mide la
+literatura sobre conjuntos análogos y bajo qué partición.}
+
+\noindent\textbf{Problemas conocidos.} \pc{Sesgos, fugas, limitaciones de
+tamaño o de representatividad. Este apartado justifica varias decisiones de
+la Sección~\ref{sec:analisistecnico}.}
+
+% ------------------------------------------------------------
+% TABLA COMPARATIVA
+% ------------------------------------------------------------
+\subsection{Análisis comparativo}
+\label{subsec:comparativo}
+
+\safeinput{tab/tabla_comparativa}
+
+\pc{Dos a tres párrafos interpretando la tabla: tendencias observables,
+comparaciones que no resultan legítimas y por qué, y limitaciones que se
+repiten entre trabajos.}
+
+\razon{El texto debe leer la tabla y no repetirla. Si el párrafo se limita
+a enumerar las filas, la tabla no cumple su función. Hodge \textit{et al.}
+ofrecen el precedente de publicar la comparación acompañada de la
+advertencia sobre su comparabilidad \cite{hodge_winprediction_2021}.}
+
+% ------------------------------------------------------------
+% BRECHAS
+% ------------------------------------------------------------
+\subsection{Brechas identificadas}
+\label{subsec:brechas}
+
+\noindent\textbf{Carencias encontradas en la literatura.}
+
+\begin{enumerate}
+  \item \textbf{Ausencia de estimación de probabilidad de victoria en
+        juegos de cartas coleccionables a partir del estado de juego.}
+        \pc{Verificar y precisar el alcance de esta afirmación una vez
+        completados los ejes A y C.}
+  \item \textbf{Evaluación desigual de la calidad de las probabilidades en
+        el dominio de juegos.} La literatura de predicción de desenlace
+        revisada reporta predominantemente métricas de exactitud o de
+        ordenamiento \cite{hodge_winprediction_2021}, con la excepción de
+        Xenopoulos \textit{et al.}, quienes incorporan una medida de error
+        de calibración \cite{xenopoulos_winprob_2022}.
+  \item \textbf{Evaluación de métricas probabilísticas pendiente en la
+        comparación de modelos tabulares.} Grinsztajn \textit{et al.}
+        identifican explícitamente la evaluación de las predicciones
+        probabilísticas como línea de trabajo no cubierta por su
+        comparación \cite{grinsztajn_trees_2022}.
+  \item \textbf{Ausencia de caracterización de la degradación de la
+        calibración bajo desplazamiento temporal en el dominio de juegos.}
+        Xenopoulos \textit{et al.} evalúan la transferencia entre
+        poblaciones de distinto nivel de habilidad
+        \cite{xenopoulos_winprob_2022}, escenario distinto del
+        desplazamiento temporal de la población.
+  \item \pc{Brecha correspondiente al conjunto de datos, aportada por el
+        Eje C.}
+  \item \pc{Brecha correspondiente al dominio, aportada por el Eje A.}
+\end{enumerate}
+
+\razon{La brecha número dos no puede formularse como ausencia absoluta. Al
+menos un trabajo de la propia bibliografía reporta calibración, de modo que
+afirmar que ningún trabajo lo hace sería contradicho por una referencia
+citada en este mismo documento.}
+
+\noindent\textbf{Brechas que este trabajo aborda.} El presente trabajo
+aborda las brechas primera, segunda y cuarta. La primera, mediante la
+construcción y evaluación de un estimador sobre un dominio no cubierto por
+la literatura revisada. La segunda y la cuarta, mediante el reporte
+separado de discriminación y calibración bajo tres protocolos de
+generalización, uno de los cuales corresponde a desplazamiento temporal.
+
+\noindent\textbf{Brechas que quedan fuera del alcance.} La tercera brecha
+---la evaluación sistemática de métricas probabilísticas en la comparación
+de modelos tabulares--- excede el alcance de este trabajo, que no constituye
+un estudio comparativo de familias de modelos sobre múltiples conjuntos de
+datos. \pc{Añadir las brechas fuera de alcance correspondientes a los ejes
+A y C.}
+
+\razon{Reconocer explícitamente las brechas que el trabajo no aborda es un
+requisito del enunciado y no una debilidad. Un apartado de brechas que
+declara abordarlas todas resulta menos creíble que uno que delimita su
+alcance.}

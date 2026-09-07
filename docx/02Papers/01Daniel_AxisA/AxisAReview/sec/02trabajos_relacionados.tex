@@ -1,0 +1,259 @@
+% ============================================================
+% VERSIÓN INDIVIDUAL — DANIEL DUARTE CORDERO
+% Eje A completo con las lecturas asignadas a Daniel.
+% Ejes B y C: se rellena únicamente lo sostenido por sus fuentes;
+% los TODO indican material que debe integrarse con Adriel/Sebastián.
+% ============================================================
+\section{Trabajos Relacionados}
+\label{sec:relacionados}
+
+Para descubrimiento y verificación se consultaron
+fuentes editoriales primarias y bases bibliográficas de IEEE, ACM,
+AAAI/AIIDE, Springer y los proceedings correspondientes. Se priorizaron
+trabajos arbitrados sobre predicción de victoria durante la partida,
+evaluación de estados en juegos de cartas, generalización entre
+composiciones o parches, y dos requisitos metodológicos del Track A:
+imputación y desbalance. Se excluyeron estudios exclusivamente
+pre-partida cuando no aportaban a la representación de estados ni a la
+generalización. \textbf{\% TODO integración:} sustituir este párrafo por
+la metodología de búsqueda del equipo completo, incluyendo cadenas de
+búsqueda y el número total de trabajos cribados y retenidos.
+
+\subsection{Eje A: el problema y el dominio}
+\label{subsec:ejea}
+
+La predicción de resultados en juegos competitivos aparece de forma
+recurrente en la literatura de esports. La revisión sistemática de
+Kamal et al. incluye 35 estudios de MOBA y encuentra un predominio del
+aprendizaje supervisado, con uso frecuente de estadísticas de jugador,
+mecánicas del juego y eventos intra-partida para tareas que incluyen la
+predicción del ganador \cite{kamal_moba_2025}. El estudio de Tian et al.
+es un ejemplo específico de predicción durante la partida: su Hero
+Featured Network combina información de combate y de héroes a lo largo
+del tiempo y reporta 81.8\% de accuracy en el nodo de 7 minutos en la
+tabla detallada, aunque el resumen del artículo menciona 84.7\%
+\cite{tian_hero_2022}. Más importante para nuestro problema, el estudio
+muestra que la utilidad de las variables cambia con el progreso: la
+alineación domina al inicio, el oro gana relevancia en la etapa media y
+las bajas y torres se vuelven más informativas más adelante.
+
+En juegos de cartas, la evaluación de estados se ha abordado con
+objetivos distintos. Miernik y Kowalski evolucionan funciones lineales
+y basadas en árboles para asignar un valor escalar a estados de
+\emph{Legends of Code and Magic}; su mejor variante global alcanza
+60.2\% de win rate en el torneo de evaluación, pero la función se
+optimiza indirectamente por el desempeño del agente y no representa
+una probabilidad de victoria aprendida de pares estado--resultado
+\cite{miernik_evolving_2022}. El antecedente más cercano a nuestra tarea
+es el AAIA'17 Data Mining Challenge de Hearthstone: su objetivo fue
+predecir la probabilidad de victoria desde estados intra-partida y la
+métrica del reto fue AUC. El baseline oficial alcanzó 0.7846 y la mejor
+solución 0.8019 \cite{janusz_hearthstone_2017}. Este antecedente
+establece que el problema es viable en otro CCG, pero no resuelve su
+transferencia a Pokémon TCG ni sus riesgos particulares de dependencia
+entre snapshots.
+
+Otra familia de trabajos se concentra menos en la precisión dentro de
+una distribución fija y más en la robustez frente a cambios del
+entorno. Chitayat et al. proponen Clustered Character Representation
+(CCR), que codifica héroes de Dota~2 mediante atributos y habilidades
+de diseño en lugar de depender solo de IDs. Un modelo con CCR obtiene
+AUC 0.85 en parches conocidos y mantiene 0.85 y 0.86 en dos parches
+posteriores no usados para entrenar el modelo con partidas, lo que
+apoya el uso de representaciones ligadas a mecánicas cuando el juego
+cambia \cite{chitayat_meta_2023}. Sin embargo, su caso de estudio
+predice conteos finales de bajas usando duración y composición de
+equipo, no probabilidad de victoria desde un estado intermedio rico.
+
+VGC-Bench aborda otra forma de cambio: la diversidad de composiciones.
+El benchmark de Pokémon VGC separa equipos vistos y 72 equipos fuera de
+distribución, con 1000 episodios por emparejamiento en sus pruebas
+principales. En la prueba de generalización, el agente entrenado con 64
+equipos vence al entrenado con uno con win rate 0.669, y los autores
+concluyen que una mayor diversidad de entrenamiento mejora la
+transferencia a equipos no vistos aun cuando empeora el rendimiento en
+configuraciones familiares \cite{angliss_vgcbench_2026}. La tarea es de
+aprendizaje de políticas, no de estimación probabilística, pero el
+diseño de holdout por composición ofrece un antecedente metodológico
+para preguntar si nuestro predictor aprende estado de juego o memoriza
+el metajuego.
+
+\noindent\textbf{Qué enfoques dominan.} En esports predominan métodos
+supervisados para predicción de resultado y, en trabajos de estado
+dinámico, representaciones que incorporan información intra-partida.
+En CCG y Pokémon también aparecen evaluadores heurísticos, búsqueda,
+behavior cloning y aprendizaje por refuerzo, pero esos enfoques
+optimizan decisiones o políticas y no necesariamente producen
+probabilidades calibradas \cite{kamal_moba_2025,miernik_evolving_2022,angliss_vgcbench_2026}.
+
+\noindent\textbf{Qué se considera resuelto.} La literatura demuestra
+que es posible extraer señal predictiva del estado durante la partida y
+que la importancia de las variables puede cambiar con la progresión
+temporal \cite{tian_hero_2022,janusz_hearthstone_2017}. También existen
+protocolos explícitos para estudiar robustez a parches y a
+composiciones no vistas \cite{chitayat_meta_2023,angliss_vgcbench_2026}.
+
+\noindent\textbf{Qué sigue abierto.} No se ha establecido, con las
+referencias revisadas, un protocolo equivalente para Pokémon TCG que
+combine snapshots tabulares observables, control de dependencia entre
+estados de una misma partida, calidad probabilística y evaluación bajo
+cambio temporal y de mazos. Tampoco es válido asumir que los resultados
+de MOBA, VGC o Hearthstone se transfieren directamente porque cambian
+las reglas, las unidades de observación, los protocolos y la población.
+
+\subsection{Eje B: las técnicas del track}
+\label{subsec:ejeb}
+
+Dentro de las referencias asignadas a Daniel, dos trabajos sostienen
+decisiones transversales del Track A. Emmanuel et al. revisan
+mecanismos de datos faltantes y métodos de imputación, y muestran que
+la precisión relativa de KNN y missForest cambia entre datasets
+\cite{emmanuel_missing_2021}. El resultado relevante para este proyecto
+no es que una técnica sea superior, sino que la estrategia de
+imputación depende del mecanismo de ausencia y de las características
+del conjunto de datos. Por ello, una frecuencia alta de valores
+ausentes no justifica por sí sola imputarlos automáticamente.
+
+Van den Goorbergh et al. estudian modelos de regresión logística
+estándar y ridge bajo ausencia de corrección, random undersampling,
+random oversampling y SMOTE. Las correcciones no mejoran de forma
+sistemática el AUROC y sí producen sobreestimación pronunciada de la
+probabilidad de la clase minoritaria, deteriorando la calibración
+\cite{vandenGoorbergh_imbalance_2022}. El alcance debe respetarse: el
+trabajo no evalúa \texttt{class\_weight}, Random Forest, SVM o redes
+neuronales; por tanto, no justifica preferir ponderación de clases como
+regla general.
+
+\noindent\textbf{Fortalezas.} Estas referencias permiten justificar un
+tratamiento de faltantes guiado por mecanismo y una evaluación del
+desbalance centrada no solo en clasificación sino también en
+calibración cuando la salida deseada es una probabilidad
+\cite{emmanuel_missing_2021,vandenGoorbergh_imbalance_2022}.
+
+\noindent\textbf{Límites.} Ninguna de estas dos referencias decide por
+sí sola qué modelo tabular clásico debe ser el principal. Paper 6 no
+formaliza nuestra noción de ausencia estructural/semántica, y Paper 7
+solo estudia correcciones de desbalance en regresión logística.
+\textbf{\% TODO integración:} incorporar las referencias de Adriel sobre
+modelos tabulares, calibración y explicabilidad para completar las
+3--5 síntesis exigidas por el Eje B.
+
+\noindent\textbf{Supuestos bajo los que funcionan.} Las decisiones de
+imputación requieren identificar razonablemente el mecanismo y tipo de
+dato; las conclusiones de Paper 7 son directamente aplicables a modelos
+de regresión logística probabilística y solo indicativas para otras
+familias.
+
+\noindent\textbf{Justificación técnica del track.} Con las referencias
+de Daniel puede sostenerse que un problema de probabilidad sobre
+características estructuradas exige especial cuidado con calidad de
+datos y calibración. La justificación completa de por qué se elige
+Track A frente a una alternativa profunda o de RL debe integrarse con
+las referencias metodológicas del resto del equipo. \textbf{\% TODO
+integración.}
+
+\subsection{Eje C: el dataset}
+\label{subsec:ejec}
+
+El dataset \emph{PTCG AI Battle Challenge Simulation Episodes} fue
+publicado en 2026 y, en la revisión realizada hasta esta etapa, no se
+localizó literatura arbitrada que lo utilice. Por ello, el requisito de
+baseline se sustituye por datasets y entornos análogos. Hearthstone es
+el análogo más cercano porque también es un juego de cartas con
+información imperfecta y el reto AAIA'17 predice el ganador desde un
+estado intra-partida \cite{janusz_hearthstone_2017}. LoCM aporta un
+antecedente conceptual de evaluación de estados en CCG, aunque su
+protocolo es simulación evolutiva y su salida no es probabilística
+\cite{miernik_evolving_2022}.
+
+VGC-Bench y el trabajo de Chitayat et al. no son datasets equivalentes,
+pero aportan protocolos útiles para dos riesgos presentes en nuestros
+datos: composiciones no vistas y cambio de versión. VGC-Bench reserva
+configuraciones de equipo fuera de entrenamiento, mientras que CCR se
+evalúa en dos parches posteriores excluidos del entrenamiento con
+partidas \cite{angliss_vgcbench_2026,chitayat_meta_2023}. Estas
+comparaciones justifican incorporar pruebas de robustez separadas del
+holdout principal.
+
+\noindent\textbf{Métricas y protocolos reportados.} Hearthstone usa AUC
+para comparar predictores de probabilidad; Tian et al. reportan
+accuracy por nodos temporales; Chitayat et al. reportan AUC entre
+parches; VGC-Bench usa win rate, cross-play, Alpha-Rank y evaluaciones
+sobre equipos vistos/no vistos \cite{janusz_hearthstone_2017,tian_hero_2022,chitayat_meta_2023,angliss_vgcbench_2026}. La heterogeneidad impide
+leer sus números como un ranking único.
+
+\noindent\textbf{Problemas conocidos.} Los análogos revelan riesgos de
+representatividad y generalización: Tian et al. usan un solo día y
+jugadores de alto nivel; Chitayat et al. restringen sus partidas a
+profesionales/premium; VGC-Bench muestra degradación al ampliar la
+diversidad de equipos. En el dataset propio, además, la auditoría
+muestra fuerte dependencia entre snapshots de un mismo episodio y
+cambios temporales de mazos, agentes y versiones. \textbf{\% TODO
+integración:} incorporar aquí la revisión específica de Sebastián sobre
+el dataset y análogos adicionales.
+
+\subsection{Análisis comparativo}
+\label{subsec:comparativo}
+
+\safeinput{tab/tabla_comparativa}
+
+La tabla muestra que los resultados numéricos no admiten una
+comparación directa. Tian et al. evalúan accuracy de un modelo
+secuencial en un MOBA, Miernik y Kowalski evalúan win rate de agentes
+que consumen una función heurística, VGC-Bench compara políticas por
+cross-play y el estudio de Chitayat et al. usa AUC para una tarea de
+predicción de bajas. Hearthstone es el único antecedente cuyo objetivo
+y métrica se aproximan a nuestro planteamiento: estimar la posibilidad
+de victoria desde un estado intra-partida mediante AUC
+\cite{janusz_hearthstone_2017}.
+
+Sí aparece una tendencia transversal: el desempeño depende del
+momento del juego y de la distribución sobre la que se evalúa. Tian et
+al. encuentran distinta utilidad de variables por etapa;
+VGC-Bench separa composiciones vistas de no vistas; Chitayat et al.
+separan parches de entrenamiento y parches futuros
+\cite{tian_hero_2022,angliss_vgcbench_2026,chitayat_meta_2023}. Por ello,
+un único holdout aleatorio sería insuficiente para sostener una
+conclusión fuerte de generalización en Pokémon TCG.
+
+Otra limitación recurrente es que el resultado depende de una
+población acotada. Los estudios de HoK y Dota~2 revisados se restringen
+a jugadores de alto nivel/profesionales, y VGC-Bench trabaja con un
+entorno y formato distintos de Pokémon. Esto obliga a declarar los
+límites de extrapolación y evita presentar un resultado sobre agentes
+artificiales de Pokémon TCG como evidencia sobre jugadores humanos.
+
+\subsection{Brechas identificadas}
+\label{subsec:brechas}
+
+\textbf{Carencias encontradas en la literatura.}
+\begin{enumerate}
+  \item No se localizó literatura arbitrada sobre el dataset específico
+  de replays de la competencia Pokémon TCG de 2026.
+  \item La estimación de victoria desde estados existe en Hearthstone,
+  pero no está establecida para la estructura de recursos y estados de
+  Pokémon TCG en las referencias revisadas.
+  \item El antecedente de Hearthstone usa AUC como medida de
+  discriminación, pero la calidad y calibración de la probabilidad
+  requieren evaluación adicional cuando la salida se consume como
+  evaluador de posiciones.
+  \item Los datasets con múltiples estados correlacionados por partida
+  requieren particiones por unidad independiente; en el conjunto propio
+  un split por snapshot produciría fuga entre episodios.
+  \item La literatura revisada muestra sensibilidad a composiciones y
+  parches, pero no existe un protocolo único que combine partida nueva,
+  mazo no visto y periodo futuro para esta tarea de Pokémon TCG.
+\end{enumerate}
+
+\noindent\textbf{Brechas que este trabajo aborda.} El proyecto aborda
+las brechas 2--5 mediante una formulación supervisada de
+$P(\mathrm{win}\mid\mathrm{state})$, métricas de discriminación y
+calidad probabilística, particiones agrupadas por episodio, análisis
+por turno y pruebas secundarias temporales y por mazo/matchup.
+
+\noindent\textbf{Brechas fuera del alcance.} La ausencia de literatura
+sobre el dataset no puede resolverse dentro del semestre; se documenta
+y se sustituye por análogos. Tampoco se busca demostrar transferencia a
+jugadores humanos, resolver el juego ni construir una política de RL.
+La comparabilidad estricta con Hearthstone permanece fuera del alcance
+porque cambian reglas, población, representación y protocolo.

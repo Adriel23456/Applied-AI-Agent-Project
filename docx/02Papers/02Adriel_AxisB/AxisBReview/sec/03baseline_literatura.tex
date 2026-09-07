@@ -1,0 +1,134 @@
+% ============================================================
+% sec/03baseline_literatura.tex
+%
+% OBLIGATORIO: un número objetivo con su fuente, declaración
+% explícita de qué se busca igualar o superar, y las diferencias
+% de protocolo que impiden una comparación justa.
+%
+% Si el conjunto de datos carece de literatura previa, el
+% requisito se sustituye por revisar trabajos con conjuntos
+% análogos del mismo dominio.
+% ============================================================
+\section{Baseline de Literatura}
+\label{sec:baseline}
+
+\subsection{Ausencia de literatura sobre el conjunto de datos}
+\label{subsec:ausencialiteratura}
+
+El conjunto de datos empleado en este trabajo no cuenta, hasta donde
+alcanza la revisión realizada, con publicaciones arbitradas que reporten
+resultados sobre él. En consecuencia, no existe un mejor resultado
+publicado sobre este conjunto con la métrica seleccionada, y el requisito
+se satisface mediante la revisión de trabajos sobre conjuntos análogos del
+mismo dominio, justificando en qué medida resultan comparables.
+
+\razon{Esta declaración debe abrir la sección y no ocultarse. El enunciado
+prevé explícitamente la sustitución cuando el conjunto carece de literatura
+previa, de modo que declararla es cumplir el requisito y no eludirlo.
+Además, la ausencia se recoge como brecha en la
+Sección~\ref{subsec:brechas}.}
+
+\subsection{Origen del punto de referencia}
+\label{subsec:origenbaseline}
+
+\pc{Descripción del certamen de minería de datos sobre un juego de cartas
+coleccionables del cual procede el número objetivo: en qué consistía la
+tarea, qué características del estado se empleaban, y bajo qué protocolo se
+evaluó. Corresponde al Eje A y lo aporta Daniel.}
+
+\pc{Valor del resultado oficial de referencia y del mejor resultado
+alcanzado, con la métrica correspondiente y la cita al trabajo que los
+publica.}
+
+\razon{La cifra debe entrar acompañada de su fuente arbitrada en la
+bibliografía. Un número de literatura sin referencia citable incumple el
+criterio de esta sección, que exige declarar el resultado con su fuente.}
+
+\subsection{Número objetivo declarado}
+\label{subsec:objetivobaseline}
+
+\begin{quote}
+\textbf{Referencia declarada:} \pc{valor y métrica}, reportado sobre
+\pc{conjunto de datos y juego} \cite{pc}.
+\end{quote}
+
+Este trabajo declara dicho valor como \textbf{referencia de orden de
+magnitud} y no como cifra a superar. La distinción es sustantiva y se
+justifica en el apartado siguiente.
+
+\razon{Declarar el número como cifra a batir cuando procede de otro juego
+constituiría una comparación no legítima. Declararlo como orden de magnitud
+cumple el requisito de la sección y a la vez respeta el criterio de
+comparabilidad.}
+
+\subsection{Comparabilidad del protocolo}
+\label{subsec:comparabilidad}
+
+La comparación entre el resultado de referencia y los resultados que este
+trabajo obtenga se considera \textbf{únicamente indicativa}. Las siguientes
+diferencias impiden una comparación directa:
+
+\begin{itemize}
+  \item \textbf{Juego distinto.} El punto de referencia procede de un juego
+        de cartas coleccionables con reglas, recursos y condiciones de
+        victoria distintas de las del Pok\'emon Trading Card Game.
+  \item \textbf{Población de jugadores distinta.} \pc{Precisar si el
+        conjunto de referencia procede de partidas entre personas o entre
+        agentes automáticos.} El conjunto empleado en este trabajo procede
+        de partidas entre agentes automáticos seleccionados por
+        clasificación, condición que se detalla en la
+        Sección~\ref{sec:analisistecnico}.
+  \item \textbf{Protocolo de partición distinto.} \pc{Precisar el protocolo
+        del certamen de referencia.} Este trabajo emplea partición agrupada
+        por episodio, condición que reduce el desempeño medido respecto de
+        una partición aleatoria, según se argumenta en la
+        Sección~\ref{sec:metodologia}.
+  \item \textbf{Representación del estado distinta.} \pc{Precisar qué
+        características empleaba el certamen de referencia.}
+\end{itemize}
+
+\razon{Esta enumeración es la exigencia central del criterio de baseline.
+Hodge \textit{et al.} ofrecen el precedente: publican una tabla comparativa
+de dieciséis trabajos y advierten en nota al pie que la variación en
+tamaño, composición y versión del juego obliga a tratar con cautela la
+comparación de las exactitudes reportadas
+\cite{hodge_winprediction_2021}.}
+
+\noindent\textbf{Interpretación del número.} La referencia indica el orden
+de magnitud del desempeño que la literatura considera alcanzable en tareas
+de predicción de desenlace a partir del estado en juegos de cartas
+coleccionables. No constituye un umbral de éxito ni de fracaso para este
+trabajo.
+
+\subsection{Referencias adicionales de orden de magnitud}
+\label{subsec:referenciasadicionales}
+
+Dado que la comparación directa no es posible, se recogen dos referencias
+adicionales del dominio de juegos competitivos que permiten situar el orden
+de magnitud esperable en tareas de predicción de desenlace a partir del
+estado de juego.
+
+Hodge \textit{et al.} reportan exactitudes en el rango de setenta a ochenta
+por ciento sobre datos mixtos y profesionales de un videojuego de arena
+multijugador, evaluando en el punto medio de la partida
+\cite{hodge_winprediction_2021}. \pc{Verificar los valores exactos de la
+Tabla III del artículo antes de incorporarlos.}
+
+Xenopoulos \textit{et al.} reportan valores de pérdida logarítmica en torno
+a cuatro décimas y errores de calibración esperados de un orden de
+magnitud considerablemente menor dentro del entorno de entrenamiento
+\cite{xenopoulos_winprob_2022}. \pc{Verificar los valores exactos de la
+Tabla 1 del artículo antes de incorporarlos.}
+
+\razon{Estas dos referencias se incluyen con su métrica original y sin
+convertirla. Traducir una exactitud a un área bajo la curva, o una pérdida
+logarítmica a una exactitud, produciría cifras que ninguno de los dos
+artículos reporta.}
+
+\decidir{Queda pendiente definir si el trabajo declara además un umbral
+propio de éxito, independiente de la literatura, formulado sobre los
+modelos de referencia internos descritos en la
+Sección~\ref{subsec:planbaselines}. Un umbral de esa naturaleza sería
+comparable de forma legítima, a diferencia del número de literatura. La
+decisión afecta la redacción de la discusión final y conviene tomarla antes
+de la Etapa 2.}

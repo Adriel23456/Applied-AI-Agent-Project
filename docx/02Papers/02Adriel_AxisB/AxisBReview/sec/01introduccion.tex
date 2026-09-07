@@ -1,0 +1,233 @@
+% ============================================================
+% sec/01introduccion.tex
+%
+% OBLIGATORIO: contexto y relevancia, pregunta de investigación
+% explícita, hipótesis de trabajo, objetivos con contribución
+% esperada, y estructura del documento.
+% ============================================================
+\section{Introducción}
+\label{sec:introduccion}
+
+\subsection{Contexto y relevancia}
+\label{subsec:contexto}
+
+La estimación de la probabilidad de victoria a partir del estado
+intermedio de una partida constituye una función de valor canónica en la
+analítica de juegos competitivos. Brill \textit{et al.} señalan que dicha
+cantidad no es una estadística contable ni una magnitud observable, sino
+que queda definida por un modelo estimado a partir de datos
+\cite{brill_winprob_2026}. Esta propiedad distingue la tarea de otros
+problemas de predicción: el desenlace observado de una partida es binario,
+mientras que la magnitud que se desea estimar es una probabilidad que
+nunca se observa directamente.
+
+\razon{La primera oración fija la naturaleza de la tarea. Si no se declara
+que la probabilidad verdadera es inobservable, el lector puede suponer que
+existe una etiqueta contra la cual verificar cada predicción, y toda la
+discusión posterior sobre calibración pierde sentido.}
+
+En el ámbito de los deportes electrónicos, la utilidad de esta estimación
+excede el interés metodológico. Hodge \textit{et al.} observan que, a
+diferencia de los deportes tradicionales, numerosos juegos competitivos
+carecen de un marcador legible, y que su complejidad dificulta el
+seguimiento por parte de audiencias no expertas; una estadística única que
+resuma el estado de la partida amplía el atractivo del juego y lo vuelve
+más accesible \cite{hodge_winprediction_2021}. Xenopoulos \textit{et al.}
+desarrollan la misma línea al estimar la probabilidad de victoria por ronda
+y analizar cómo varían los efectos de las características del estado entre
+poblaciones de jugadores con distinto nivel de habilidad
+\cite{xenopoulos_winprob_2022}.
+
+El Pok\'emon Trading Card Game presenta las condiciones que hacen relevante
+este tipo de estimación. \pc{2 o 3 oraciones con datos concretos del
+dominio: tamaño de la comunidad competitiva, cantidad de cartas
+disponibles, complejidad combinatoria del mazo. Este contenido pertenece al
+Eje A y lo aporta Daniel.} El estado de una partida involucra premios
+restantes, puntos de vida, energías acumuladas, cartas en mano, evoluciones
+y estados alterados, distribuidos entre dos jugadores con información
+parcial sobre el mazo y la mano del oponente. Un observador no experto no
+puede determinar de un vistazo cuál de los dos jugadores se encuentra en
+ventaja.
+
+\subsection{Planteamiento del problema}
+\label{subsec:problema}
+
+El problema que este trabajo aborda es la ausencia de un estimador validado
+de probabilidad de victoria a partir del estado de juego en el Pok\'emon
+Trading Card Game, junto con la ausencia de una caracterización de cuánta
+información sobre el desenlace contiene efectivamente dicho estado.
+
+Esta ausencia no es únicamente una carencia de resultados: es también una
+carencia metodológica. Los conjuntos de datos derivados de repeticiones de
+partidas presentan una estructura de dependencia que invalida los
+procedimientos de partición aleatoria habituales. Brill \textit{et al.}
+demuestran que, cuando múltiples observaciones comparten el mismo sorteo
+del desenlace, el sesgo y la varianza de los estimadores se incrementan y
+el tamaño de muestra efectivo se reduce sustancialmente
+\cite{brill_winprob_2026}. Figueiredo y Mendes cuantifican el efecto
+complementario sobre las métricas reportadas: en conjuntos de imágenes con
+alta correlación espaciotemporal, la partición aleatoria infla el
+desempeño medido respecto de una partición agrupada de referencia
+\cite{figueiredo_leakage_2024}.
+
+\razon{Este párrafo debe existir en la introducción y no solo en la
+metodología. El riesgo metodológico propio del Track A es la fuga de
+información, y presentarlo desde el planteamiento del problema convierte
+el control de fuga en parte de la contribución en lugar de en una
+precaución técnica mencionada al final.}
+
+\subsection{Pregunta de investigación}
+\label{subsec:pregunta}
+
+\begin{quote}
+\textbf{PI:} ¿Cuánta información sobre el desenlace de una partida de
+Pok\'emon Trading Card Game contiene un estado de juego aislado; cómo varía
+esa capacidad predictiva conforme progresa la partida; y en qué medida se
+conserva cuando el modelo se evalúa sobre partidas, mazos y periodos
+temporales no observados durante el entrenamiento?
+\end{quote}
+
+\noindent\textbf{Condiciones de refutación.} La pregunta admite respuesta
+negativa en al menos tres formas: que el modelo no supere a una heurística
+de dominio sobre partidas no vistas; que la capacidad predictiva no
+presente variación apreciable a lo largo de la partida; o que el desempeño
+se degrade hasta niveles no informativos bajo los protocolos de
+generalización temporal o por mazo.
+
+\razon{El enunciado exige que la pregunta pueda responderse con evidencia y
+admita refutación. Enumerar las condiciones concretas bajo las cuales la
+respuesta sería negativa es lo que distingue una pregunta de investigación
+de una expectativa.}
+
+\noindent\textbf{Condiciones de medición.} La respuesta se sustenta sobre
+métricas calculadas en conjuntos de prueba disjuntos a nivel de episodio,
+reportando de forma separada la capacidad de discriminación y la calidad de
+la calibración, con intervalos de confianza construidos sobre episodios y
+no sobre observaciones individuales.
+
+\subsection{Hipótesis de trabajo}
+\label{subsec:hipotesis}
+
+\begin{quote}
+\textbf{H1.} El estado de juego contiene información predictiva sobre el
+desenlace desde etapas tempranas de la partida, y dicha información se
+incrementa de forma monótona conforme progresa la partida.
+\end{quote}
+
+\begin{quote}
+\textbf{H2.} La capacidad de discriminación se conserva en mayor medida
+que la calidad de la calibración cuando el modelo se evalúa sobre
+periodos posteriores a los de entrenamiento.
+\end{quote}
+
+\begin{quote}
+\textbf{H3.} \pc{Hipótesis sobre generalización a mazos no vistos. Su
+formulación depende del análisis de concentración de mazos que
+corresponde al Eje C.}
+\end{quote}
+
+\noindent\textbf{Fundamento de H2.} Xenopoulos \textit{et al.} reportan que
+un modelo evaluado fuera del entorno en que fue entrenado presenta un
+incremento moderado en la pérdida logarítmica acompañado de una degradación
+considerablemente mayor en el error de calibración esperado
+\cite{xenopoulos_winprob_2022}. Silva Filho \textit{et al.} ofrecen la
+explicación formal: las reglas de puntuación propias se descomponen en un
+componente de calibración y uno de refinamiento, y las métricas basadas
+exclusivamente en el ordenamiento son invariantes ante transformaciones
+monótonas de las probabilidades predichas \cite{silvafilho_calibration_2023}.
+
+\noindent\textbf{Advertencia sobre H1.} Brill \textit{et al.} documentan que
+el sesgo del estimador es considerablemente mayor al comienzo de la partida,
+por dos razones estructurales: los estados tempranos con desequilibrios
+marcados son infrecuentes, y resulta más difícil vincular un estado temprano
+con un desenlace determinado al final \cite{brill_winprob_2026}. En
+consecuencia, un desempeño reducido en la ventana temprana admite dos
+interpretaciones que este diseño debe procurar distinguir: ausencia genuina
+de señal, o sesgo del estimador por escasez de observaciones en esa región
+del espacio de estados.
+
+\razon{Declarar esta ambigüedad antes de obtener resultados es obligatorio.
+Sin ella, un desempeño bajo en turnos tempranos se interpretaría como
+refutación de H1 cuando podría deberse al sesgo que Brill documenta.}
+
+\decidir{Si el equipo desea separar ambas interpretaciones, hay que definir
+en la Etapa 2 un procedimiento adicional: reportar el conteo de episodios y
+de observaciones por ventana de turno, o restringir el análisis temprano a
+regiones del espacio de estados con soporte suficiente. La decisión afecta
+el diseño experimental y conviene tomarla antes de ejecutar.}
+
+\subsection{Objetivos}
+\label{subsec:objetivos}
+
+\noindent\textbf{Objetivo general.} Determinar y caracterizar la capacidad
+predictiva del estado de juego sobre el desenlace de una partida de
+Pok\'emon Trading Card Game, mediante modelos de aprendizaje supervisado
+sobre datos tabulares, bajo un protocolo experimental que controle de forma
+explícita la fuga de información derivada de la dependencia entre
+observaciones.
+
+\noindent\textbf{Objetivos específicos.}
+\begin{enumerate}
+  \item Formalizar la estimación de la probabilidad de victoria a partir
+        del estado de juego como un problema de clasificación binaria
+        probabilística sobre datos tabulares, estableciendo la distinción
+        entre la unidad de observación y la unidad estadísticamente
+        independiente.
+  \item Construir un conjunto de datos tabular a partir de las
+        repeticiones disponibles, definiendo un diccionario de
+        características restringido a la información accesible en el
+        instante de la decisión.
+  \item Cuantificar el riesgo de fuga de información asociado a la
+        partición aleatoria sobre este conjunto de datos, y establecer un
+        protocolo de partición agrupada verificable de forma automática.
+  \item Implementar y comparar una escalera de modelos de referencia que
+        incluya un predictor trivial, una heurística de dominio y modelos
+        tabulares clásicos, evaluando de forma separada discriminación y
+        calibración.
+  \item Caracterizar la evolución de la capacidad predictiva a lo largo de
+        la partida y su comportamiento bajo tres protocolos de
+        generalización: partidas no vistas, periodos posteriores y mazos
+        no observados.
+\end{enumerate}
+
+\razon{Los cinco objetivos deben poder verificarse al final del semestre.
+Se redactan como acciones con producto observable --- formalizar,
+construir, cuantificar, implementar, caracterizar --- y no como intenciones
+de desempeño, porque un objetivo del tipo «superar un umbral» quedaría
+incumplido si el resultado fuera negativo, cuando un resultado negativo
+también responde la pregunta.}
+
+\subsection{Contribución esperada}
+\label{subsec:contribucion}
+
+Este trabajo aspira a tres contribuciones. En primer lugar, la
+caracterización de una tarea que, hasta donde alcanza esta revisión, no ha
+sido abordada en el Pok\'emon Trading Card Game, en un dominio donde la
+información oculta y la evolución del conjunto de estrategias dominantes
+plantean condiciones distintas a las de los juegos estudiados previamente.
+En segundo lugar, un protocolo experimental que trata la fuga de
+información como objeto de medición y no únicamente como precaución
+declarada. En tercer lugar, un análisis de la calidad de las probabilidades
+estimadas, dimensión que Grinsztajn \textit{et al.} identifican como
+pendiente en la evaluación de modelos tabulares
+\cite{grinsztajn_trees_2022} y que la literatura de predicción de victoria
+en juegos ha reportado de forma desigual.
+
+\razon{La contribución se enuncia en términos de aportes verificables y no
+de resultados prometidos. Prometer un nivel de desempeño en la Etapa 1
+compromete el trabajo con un resultado que aún no se conoce.}
+
+\subsection{Estructura del documento}
+\label{subsec:estructura}
+
+La Sección~\ref{sec:relacionados} revisa la literatura en tres ejes
+---el problema y su dominio, las técnicas del \textit{track} seleccionado,
+y el conjunto de datos--- y cierra con la identificación explícita de las
+brechas. La Sección~\ref{sec:baseline} declara el punto de referencia
+tomado de la literatura y discute su comparabilidad. La
+Sección~\ref{sec:metodologia} presenta la formalización del problema, el
+protocolo experimental y el plan de modelos de referencia. La
+Sección~\ref{sec:analisistecnico} desarrolla el análisis técnico exigido
+por el \textit{track} seleccionado, con énfasis en la prevención de fuga de
+información. La Sección~\ref{sec:etica} documenta las consideraciones
+éticas preliminares.

@@ -1,0 +1,97 @@
+% ============================================================
+% sec/06etica.tex
+%
+% Riesgos identificados y forma prevista de mitigarlos, en el
+% momento previo al entrenamiento.
+% ============================================================
+\section{Consideraciones Éticas Preliminares}
+\label{sec:etica}
+
+\subsection{Naturaleza de los datos}
+\label{subsec:sensibilidad}
+
+El corpus no contiene datos clínicos, biométricos ni conductuales sobre
+personas: sus registros son partidas simuladas entre agentes de software,
+publicadas bajo licencia abierta \cite{ptcg_dataset_2026}.
+
+Cabe una salvedad. Cada partida lleva los nombres de agente de sus
+participantes, que son seudónimos elegidos por sus autores e identifican a
+competidores de un certamen público. Se tratan como metadatos y no como
+material de modelado: se emplean para auditoría y agrupación, quedan
+excluidos del vector de características, y no se publicará ningún
+ordenamiento ni comparación de competidores nombrados.
+
+\subsection{Riesgo principal: la sobreafirmación}
+\label{subsec:sesgo}
+
+El riesgo dominante de este trabajo no es el daño a un sujeto de datos, sino
+atribuir a sus resultados un alcance que no tienen.
+
+El corpus corresponde a la franja alta de una clasificación de agentes
+automáticos, y su composición cambia de forma medible en diez días: el
+conjunto de mazos del último día auditado es esencialmente disjunto del del
+primero, y los diez mazos más frecuentes concentran el 39.94\,\% de las
+instancias. Un modelo ajustado sobre estos datos aprende un conjunto de
+estrategias estrecho y en movimiento.
+
+De ahí se siguen tres lecturas erróneas que conviene nombrar. Extrapolar a
+jugadores humanos carecería de respaldo, pues ninguna partida humana aparece
+en el corpus. Extrapolar al juego completo tampoco lo tendría, porque un
+modelo que nunca vio un arquetipo de mazo carece de base para juzgar
+posiciones construidas en torno a él. Y tratar la salida como una propiedad
+estable de una posición carecería de respaldo a lo largo del tiempo, dado
+que la población cambia con rapidez.
+
+\subsection{Interpretación de la probabilidad}
+\label{subsec:interpretacionprob}
+
+Una estimación de probabilidad de victoria invita a un mal uso específico:
+leer un número entre cero y uno como una posibilidad bien fundada cuando
+puede ser solo una puntuación bien ordenada. Un modelo puede seguir
+ordenando posiciones correctamente mucho después de que sus probabilidades
+declaradas hayan dejado de ser ciertas \cite{guo_temporalshift_2021}.
+
+Reportar la calidad de las probabilidades junto a la capacidad de ordenar es,
+por tanto, un compromiso ético además de metodológico: es lo que permite al
+lector saber cuál de las dos cosas está midiendo el número.
+
+\subsection{Límites de generalización declarados}
+\label{subsec:limitesgeneralizacion}
+
+Los resultados no deben extrapolarse a partidas entre personas, al juego en
+formato físico, a estrategias no representadas en la muestra, a agentes de
+otra franja de puntuación, a versiones del motor ausentes de los datos, ni a
+periodos posteriores más allá de lo que el escenario B permita evaluar.
+
+Dos precisiones adicionales. Un buen resultado bajo la partición agrupada no
+implica robustez temporal, afirmación que solo puede sostenerse si el
+desempeño se mantiene bajo el escenario cronológico. Y un buen valor global
+de capacidad de ordenar no implica que las probabilidades estén calibradas
+ni que el modelo se comporte igual en las etapas tempranas y tardías de la
+partida.
+
+\subsection{Mitigaciones previstas antes del entrenamiento}
+\label{subsec:mitigacionetica}
+
+\begin{itemize}
+  \item Toda cifra reportada lleva su alcance: los días auditados, la franja
+        de puntuación y las versiones del motor presentes.
+  \item Los tres escenarios de evaluación se reportan por separado, sin
+        promediar el primario con los de generalización.
+  \item Los identificadores de agente quedan fuera del vector de
+        características, y no se publican resultados por competidor.
+  \item Los intervalos de confianza se calculan sobre partidas, de modo que
+        la incertidumbre no se subestime contando observaciones
+        correlacionadas como evidencia independiente.
+  \item El resumen y las conclusiones declaran la población sobre la que se
+        ajustó el modelo, para que la limitación viaje con el resultado en
+        lugar de quedar confinada a esta sección.
+\end{itemize}
+
+\subsection{Aspectos diferidos}
+\label{subsec:diferido}
+
+La ética del despliegue, los escenarios de uso indebido y los riesgos
+operativos de un agente que consuma este estimador, en particular el
+efecto de un evaluador sobreconfiado sobre sus decisiones, se abordan en la
+etapa final, cuando exista un agente.

@@ -1,0 +1,242 @@
+% ============================================================
+% tab/tabla_comparativa.tex
+%
+% COLUMNAS OBLIGATORIAS. No sustituir, no reordenar, no añadir.
+%
+% CRITERIO DE INCLUSIÓN: trabajos que resuelven una tarea sobre
+% un conjunto de datos y reportan una métrica. Las referencias
+% metodológicas se discuten en el texto y no figuran aquí.
+%
+% Se divide en dos partes por volumen. La segunda retrocede el
+% contador para conservar un único número de tabla.
+%
+% REGLA DE tabularx: la suma de los pesos W debe ser igual al
+% número de columnas W. Aquí son 5 y suman 5.00.
+% ============================================================
+
+\begin{table*}[!tp]
+\centering
+\caption{Resumen comparativo de trabajos relacionados. Los valores están
+transcritos de la fuente. Los conjuntos difieren en tamaño, composición,
+juego y versión, por lo que la comparación directa requiere cautela.}
+\label{tab:comparativa}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\textwidth}{@{}
+    P{1.9cm}
+    >{\centering\arraybackslash}p{0.6cm}
+    W{0.95}
+    W{1.00}
+    W{0.70}
+    W{0.95}
+    W{1.40}
+  @{}}
+\toprule
+\textbf{Referencia} & \textbf{Año} & \textbf{Técnica} &
+\textbf{Conjunto de datos / entorno} & \textbf{Métrica principal} &
+\textbf{Resultado reportado} & \textbf{Limitación identificada}\\
+\midrule
+
+Janusz et al. \cite{janusz_hearthstone_2017} & 2017 &
+Competencia abierta; la referencia de los organizadores es una red de dos
+capas ocultas sobre representación tabular &
+\emph{Hearthstone}: estados intra-partida; conjuntos de entrenamiento y
+prueba separados por partida y por mazo &
+AUC &
+0.7846 la referencia; 0.8019 la mejor solución. Al transferir a estados
+generados por agentes de búsqueda, el AUC cae de $\approx$0.79 a
+$\approx$0.75 &
+Estados generados por agentes que eligen acciones al azar, población no
+representativa; no se reporta calibración; una fuga involuntaria a mitad de
+competencia obligó a reasignar parte del conjunto de prueba
+\\
+\addlinespace[3pt]
+
+Hodge et al. \cite{hodge_winprediction_2021} & 2021 &
+Regresión logística, bosques aleatorios y potenciación del gradiente sobre
+ventanas deslizantes del estado &
+DotA 2: repeticiones mixtas y profesionales &
+Exactitud &
+Exactitudes en el rango aproximado de 0.70 a 0.80, evaluando en el punto
+medio de la partida &
+Los conjuntos de la literatura no son comparables entre sí; el flujo en vivo
+provee un subconjunto de las características presentes en las repeticiones
+\\
+\addlinespace[3pt]
+
+Guo et al. \cite{guo_temporalshift_2021} & 2021 &
+Revisión sistemática de estrategias de mitigación del cambio temporal &
+15 estudios de predicción clínica retenidos de 4\,457 referencias
+examinadas; regresión logística en 13 de 15 &
+Cambio en calibración y en discriminación &
+Deterioro de calibración en 11 de los 11 estudios que la midieron;
+deterioro de discriminación en solo 3 de 12 &
+Dominio clínico, citado por la asimetría que mide y por la terminología que
+estandariza; sin metaanálisis; cobertura incompleta de actas de congresos
+\\
+\addlinespace[3pt]
+
+Tian et al. \cite{tian_hero_2022} & 2022 &
+Red recurrente con características de alineación y de combate &
+Honor of Kings: 27\,256 partidas, 496\,342 marcos &
+Exactitud &
+81.8\,\% en el nodo de 7 min según la tabla detallada; el resumen del
+artículo reporta 84.7\,\% &
+Datos de un solo día y jugadores de nivel elevado; partición descrita a
+nivel de marcos sin agrupación explícita por partida; no evalúa calibración
+\\
+\addlinespace[3pt]
+
+Miernik y Kowalski \cite{miernik_evolving_2022} & 2022 &
+Evolución de funciones de evaluación lineales y basadas en árboles &
+Legends of Code and Magic &
+Tasa de victoria &
+60.2\,\% promedio global para la variante de mejor desempeño &
+No estima probabilidades de forma supervisada; posible especialización
+respecto del oponente empleado para evaluar
+\\
+\addlinespace[3pt]
+
+Xenopoulos et al. \cite{xenopoulos_winprob_2022} & 2022 &
+Máquinas de potenciación explicables, un modelo aditivo generalizado con
+atribuciones nativas &
+CSGO: tres poblaciones de distinto nivel de habilidad &
+Pérdida logarítmica y error de calibración esperado &
+Modelos bien calibrados dentro de su propio entorno. El entrenado sobre la
+población de menor nivel presenta mayor pérdida logarítmica y peor
+calibración al evaluarse fuera &
+Un solo juego; el modelo interpretable podría ser superado por otros
+métodos; no es posible identificar a los jugadores que incurren en trampa
+\\
+\addlinespace[3pt]
+
+Bia\l ecki et al. \cite{bialecki_sc2egset_2023} & 2023 &
+Regresión logística, máquina de vectores de soporte y potenciación del
+gradiente con hiperparámetros próximos a los predeterminados &
+SC2EGSet: repeticiones de torneos de StarCraft II; 11\,115 partidas
+reducidas a 22\,230 muestras promediadas; 17 características económicas &
+Exactitud &
+0.9071 con dos jugadores; 0.8924 y 0.8916 los otros dos modelos; 0.8488 con
+un solo jugador &
+Solo jugadores de nivel de torneo, sin análisis entre niveles de habilidad;
+los autores describen sus experimentos como ilustrativos; no se documenta
+agrupación por partida en los pliegues
+\\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+
+% ============================================================
+% PARTE 2 DE 2 — el contador retrocede para mantener un número.
+% ============================================================
+\begin{table*}[!tp]
+\addtocounter{table}{-1}
+\centering
+\caption{Resumen comparativo de trabajos relacionados (continuación).}
+\label{tab:comparativa-cont}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\textwidth}{@{}
+    P{1.9cm}
+    >{\centering\arraybackslash}p{0.6cm}
+    W{0.95}
+    W{1.00}
+    W{0.70}
+    W{0.95}
+    W{1.40}
+  @{}}
+\toprule
+\textbf{Referencia} & \textbf{Año} & \textbf{Técnica} &
+\textbf{Conjunto de datos / entorno} & \textbf{Métrica principal} &
+\textbf{Resultado reportado} & \textbf{Limitación identificada}\\
+\midrule
+
+Chitayat et al. \cite{chitayat_meta_2023} & 2023 &
+Representación de personajes por atributos de diseño, agrupada con K-Means,
+sobre redes neuronales &
+DotA 2: versiones 7.27 a 7.33, 61\,254 partidas &
+AUC &
+0.85 en versiones conocidas; 0.85 y 0.86 en dos versiones posteriores no
+empleadas para entrenar &
+Solo partidas profesionales; predice conteos finales a partir de duración y
+composición, no probabilidad desde un estado intermedio
+\\
+\addlinespace[3pt]
+
+Bertram et al. \cite{bertram_cardrepresentations_2024} & 2024 &
+Redes siamesas sobre representaciones generalizadas de carta construidas
+con atributos, metadatos e imágenes &
+Selección de cartas de Magic: The Gathering; un conjunto completo de cartas
+reservado para evaluación &
+Acierto \emph{top-1} &
+67.20\,\% sobre conjuntos vistos frente a 55.44\,\% sobre el conjunto no
+visto; la codificación por identidad queda indefinida sobre cartas nuevas &
+La tarea es predecir una elección humana y no un desenlace de partida, por
+lo que solo es análoga en cuanto a generalización de contenido; las
+elecciones humanas no son consistentes, lo que acota el acierto alcanzable
+\\
+\addlinespace[3pt]
+
+Saravanan y Guzdial \cite{saravanan_metadiscovery_2024} & 2024 &
+Agente de refuerzo y agente heurístico, con constructor de equipos &
+Pok\'emon Showdown, el videojuego competitivo; cuatro escenarios de
+prohibición de personajes &
+Solapamiento, distancia de edición y correlación de rangos &
+Solapamiento elevado entre el conjunto de estrategias descubierto y el real,
+pero correlación de rangos débil y no significativa &
+La correlación de rangos no significativa indica que el conjunto descubierto
+difiere del real pese al solapamiento; es el videojuego y no el juego de
+cartas
+\\
+\addlinespace[3pt]
+
+Kamal et al. \cite{kamal_moba_2025} & 2025 &
+Revisión sistemática con metodología PRISMA &
+35 estudios sobre deportes electrónicos de arena multijugador &
+Métricas heterogéneas &
+Sin resultado único; se reportan, entre otros, AUC de 0.97 y exactitud
+cercana al 93\,\% &
+Alta heterogeneidad entre tareas, conjuntos y protocolos; generalización
+limitada entre regiones, periodos y poblaciones
+\\
+\addlinespace[3pt]
+
+Karbalaie et al. \cite{karbalaie_participantaware_2026} & 2026 &
+Diez clasificadores bajo cuatro diseños de validación, incluida la
+estratificada y la agrupada por participante &
+623 ensayos de 72 participantes; 624 características reducidas a un
+conjunto fijo de 10 &
+Exactitud y brecha entrenamiento--prueba &
+0.91 bajo validación estratificada frente a 0.66 dejando un participante
+fuera; los modelos lineales difieren en 0.03 o menos entre ambos protocolos &
+Dominio de biomecánica, citado por su argumento estadístico y no como
+resultado del dominio de juegos; una única tarea binaria; calibración
+explícitamente fuera de alcance
+\\
+\addlinespace[3pt]
+
+Angliss et al. \cite{angliss_vgcbench_2026} & 2026 &
+Clonación de comportamiento y aprendizaje por refuerzo multiagente &
+Pok\'emon VGC, el videojuego competitivo; 72 composiciones reservadas fuera
+de distribución &
+Tasa de victoria y evaluación cruzada &
+0.669 del agente entrenado con 64 composiciones frente al entrenado con una,
+sobre las composiciones no vistas &
+El desempeño en configuraciones familiares disminuye al crecer la
+diversidad; no es una tarea de estimación de probabilidad
+\\
+
+\bottomrule
+\end{tabularx}
+\begin{minipage}{\textwidth}
+\vspace{3pt}
+\footnotesize
+\textit{Nota.} Las referencias de carácter metodológico incluidas en la
+revisión ---formalización de la fuga de datos, catálogos de escenarios de
+fuga y revisiones de calibración y de modelos tabulares--- no figuran en
+esta tabla, dado que no resuelven una tarea de predicción sobre un conjunto
+de datos comparable. Sus aportes se discuten en el texto.
+\end{minipage}
+\end{table*}

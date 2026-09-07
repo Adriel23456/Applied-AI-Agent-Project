@@ -1,0 +1,383 @@
+% ============================================================
+% sec/01introduccion.tex
+%
+% Contexto y relevancia, pregunta de investigación explícita,
+% hipótesis, objetivos con contribución esperada, y estructura.
+% ============================================================
+\section{Introducción}
+\label{sec:introduccion}
+
+\subsection{El juego y su estado observable}
+\label{subsec:juego}
+
+El Pok\'emon Trading Card Game es un juego de cartas coleccionables por
+turnos para dos jugadores. Cada uno construye antes de la partida un mazo de
+sesenta cartas, y durante el juego alterna turnos con su oponente hasta que
+se cumple una condición de victoria.
+
+Cuatro elementos bastan para situar el problema que este trabajo aborda.
+
+\begin{itemize}
+  \item \textbf{La partida} comienza con ambos jugadores repartiendo seis
+        cartas de premio boca abajo. Vence quien primero reclame las seis,
+        quien deje al oponente sin Pok\'emon en juego, o quien lo obligue a
+        robar de un mazo vacío.
+  \item \textbf{El turno} es la unidad de progreso. Dentro de un turno el
+        jugador activo roba una carta y ejecuta una secuencia de acciones:
+        colocar Pok\'emon en la banca, asignar energía, evolucionar, jugar
+        cartas de apoyo y finalmente atacar.
+  \item \textbf{El estado observable} es lo que un jugador ve en un instante
+        dado. Incluye su propia mano, ambos tableros con sus puntos de vida
+        y energías, los estados alterados activos y el número de premios y
+        de cartas que restan a cada lado. No incluye la mano del oponente,
+        el contenido de las cartas de premio ni el orden de ninguno de los
+        dos mazos.
+  \item \textbf{El desenlace} es binario y se conoce solo al terminar la
+        partida: el jugador venció o no venció.
+\end{itemize}
+
+La Figura~\ref{fig:estado} representa esa asimetría entre lo visible y lo
+oculto, junto con la relación entre los estados sucesivos de una partida y
+su desenlace único. Y la Figura~\ref{fig:gameplay}  muestra un screanshot del juego
+para móvil: Pokémon TCG Pocket, un juego que busca traer la experiencia de jugar
+en un tablero de la vida real con las cartas de Pokémon.
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  visible/.style={draw=tecsteel, fill=boxbg, rounded corners=2pt,
+                  minimum width=1.55cm, minimum height=5mm, inner sep=2pt},
+  oculto/.style={draw=labelgray, dashed, fill=white, rounded corners=2pt,
+                 minimum width=1.55cm, minimum height=5mm, inner sep=2pt,
+                 text=labelgray},
+  etiq/.style={font=\tiny\bfseries, text=tecnavy},
+  nota/.style={font=\tiny\itshape, text=labelgray}
+]
+
+% --- Bloque del oponente ---
+\node[etiq] at (0,2.55) {OPONENTE};
+\node[oculto]  at (-1.7,2.1) {mano oculta};
+\node[oculto]  at ( 0.0,2.1) {premios ocultos};
+\node[visible] at ( 1.7,2.1) {n.\ de cartas};
+\node[visible] at (-1.7,1.5) {activo, PV};
+\node[visible] at ( 0.0,1.5) {banca};
+\node[visible] at ( 1.7,1.5) {energías};
+
+% --- Separador ---
+\draw[draw=tecrule, thick] (-2.6,1.05) -- (2.6,1.05);
+\node[nota] at (0,0.85) {información compartida del tablero};
+
+% --- Bloque propio ---
+\node[visible] at (-1.7,0.45) {activo, PV};
+\node[visible] at ( 0.0,0.45) {banca};
+\node[visible] at ( 1.7,0.45) {energías};
+\node[visible] at (-1.7,-0.15) {mi mano};
+\node[oculto]  at ( 0.0,-0.15) {premios ocultos};
+\node[visible] at ( 1.7,-0.15) {n.\ de cartas};
+\node[etiq] at (0,-0.6) {JUGADOR DE REFERENCIA};
+
+% --- Leyenda ---
+\node[visible, minimum width=0.5cm] at (-2.1,-1.25) {};
+\node[nota, anchor=west] at (-1.8,-1.25) {observable};
+\node[oculto, minimum width=0.5cm] at (0.55,-1.25) {};
+\node[nota, anchor=west] at (0.85,-1.25) {no observable};
+
+\end{tikzpicture}
+\caption{Estado observable en una partida. El jugador de referencia ve ambos
+tableros completos y su propia mano, pero no la mano del oponente ni el
+contenido de las cartas de premio de ninguno de los dos. La estimación de la
+probabilidad de victoria debe construirse únicamente sobre los campos
+observables.}
+\label{fig:estado}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.3\textwidth]{img//PokemonTCG_PocketBattle.png}
+    \caption{Gameplay de Pokémon TCG Pocket \cite{SweetGameBuddy2025}}
+    \label{fig:gameplay}
+\end{figure}
+
+\subsection{Por qué estimar la probabilidad de victoria}
+\label{subsec:relevancia}
+
+Determinar quién lleva ventaja en un instante dado no es inmediato. La
+posición combina premios restantes, puntos de vida repartidos entre varios
+Pok\'emon, energías acumuladas, cartas en mano y estados alterados, y ningún
+recurso domina a los demás de forma evidente. Un observador no experto no
+puede resolverlo de un vistazo, y un jugador experimentado lo hace mediante
+un juicio que no está escrito en ninguna parte.
+
+Una función que convierta ese estado en un número tiene dos usos. Para un
+sistema que juega, sustituye una búsqueda intratable por una evaluación
+directa, y permite detener una simulación antes de tiempo sin renunciar a un
+juicio con sentido. Para quien analiza o retransmite partidas, ofrece el
+marcador que el juego no tiene: Hodge \textit{et al.} señalan que numerosos
+juegos competitivos carecen de un indicador legible de ventaja, y que una
+estadística única que resuma el estado los vuelve más accesibles para
+audiencias no expertas \cite{hodge_winprediction_2021}.
+
+Conviene fijar desde el comienzo qué tipo de cantidad es la que se busca.
+Brill \textit{et al.} señalan que la probabilidad de victoria no es una
+estadística contable ni una magnitud observable, sino que queda definida por
+un modelo estimado a partir de datos \cite{brill_winprob_2026}. El desenlace
+que se registra es binario; la probabilidad que se desea estimar nunca se
+observa de forma directa. De ahí que evaluar el modelo no consista solo en
+comprobar si acertó el ganador, sino además en comprobar si el número que
+produce significa lo que dice.
+
+\subsection{La dificultad metodológica del corpus}
+\label{subsec:dificultad}
+
+La pregunta se ha vuelto abordable porque existe un corpus público de
+repeticiones completas de partidas entre agentes automáticos que compiten
+entre sí, publicado durante 2026 y con un volumen del orden de cientos de
+miles de partidas \cite{ptcg_dataset_2026}. Este trabajo emplea una muestra
+temporal auditada de ese corpus, descrita en la
+Sección~\ref{sec:analisistecnico}.
+
+Su estructura, sin embargo, plantea un problema que no aparece en conjuntos
+de datos donde cada fila es independiente. Una partida completa produce del
+orden de un centenar de estados sucesivos, y dos estados consecutivos
+difieren en una sola acción atómica. Todos ellos comparten, además, la misma
+etiqueta: el desenlace se sortea una única vez por partida.
+
+La consecuencia es directa y la Figura~\ref{fig:particion} la representa. Si
+esos estados se reparten al azar entre entrenamiento y prueba, el modelo
+acaba evaluándose sobre situaciones casi idénticas a las que ya vio, y la
+cifra resultante mide memoria antes que capacidad de generalizar. Sobre la
+muestra auditada, una partición aleatoria por fila colocaría prácticamente
+todas las partidas a ambos lados de la división.
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  ep/.style={draw=tecsteel, fill=boxbg, rounded corners=1pt,
+             minimum width=3.2mm, minimum height=3.2mm, inner sep=0pt},
+  epb/.style={draw=tecnavy, fill=tecnavy!25, rounded corners=1pt,
+              minimum width=3.2mm, minimum height=3.2mm, inner sep=0pt},
+  cab/.style={font=\tiny\bfseries, text=tecnavy},
+  nota/.style={font=\tiny\itshape, text=labelgray, align=center}
+]
+
+% ---------- Panel izquierdo: partición aleatoria ----------
+\node[cab] at (-2.1,1.45) {Partición aleatoria por fila};
+\foreach \i in {0,...,7}{
+  \pgfmathsetmacro\x{-3.55+\i*0.42}
+  \ifodd\i \node[epb] at (\x,0.95) {}; \else \node[ep] at (\x,0.95) {}; \fi
+}
+\foreach \i in {0,...,7}{
+  \pgfmathsetmacro\x{-3.55+\i*0.42}
+  \ifodd\i \node[ep] at (\x,0.5) {}; \else \node[epb] at (\x,0.5) {}; \fi
+}
+\node[nota, text width=3.4cm] at (-2.1,-0.05)
+  {Los estados de una misma partida caen en ambos lados. La prueba
+   contiene situaciones casi idénticas a las de entrenamiento.};
+
+% ---------- Panel derecho: partición agrupada ----------
+\node[cab] at (2.1,1.45) {Partición agrupada por partida};
+\foreach \i in {0,...,7}{
+  \pgfmathsetmacro\x{0.65+\i*0.42}
+  \node[ep] at (\x,0.95) {};
+}
+\foreach \i in {0,...,7}{
+  \pgfmathsetmacro\x{0.65+\i*0.42}
+  \node[epb] at (\x,0.5) {};
+}
+\node[nota, text width=3.4cm] at (2.1,-0.05)
+  {Cada partida vive en un único subconjunto. La prueba contiene
+   partidas que el modelo nunca vio.};
+
+% ---------- Etiquetas de fila ----------
+\node[nota, anchor=east] at (-3.85,0.95) {partida A};
+\node[nota, anchor=east] at (-3.85,0.5)  {partida B};
+
+% ---------- Leyenda ----------
+\node[ep] at (-1.5,-1.15) {};
+\node[nota, anchor=west] at (-1.3,-1.15) {entrenamiento};
+\node[epb] at (0.9,-1.15) {};
+\node[nota, anchor=west] at (1.1,-1.15) {prueba};
+
+\end{tikzpicture}
+\caption{Efecto de la regla de partición. Cada cuadrado es un estado; cada
+fila, una partida. A la izquierda, la asignación aleatoria reparte estados
+de la misma partida entre ambos subconjuntos. A la derecha, la asignación
+agrupada mantiene cada partida completa en un solo lado.}
+\label{fig:particion}
+\end{figure}
+
+Este riesgo no es una conjetura de diseño. Brill \textit{et al.} demuestran
+que, cuando varias observaciones comparten el mismo sorteo del desenlace, el
+sesgo y la varianza de los estimadores aumentan y el tamaño de muestra
+efectivo se reduce por debajo del número de filas
+\cite{brill_winprob_2026}. Karbalaie \textit{et al.} lo miden sobre datos de
+medidas repetidas: un mismo modelo pasa de 0.91 de acierto bajo validación
+estratificada a 0.66 bajo validación que respeta la agrupación, una
+diferencia producida enteramente por la regla de partición
+\cite{karbalaie_participantaware_2026}. El costo de ignorar la estructura no
+es un sesgo marginal, sino la diferencia entre un resultado y un artefacto.
+
+Por esa razón, el control de la fuga de información se trata aquí como parte
+del problema de investigación y no como una precaución técnica que se
+menciona al final.
+
+\subsection{Pregunta de investigación}
+\label{subsec:pregunta}
+
+\begin{quote}
+\textbf{PI:} ¿Hasta qué punto puede estimarse la probabilidad de victoria en
+el Pok\'emon Trading Card Game a partir de las características observables
+del estado de la partida?
+\end{quote}
+
+La pregunta admite respuesta negativa. Quedaría refutada, o sustancialmente
+debilitada, si el modelo no superara a una heurística de dominio sobre
+partidas nuevas; si su capacidad predictiva no mejorara al avanzar la
+partida; o si esa capacidad se redujera al nivel del azar bajo cualquiera de
+los dos escenarios de generalización.
+
+Puede además responderse: el corpus está disponible y
+auditado, y definir el protocolo no requiere entrenar ningún modelo.
+
+\subsection{Hipótesis de trabajo}
+\label{subsec:hipotesis}
+
+\begin{quote}
+\textbf{H1.} El estado observable contiene señal predictiva sobre el
+desenlace desde etapas tempranas de la partida, y esa señal aumenta conforme
+la partida progresa.
+\end{quote}
+
+\begin{quote}
+\textbf{H2.} La señal temprana no se explica únicamente por el orden de
+turno ni por la identidad del mazo.
+\end{quote}
+
+\begin{quote}
+\textbf{H3.} Bajo cambio temporal de la población, la calidad de las
+probabilidades se degrada antes y en mayor medida que la capacidad de
+ordenar posiciones.
+\end{quote}
+
+\noindent\textbf{Criterios de evaluación.} H1 se debilita si, en la ventana
+temprana, el modelo no supera de forma clara al azar, o si su desempeño no
+crece al avanzar la partida una vez controlada su duración. H2 se refuta si
+un modelo restringido al número de turno y a la identidad del mazo iguala al
+modelo que emplea el estado completo; en ese caso, la capacidad predictiva
+provendría del emparejamiento y no de la situación de juego. H3 se refuta si
+las medidas de calidad probabilística no se degradan más rápido que las de
+ordenamiento bajo la partición cronológica.
+
+No se fija de antemano ningún umbral numérico de mejora. Sin resultado
+empírico previo sobre este corpus, cualquier cifra de ese tipo sería
+arbitraria.
+
+\noindent\textbf{Origen de H3.} La hipótesis se importa de un campo vecino y
+se pone a prueba aquí por primera vez en un juego de cartas. Guo \textit{et
+al.} revisaron quince estudios clínicos sobre cambio temporal y encontraron
+una asimetría marcada: los once que midieron calidad probabilística
+reportaron deterioro, frente a solo tres de doce que reportaron deterioro en
+la capacidad de ordenar \cite{guo_temporalshift_2021}. Xenopoulos \textit{et
+al.} observan el mismo patrón en un juego competitivo, donde un modelo
+evaluado fuera de su población de origen pierde poco en pérdida logarítmica
+y bastante más en error de calibración \cite{xenopoulos_winprob_2022}. Que
+esa asimetría se sostenga en el Pok\'emon TCG es una pregunta empírica
+abierta.
+
+\subsection{Objetivos}
+\label{subsec:objetivos}
+
+\noindent\textbf{Objetivo general.} Determinar hasta qué punto la
+probabilidad de victoria en el Pok\'emon Trading Card Game puede estimarse a
+partir de las características observables del estado de la partida, mediante
+modelos clásicos de aprendizaje automático evaluados bajo un protocolo que
+controle de forma explícita la fuga de información.
+
+\noindent\textbf{Objetivos específicos.} Los tres primeros descomponen la
+pregunta general; los tres restantes construyen las condiciones que hacen
+interpretable la respuesta.
+
+\begin{enumerate}
+  \item \textbf{Caracterizar la evolución de la estimación.} Medir la
+        capacidad predictiva y la calidad de las probabilidades por etapa de
+        la partida, acompañando cada medición del número de partidas que la
+        sustenta.
+  \item \textbf{Evaluar la generalización estructural.} Medir el desempeño
+        sobre partidas no vistas y, de forma separada, sobre mazos completos
+        reservados para la evaluación.
+  \item \textbf{Evaluar la estabilidad temporal.} Medir el desempeño cuando
+        el entrenamiento procede de periodos anteriores al de la prueba, y
+        contrastar si la calidad probabilística se degrada antes que la
+        capacidad de ordenar.
+  \item \textbf{Formalizar la tarea} como clasificación binaria
+        probabilística sobre datos tabulares, distinguiendo la unidad de
+        observación de la unidad estadísticamente independiente.
+  \item \textbf{Construir y auditar la representación tabular:} análisis
+        exploratorio, diccionario de datos, mecanismos de ausencia, valores
+        atípicos, balance de clases y cobertura de cartas en el conjunto de
+        entrenamiento.
+  \item \textbf{Comparar una escalera de modelos de referencia} bajo los tres
+        escenarios anteriores, con controles de fuga verificados de forma
+        automática y análisis de qué características del estado transportan
+        información.
+\end{enumerate}
+
+Los objetivos se descompone en tres dimensiones:
+
+\begin{enumerate}
+  \item \textbf{Evolución.} Cómo cambia la calidad de la estimación conforme
+        avanza la partida.
+  \item \textbf{Generalización estructural.} Si la estimación se sostiene
+        sobre partidas y mazos que el modelo no vio durante el
+        entrenamiento.
+  \item \textbf{Estabilidad temporal.} Si el desempeño se mantiene cuando la
+        población de agentes y de mazos cambia con el tiempo.
+\end{enumerate}
+
+\subsection{Contribución esperada}
+\label{subsec:contribucion}
+
+Se esperan tres contribuciones.
+
+La primera es la caracterización de la probabilidad de victoria desde el
+estado de juego en un juego de cartas que no ha sido estudiado de esta
+forma. En particular, el perfil de capacidad predictiva por etapa de la
+partida, que existe para otros juegos pero no para este dominio, cuya
+estructura de recursos, cartas de premio, asignación de energía, banca y
+líneas de evolución, difiere de la de los juegos donde la tarea se ha
+abordado.
+
+La segunda es un protocolo de evaluación cuyos controles de fuga están
+medidos sobre el propio corpus y no solo afirmados. La auditoría cuantifica
+cuántas partidas quedarían divididas entre subconjuntos bajo una partición
+por fila, de modo que la decisión de agrupar se justifica con una medición
+directa y no por analogía con otros campos.
+
+La tercera es la separación explícita entre la capacidad de ordenar
+posiciones y la calidad de las probabilidades. Grinsztajn \textit{et al.}
+identifican la evaluación de predicciones probabilísticas como una línea
+pendiente en la comparación de modelos tabulares
+\cite{grinsztajn_trees_2022}, y la literatura de predicción de desenlace en
+juegos la ha reportado de forma desigual.
+
+Un resultado negativo también constituiría una contribución. Si la capacidad
+predictiva colapsa bajo el protocolo temporal, eso aporta evidencia sobre la
+rapidez con que la evolución del conjunto de estrategias dominante invalida
+un evaluador de posiciones, que es la preocupación que Bertram \textit{et
+al.} plantean para repertorios de cartas en cambio permanente
+\cite{bertram_cardrepresentations_2024}.
+
+\subsection{Estructura del documento}
+\label{subsec:estructura}
+
+La Sección~\ref{sec:relacionados} revisa la literatura en tres ejes, el
+problema y su dominio, las técnicas del \textit{track} seleccionado y el
+conjunto de datos, y cierra identificando las brechas. La
+Sección~\ref{sec:baseline} declara el punto de referencia externo y discute
+su comparabilidad. La Sección~\ref{sec:metodologia} presenta la
+formalización, el protocolo experimental y el plan de modelos de referencia.
+La Sección~\ref{sec:analisistecnico} desarrolla el análisis técnico del
+\textit{track}, con énfasis en la prevención de fuga de información. La
+Sección~\ref{sec:etica} documenta las consideraciones éticas preliminares.

@@ -1,0 +1,176 @@
+% ============================================================
+% preamble.tex — configuración compartida, compatible con IEEEtran
+%
+% NO agregar: geometry, fancyhdr, setspace, tocloft, natbib,
+% caption, subcaption, cleveref. IEEEtran los maneja internamente.
+% ============================================================
+
+% ---------- Idioma ----------
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-noquoting,es-nodecimaldot]{babel}
+\usepackage{microtype}
+
+% ---------- Encabezados de IEEEtran en español ----------
+\renewcommand{\abstractname}{Resumen}
+\renewcommand{\IEEEkeywordsname}{Palabras clave}
+\renewcommand{\refname}{Referencias}
+\renewcommand{\figurename}{Fig.}
+\renewcommand{\tablename}{TABLA}
+
+% ---------- Numeración de página ----------
+% IEEEtran conference la desactiva por defecto porque en actas
+% reales la asigna el editor. Se activa por ser trabajo de curso.
+\pagestyle{plain}
+\AtBeginDocument{\thispagestyle{plain}}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{siunitx}
+\sisetup{per-mode=symbol}
+
+\usepackage{cite}
+
+\usepackage{xcolor}
+\definecolor{tecnavy}{RGB}{31,56,100}
+\definecolor{tecsteel}{RGB}{46,85,150}
+\definecolor{tecrule}{RGB}{155,184,216}
+\definecolor{boxbg}{RGB}{242,246,252}
+\definecolor{labelgray}{RGB}{120,120,120}
+\definecolor{notaverde}{RGB}{22,110,60}
+\definecolor{decisionambar}{RGB}{170,110,10}
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codekw}{RGB}{0,0,180}
+\definecolor{codecmt}{RGB}{0,120,60}
+\definecolor{codestr}{RGB}{170,55,55}
+
+\usepackage{graphicx}
+\graphicspath{{img/}{figures/}{./}}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit,
+                backgrounds,decorations.pathreplacing}
+
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{tabularx}
+\usepackage{threeparttable}
+\usepackage{enumitem}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\renewcommand{\arraystretch}{1.15}
+\setlist[itemize]{leftmargin=*,noitemsep,topsep=2pt}
+\setlist[enumerate]{leftmargin=*,noitemsep,topsep=2pt}
+
+\theoremstyle{definition}
+\newtheorem{definicion}{Definición}
+\newtheorem{ejemplo}{Ejemplo}
+\theoremstyle{plain}
+\newtheorem{proposicion}{Proposición}
+\theoremstyle{remark}
+\newtheorem*{observacion}{Observación}
+
+\usepackage{listings}
+\lstdefinestyle{code}{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecmt}\itshape,
+  stringstyle=\color{codestr},
+  backgroundcolor=\color{codebg},
+  numbers=left,
+  numberstyle=\tiny\color{labelgray},
+  numbersep=6pt,
+  frame=single,
+  rulecolor=\color{tecrule},
+  breaklines=true,
+  postbreak=\mbox{\textcolor{tecsteel}{$\hookrightarrow$}\space},
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b,
+  columns=flexible,
+  upquote=true
+}
+\lstset{style=code}
+
+\usepackage[hidelinks]{hyperref}
+
+% ---------- Entrada segura ----------
+\newcommand{\cajaarchivofaltante}[1]{%
+  \par\medskip\noindent
+  \fcolorbox{red!60!black}{red!5}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
+      \centering\ttfamily\scriptsize ARCHIVO FALTANTE: \detokenize{#1}}}%
+  \par\medskip}
+
+\newcommand{\cajaimagenfaltante}[1]{%
+  \begingroup\setlength{\fboxsep}{0pt}%
+  \fcolorbox{tecrule}{boxbg}{%
+    \parbox[c][2.4cm][c]{0.9\linewidth}{\centering\ttfamily\scriptsize
+      IMAGEN NO ENCONTRADA\\[3pt]\detokenize{#1}}}%
+  \endgroup}
+
+\newcommand{\safeinput}[1]{%
+  \IfFileExists{#1.tex}{\input{#1}}{%
+    \PackageWarning{tecpaper}{Falta el archivo de sección #1.tex}%
+    \cajaarchivofaltante{#1.tex}}}
+
+\newcommand{\safeimage}[2][width=\columnwidth]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \IfFileExists{img/#2}{\includegraphics[#1]{img/#2}}{%
+      \PackageWarning{tecpaper}{Falta la imagen #2}%
+      \cajaimagenfaltante{#2}}}}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+% ============================================================
+% MARCADORES DE REDACCIÓN
+%
+% Los tres se apagan antes de entregar redefiniéndolos como vacíos:
+%   \renewcommand{\pc}[1]{}
+%   \renewcommand{\razon}[1]{}
+%   \renewcommand{\decidir}[1]{}
+% Recompilar: todo lo que desaparezca del PDF nunca se escribió.
+% ============================================================
+
+% \pc  = POR COMPLETAR. Contenido que depende de los ejes A y C.
+\newcommand{\pc}[1]{%
+  \texorpdfstring{\textcolor{red}{\textbf{[POR COMPLETAR: #1]}}}%
+                 {[POR COMPLETAR: #1]}}
+
+% \razon = POR QUÉ esta parte debe decir lo que dice, con su fuente.
+\newcommand{\razon}[1]{%
+  \texorpdfstring{\textcolor{notaverde}{\small\textit{[RAZÓN: #1]}}}%
+                 {[RAZÓN: #1]}}
+
+% \decidir = requiere decisión de equipo o criterio humano.
+\newcommand{\decidir}[1]{%
+  \texorpdfstring{\textcolor{decisionambar}{\small\textbf{[DECIDIR: #1]}}}%
+                 {[DECIDIR: #1]}}
+
+% ---------- Columnas X con peso, para tabularx ----------
+% Permite repartir el ancho flexible en proporciones distintas.
+% Los pesos de todas las columnas W deben sumar el número de
+% columnas W de la tabla.
+\newcolumntype{W}[1]{>{\hsize=#1\hsize\raggedright\arraybackslash}X}
+
+% ---------- Marcador compacto para celdas de tabla ----------
+% \pc dentro de una celda produce una cadena larga que rompe el
+% ajuste de columnas. Este marcador ocupa tres caracteres.
+% Se apaga igual que los demás: \renewcommand{\pct}{}
+\newcommand{\pct}{\textcolor{red}{\textbf{[?]}}}
+
+% ============================================================
+% APAGADO DE MARCADORES
+% Descomentar las cuatro líneas antes de entregar y recompilar.
+% Todo lo que desaparezca del PDF nunca se escribió.
+% ============================================================
+
+\renewcommand{\pc}[1]{}
+\renewcommand{\razon}[1]{}
+\renewcommand{\decidir}[1]{}
+\renewcommand{\pct}{}

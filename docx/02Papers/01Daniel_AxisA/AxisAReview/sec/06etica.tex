@@ -1,0 +1,64 @@
+% ============================================================
+% VERSIÓN INDIVIDUAL — DANIEL DUARTE CORDERO
+% ============================================================
+\section{Consideraciones Éticas Preliminares}
+\label{sec:etica}
+
+\subsection{Sensibilidad de los datos}
+\label{subsec:sensibilidad}
+Los replays analizados describen partidas entre agentes artificiales y
+estados del juego; en la auditoría realizada no se identificaron datos
+personales sensibles de jugadores humanos. Sí existen nombres o IDs de
+agentes/equipos que se tratarán como metadata de auditoría y no como
+features. \textbf{\% TODO integración:} verificar y citar la licencia
+exacta con la que The Pokémon Company/Kaggle distribuye los replays y
+resumir explícitamente qué usos y redistribución permite. No se infiere
+la licencia a partir de la mera disponibilidad pública.
+
+\subsection{Riesgo de sesgo}
+\label{subsec:sesgo}
+La muestra no es aleatoria respecto del universo de Pokémon TCG. Los
+replays de la competencia se seleccionan por rating medio y se truncan
+a un volumen diario, por lo que representan principalmente agentes
+artificiales competitivos. La auditoría además muestra concentración de
+mazos y agentes, así como cambio fuerte entre días: el top-10 de mazos
+concentra 39.94\% de las instancias auditadas y las distribuciones de
+mazos/agentes cambian sustancialmente entre el primer y último día.
+Esto puede favorecer atajos asociados al metajuego dominante y degradar
+el desempeño cuando cambian composiciones o versiones.
+
+La literatura revisada refuerza que este riesgo no es meramente
+hipotético: VGC-Bench encuentra diferencias entre rendimiento en equipos
+vistos y generalización a equipos no vistos, mientras Chitayat et al.
+separan evaluación en parches conocidos y posteriores
+\cite{angliss_vgcbench_2026,chitayat_meta_2023}.
+
+\subsection{Límites de generalización declarados}
+\label{subsec:limitesgeneralizacion}
+Los resultados no deben extrapolarse a jugadores humanos, al Pokémon
+TCG físico, a todas las estrategias posibles, ni a versiones del motor,
+mazos o poblaciones que no hayan sido cubiertos por los protocolos de
+evaluación. Tampoco un buen resultado en el split agrupado implica
+robustez temporal: esa afirmación solo podrá hacerse si el modelo
+mantiene desempeño bajo el protocolo cronológico. De forma análoga, un
+buen AUC global no implica que la probabilidad esté calibrada ni que el
+modelo funcione igual en etapas tempranas y tardías.
+
+\subsection{Mitigación prevista antes de entrenar}
+\label{subsec:mitigacionetica}
+\begin{itemize}
+  \item Separar y reportar los protocolos agrupado, temporal y por
+  mazo/matchup, sin ocultar caídas de desempeño bajo cambio de
+  distribución.
+  \item Prohibir identidades de agente, ratings y metadata similares
+  como features; usar la identidad de mazo solo en una ablación
+  controlada y evaluarla con holdout por mazo.
+  \item Reportar explícitamente composición de la muestra, versiones,
+  concentración y límites de población para evitar que el modelo se
+  presente como generalizable a humanos o a todo Pokémon TCG.
+\end{itemize}
+
+\subsection{Diferido a la Etapa 3}
+\label{subsec:diferido}
+La ética del despliegue, los escenarios de uso indebido y los riesgos
+operativos del agente inteligente se abordan en la etapa final.

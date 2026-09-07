@@ -1,0 +1,197 @@
+% ============================================================
+% references.bib
+% Bibliografia canonica unica de la version individual de la
+% Etapa 1 --- Sebastian Hernandez Bonilla, Eje C.
+%
+% CONTIENE EXACTAMENTE las 8 entradas citadas por MainPaper.tex:
+% los 7 trabajos arbitrados revisados + el conjunto de datos.
+% No se incluyen referencias no citadas.
+%
+% ------------------------------------------------------------
+% AVISO IMPORTANTE PARA QUIEN EDITE ESTE FICHERO
+% BibTeX NO reconoce el simbolo de porcentaje como caracter de
+% comentario: ignora el texto entre entradas, pero en cuanto
+% encuentra el simbolo de arroba comienza a leer una entrada,
+% AUNQUE ESTE DENTRO DE UNA LINEA COMENTADA. Por eso ninguna
+% linea de comentario de este fichero contiene ese simbolo.
+% Escribir por ejemplo "vease la entrada misc del dataset" es
+% seguro; escribirlo con arroba provoca "Repeated entry".
+% ------------------------------------------------------------
+%
+% ESTADO DE VERIFICACION (2026-09-02)
+% Los siete trabajos academicos fueron leidos a texto completo
+% antes de ser citados, y todos los DOI se resolvieron contra
+% Crossref o el registro del editor. Se cita siempre la version
+% que realmente se leyo.
+%
+% Convencion de claves: autor_palabraclave_anio
+% ============================================================
+
+
+% ------------------------------------------------------------
+% EJE A / EJE C --- prediccion de victoria desde el estado de
+% juego en un juego de cartas coleccionables. Fuente del
+% baseline de literatura (seccion litbaseline).
+% Leido a texto completo: PDF de las actas FedCSIS, ACSIS
+% vol. 11, pp. 121-125.
+% ------------------------------------------------------------
+@inproceedings{janusz_hearthstone_2017,
+  author    = {Janusz, Andrzej and Tajmajer, Tomasz and
+               {\'S}wiechowski, Maciej},
+  title     = {Helping {AI} to Play {Hearthstone}: {AAIA}'17 Data Mining
+               Challenge},
+  booktitle = {Proceedings of the 2017 Federated Conference on Computer
+               Science and Information Systems ({FedCSIS})},
+  series    = {Annals of Computer Science and Information Systems},
+  volume    = {11},
+  pages     = {121--125},
+  year      = {2017},
+  publisher = {IEEE},
+  address   = {Prague, Czech Republic},
+  doi       = {10.15439/2017F573}
+}
+
+% ------------------------------------------------------------
+% EJE C --- conjunto de datos analogo de repeticiones de
+% deportes electronicos, y el ejemplo publicado mas cercano de
+% prediccion tabular de victoria a partir del estado agregado.
+% Leido a texto completo: acceso abierto.
+% ------------------------------------------------------------
+@article{bialecki_sc2egset_2023,
+  author  = {Bia{\l}ecki, Andrzej and Jakubowska, Natalia and
+             Dobrowolski, Pawe{\l} and Bia{\l}ecki, Piotr and
+             Krupi{\'n}ski, Leszek and Szczap, Andrzej and
+             Bia{\l}ecki, Robert and Gajewski, Jan},
+  title   = {{SC2EGSet}: {StarCraft II} Esport Replay and Game-State
+             Dataset},
+  journal = {Scientific Data},
+  volume  = {10},
+  number  = {1},
+  pages   = {600},
+  year    = {2023},
+  issn    = {2052-4463},
+  doi     = {10.1038/s41597-023-02510-7}
+}
+
+% ------------------------------------------------------------
+% EJE A / EJE C --- juego de cartas coleccionables cuyo
+% repertorio de cartas cambia con el tiempo; evaluacion sobre
+% conjuntos de cartas nunca vistos.
+% Leido a texto completo: arXiv 2407.05879, version de autor
+% del articulo de IEEE CoG 2024.
+% ------------------------------------------------------------
+@inproceedings{bertram_cardrepresentations_2024,
+  author    = {Bertram, Timo and F{\"u}rnkranz, Johannes and
+               M{\"u}ller, Martin},
+  title     = {Learning With Generalised Card Representations for
+               ``{Magic}: The Gathering''},
+  booktitle = {2024 {IEEE} Conference on Games ({CoG})},
+  pages     = {1--8},
+  year      = {2024},
+  publisher = {IEEE},
+  doi       = {10.1109/CoG60054.2024.10645602}
+}
+
+% ------------------------------------------------------------
+% EJE B --- marco formal de la fuga de datos.
+%
+% NOTA SOBRE LA VERSION. Esta es la version de conferencia
+% KDD '11 (tres autores), que es la que se obtuvo y leyo a
+% texto completo. Existe una version de revista ampliada en ACM
+% Transactions on Knowledge Discovery from Data 6(4), art. 15,
+% 2012, doi 10.1145/2382577.2382579, que anade a Stitelman como
+% cuarto autor. NO se cita aqui porque no se leyo; sustituirla
+% exige leerla antes a traves de la suscripcion institucional.
+% ------------------------------------------------------------
+@inproceedings{kaufman_leakage_2011,
+  author    = {Kaufman, Shachar and Rosset, Saharon and
+               Perlich, Claudia},
+  title     = {Leakage in Data Mining: Formulation, Detection, and
+               Avoidance},
+  booktitle = {Proceedings of the 17th {ACM} {SIGKDD} International
+               Conference on Knowledge Discovery and Data Mining
+               ({KDD} '11)},
+  pages     = {556--563},
+  year      = {2011},
+  publisher = {ACM},
+  address   = {San Diego, California, USA},
+  doi       = {10.1145/2020408.2020496}
+}
+
+% ------------------------------------------------------------
+% EJE B --- catalogo moderno de escenarios de fuga de datos.
+% Leido a texto completo: acceso abierto (CC BY 4.0).
+% ------------------------------------------------------------
+@article{sasse_leakage_2025,
+  author  = {Sasse, Leonard and Nicolaisen-Sobesky, Eliana and
+             Dukart, Juergen and Eickhoff, Simon B. and
+             G{\"o}tz, Michael and Hamdan, Sami and Komeyer, Vera and
+             Kulkarni, Abhijit and Lahnakoski, Juha M. and
+             Love, Bradley C. and Raimondo, Federico and
+             Patil, Kaustubh R.},
+  title   = {Overview of Leakage Scenarios in Supervised Machine
+             Learning},
+  journal = {Journal of Big Data},
+  volume  = {12},
+  number  = {1},
+  pages   = {135},
+  year    = {2025},
+  doi     = {10.1186/s40537-025-01193-8}
+}
+
+% ------------------------------------------------------------
+% EJE B / EJE C --- inflacion medida al ignorar la estructura
+% de agrupacion en datos de medidas repetidas.
+% Leido a texto completo: acceso abierto.
+% ------------------------------------------------------------
+@article{karbalaie_participantaware_2026,
+  author  = {Karbalaie, Abdolamir and Abtahi, Farhad and
+             H{\"a}ger, Charlotte K.},
+  title   = {Participant-Aware Model Validation for Repeated-Measures
+             Data: Comparative Cross-Validation Study},
+  journal = {JMIR AI},
+  volume  = {5},
+  pages   = {e87728},
+  year    = {2026},
+  doi     = {10.2196/87728}
+}
+
+% ------------------------------------------------------------
+% EJE C --- revision sistematica del cambio temporal del
+% conjunto de datos; fuente de la asimetria entre calibracion y
+% discriminacion. Leido a texto completo: HTML del editor.
+% ------------------------------------------------------------
+@article{guo_temporalshift_2021,
+  author  = {Guo, Lin Lawrence and Pfohl, Stephen R. and Fries, Jason and
+             Posada, Jose and Fleming, Scott Lanyon and
+             Aftandilian, Catherine and Shah, Nigam and Sung, Lillian},
+  title   = {Systematic Review of Approaches to Preserve Machine Learning
+             Performance in the Presence of Temporal Dataset Shift in
+             Clinical Medicine},
+  journal = {Applied Clinical Informatics},
+  volume  = {12},
+  number  = {4},
+  pages   = {808--815},
+  year    = {2021},
+  doi     = {10.1055/s-0041-1735184}
+}
+
+% ------------------------------------------------------------
+% CONJUNTO DE DATOS --- se cita como fuente de datos, nunca
+% como trabajo arbitrado. La ausencia de literatura arbitrada
+% que lo utilice se declara como Brecha 1 en la seccion gaps.
+% La regla de seleccion citada y la licencia CC0-1.0 proceden
+% de los metadatos del conjunto de datos recuperados con la API
+% de Kaggle y almacenados en el repositorio de auditoria como
+% reports/dataset-metadata.json.
+% ------------------------------------------------------------
+@misc{ptcg_dataset_2026,
+  author       = {{The Pok{\'e}mon Company}},
+  title        = {{PTCG AI} Battle Challenge Simulation Episodes},
+  year         = {2026},
+  howpublished = {Serie de conjuntos de datos diarios en Kaggle,
+                  competencia \texttt{pokemon-tcg-ai-battle}},
+  note         = {Repeticiones diarias de episodios, seleccionadas por
+                  puntuacion media de los agentes y truncadas a 20~GiB
+                  por dia; licencia CC0-1.0}
+}

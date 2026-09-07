@@ -1,0 +1,577 @@
+% ============================================================
+% sec/02trabajos_relacionados.tex
+%
+% SECCIÓN CENTRAL DE LA ETAPA 1.
+% Tres ejes + tabla comparativa obligatoria + brechas en
+% apartado propio de cierre.
+% ============================================================
+\section{Trabajos Relacionados}
+\label{sec:relacionados}
+
+La revisión se organiza en tres ejes. El primero sitúa el problema en la
+literatura de predicción de desenlace en juegos competitivos. El segundo
+justifica con evidencia la familia de técnicas seleccionada. El tercero
+examina el conjunto de datos y sus análogos.
+
+Los candidatos se recuperaron de bases bibliográficas indexadas y de los
+registros de los editores correspondientes, mediante términos que combinaron
+predicción de victoria, estado de juego, juegos de cartas coleccionables y
+repeticiones de deportes electrónicos para el dominio, y fuga de datos,
+validación agrupada, medidas repetidas y cambio temporal para la
+metodología. La inclusión exigió publicación arbitrada, identificador
+resoluble y contenido que respaldara una decisión efectivamente tomada en
+este trabajo. La mayoría de los trabajos retenidos se publicó en 2021 o
+después; los más antiguos se conservan por ser referencias fundacionales del
+campo o el único antecedente publicado de la tarea.
+
+% 
+% EJE A
+% 
+\subsection{Eje A: el problema y su dominio}
+\label{subsec:ejea}
+
+\subsubsection{Una formulación compartida, con resultados no transferibles}
+
+La literatura converge en una misma formulación: predecir el desenlace es
+una clasificación binaria supervisada sobre una instantánea de la posición,
+con la etiqueta tomada del resultado registrado de la partida completa.
+Bia\l ecki \textit{et al.} la aplican a un juego de estrategia en tiempo
+real derivando indicadores económicos de las repeticiones
+\cite{bialecki_sc2egset_2023}, y el certamen sobre \emph{Hearthstone} la
+enuncia en los mismos términos para un juego de cartas
+\cite{janusz_hearthstone_2017}. La revisión sistemática de Kamal \textit{et
+al.} confirma que el aprendizaje supervisado domina el campo, con uso
+frecuente de eventos ocurridos durante la partida \cite{kamal_moba_2025}.
+Ninguna de estas formulaciones requiere un simulador en el momento de la
+predicción, y esa es la formulación que se adopta aquí.
+
+Donde la convergencia se rompe es en los resultados. Los puntos de operación
+reportados difieren más entre trabajos que entre métodos dentro de un mismo
+trabajo, y no están medidos sobre la misma escala: unos reportan área bajo
+la curva sobre estados individuales, otros exactitud sobre características
+promediadas a lo largo de la partida completa. La consecuencia para este
+trabajo es que ninguna cifra publicada puede heredarse como expectativa, y
+que el punto de referencia externo debe declararse con sus límites de
+comparabilidad, cosa que se hace en la Sección~\ref{sec:baseline}.
+
+\subsubsection{La capacidad predictiva depende de la etapa, y nadie reporta
+su incertidumbre}
+
+Un segundo hallazgo aparece en varios trabajos y no lo desarrolla ninguno:
+la capacidad predictiva no es un escalar. El certamen sobre
+\emph{Hearthstone} grafica el área bajo la curva sobre turnos consecutivos y
+muestra que crece a lo largo de la partida
+\cite{janusz_hearthstone_2017}. Bia\l ecki \textit{et al.} observan que su
+acierto alcanza una asíntota pasado cierto punto, e interpretan que los
+indicadores económicos dejan de aportar información adicional a partir de
+ahí \cite{bialecki_sc2egset_2023}. Tian \textit{et al.} encuentran algo más
+fino: no solo cambia cuánto se puede predecir, sino qué variables lo
+permiten, pues la alineación domina al inicio y las bajas y las torres se
+vuelven más informativas después \cite{tian_hero_2022}. Su artículo reporta
+81.8\,\% de exactitud en el nodo de siete minutos según la tabla detallada,
+mientras el resumen menciona 84.7\,\%; la discrepancia se consigna aquí
+porque tomar solo la cifra mayor constituiría una lectura selectiva.
+
+Los tres trabajos coinciden, por tanto, en que una única métrica agregada
+promedia un régimen en el que el estado dice poco con otro en el que lo dice
+casi todo. Y los tres comparten la misma limitación: ninguno reporta la
+incertidumbre de esas curvas ni examina si su forma cambia al cambiar la
+población. Esta doble constatación motiva dos decisiones de este trabajo.
+Todas las métricas se reportan por etapa de la partida, y cada punto de la
+curva se acompaña del número de partidas que lo sustenta, de modo que una
+caída en la ventana temprana pueda distinguirse de una simple escasez de
+observaciones en esa región.
+
+\subsubsection{La ventaja no siempre está donde parece}
+
+Hodge \textit{et al.} organizan las características de la literatura según
+el momento en que están disponibles, antes, durante y después de la
+partida, y recogen que las disponibles durante el juego concentran la
+información más útil \cite{hodge_winprediction_2021}. Su advertencia sobre
+comparabilidad, según la cual la variación en tamaño, composición y versión
+del juego obliga a tratar con cautela las exactitudes reportadas entre
+trabajos, es el precedente de dominio de la declaración que exige la
+Sección~\ref{sec:baseline}.
+
+Miernik y Kowalski aportan un contraste útil desde otro juego de cartas: sus
+funciones de evaluación asignan un valor escalar al estado, pero se optimizan
+de forma indirecta a través del desempeño de un agente y no a partir de
+pares estado--desenlace \cite{miernik_evolving_2022}. Su salida no es, en
+consecuencia, una probabilidad interpretable. Esa distinción delimita el
+objeto de este trabajo: no se busca una heurística que ordene jugadas, sino
+una probabilidad que pueda leerse como tal.
+
+Xenopoulos \textit{et al.} son el trabajo más cercano en espíritu. Estiman
+probabilidad de victoria por ronda, organizan el estado en información
+global más información agregada por bando, estructura análoga a la que
+aquí se adopta, y son de los pocos que reportan calidad de calibración
+junto a la capacidad de ordenar \cite{xenopoulos_winprob_2022}. Su hallazgo
+de que un modelo entrenado en una población transfiere peor en calibración
+que en discriminación es el antecedente directo de la hipótesis H3.
+
+\subsubsection{Contenido cambiante: la diferencia entre memorizar e
+interpretar}
+
+Un cuarto grupo de trabajos comparte una preocupación que este corpus hace
+inevitable: el contenido de estos juegos no se queda quieto, y un modelo
+puede aprender identidades en lugar de propiedades.
+
+Bertram \textit{et al.} lo demuestran con la separación más limpia
+disponible. Al reservar un conjunto completo de cartas para evaluación,
+encuentran que una representación que identifica cada carta por su nombre
+funciona bien sobre cartas conocidas pero no puede producir predicción
+alguna sobre cartas nuevas, mientras que una representación construida a
+partir de atributos conserva una capacidad apreciable fuera de distribución
+\cite{bertram_cardrepresentations_2024}. Chitayat \textit{et al.} obtienen
+el resultado paralelo en otro juego: una representación basada en parámetros
+de diseño sostiene su desempeño a través de versiones posteriores del juego,
+donde una basada en identificadores sería frágil
+\cite{chitayat_meta_2023}. Angliss \textit{et al.} lo abordan desde la
+diversidad del entrenamiento, y encuentran un intercambio: entrenar con más
+composiciones mejora la transferencia a composiciones no vistas aunque
+empeore el desempeño en las familiares \cite{angliss_vgcbench_2026}.
+
+Saravanan y Guzdial explican por qué ese contenido cambia. Su trabajo,
+situado en el videojuego competitivo de la franquicia Pok\'emon y no en el
+juego de cartas, define el conjunto de estrategias dominante como el
+conocimiento que excede las reglas y se manifiesta en las estrategias
+predominantes de la base de jugadores, y documenta que cambia de forma
+continua \cite{saravanan_metadiscovery_2024}.
+
+Estos cuatro trabajos convergen en una advertencia y difieren en el eje que
+manipulan: cartas nuevas, versiones nuevas, composiciones nuevas y evolución
+de las estrategias. La consecuencia para este trabajo es doble. Primero, la
+evaluación no puede limitarse a partidas nuevas, y por eso se añaden un
+escenario de mazos reservados y otro de periodos posteriores. Segundo, la
+identidad del mazo se trata como una variable de riesgo antes que como una
+característica útil, y su aporte se mide en una prueba aislada en lugar de
+incorporarse al modelo principal.
+
+\subsubsection{Síntesis del eje}
+
+\noindent\textbf{Lo que puede darse por establecido.} La predicción de
+desenlace desde un estado intermedio es un problema supervisado bien
+planteado y tratable; las características tabulares derivadas del estado
+transportan señal sustancial; y esa señal varía sistemáticamente a lo largo
+de la partida. Existen además protocolos explícitos para evaluar robustez
+ante contenido y versiones no vistos.
+
+\noindent\textbf{Lo que permanece abierto.} Si las probabilidades estimadas
+están calibradas y no meramente bien ordenadas; cómo se comporta el perfil
+por etapa bajo un cambio declarado de población; y si algo de esto se
+sostiene en el Pok\'emon TCG, cuya estructura de recursos difiere de la de
+todos los juegos donde la tarea se ha estudiado. Tampoco resulta válido
+suponer que los niveles alcanzados en otros juegos se transfieren, dado que
+difieren las reglas, las unidades de observación, los protocolos y la
+población.
+
+% EJE B
+\subsection{Eje B: las técnicas del \textit{track} seleccionado}
+\label{subsec:ejeb}
+
+El \textit{track} seleccionado es el aprendizaje automático clásico sobre
+datos tabulares. Este apartado establece qué dice la evidencia sobre esos
+métodos, bajo qué supuestos operan y por qué resultan adecuados para este
+problema en concreto.
+
+\subsubsection{La evidencia general y la del dominio apuntan en la misma
+dirección}
+
+Dos revisiones amplias coinciden en el punto de partida. Borisov \textit{et
+al.} comparan enfoques de aprendizaje profundo para datos tabulares
+heterogéneos frente a métodos clásicos bajo un protocolo uniforme, y
+concluyen que la conveniencia de emplear las técnicas profundas actuales
+sobre este tipo de dato admite en general una respuesta negativa
+\cite{borisov_tabular_2024}. Grinsztajn \textit{et al.} amplían la evidencia
+a cuarenta y cinco conjuntos contabilizando el costo de la búsqueda de
+hiperparámetros, y reportan que los modelos basados en árboles resultan
+superiores para todo presupuesto considerado \cite{grinsztajn_trees_2022}.
+
+Lo relevante es que la evidencia procedente del propio dominio de juegos
+llega a la misma conclusión por una vía independiente. En SC2EGSet, tres
+clasificadores convencionales con hiperparámetros próximos a los
+predeterminados quedan a menos de 0.016 de acierto unos de otros
+\cite{bialecki_sc2egset_2023}. En el certamen sobre \emph{Hearthstone}, la
+solución ganadora superó a la referencia tabular de los organizadores por
+menos de dos puntos porcentuales de área bajo la curva, y los organizadores
+lo hacen notar \cite{janusz_hearthstone_2017}. La lectura conjunta es que la
+mayor parte de la señal extraíble de una representación tabular del estado
+resulta alcanzable sin arquitecturas profundas, y que el margen restante es
+lo bastante pequeño como para que la interpretabilidad y el costo dominen la
+elección.
+
+Karbalaie \textit{et al.} añaden un argumento que invierte una expectativa.
+Al comparar diez clasificadores bajo distintos diseños de validación,
+encuentran que los modelos lineales son los que menos varían entre el
+protocolo contaminado y el correcto, 0.03 de acierto o menos, mientras
+que los conjuntos de árboles muestran brechas superiores a 0.34
+\cite{karbalaie_participantaware_2026}. Los modelos de alta capacidad no
+son, por tanto, solo más difíciles de interpretar: son los que un protocolo
+defectuoso más favorece. Ese hallazgo sostiene mantener un modelo lineal
+regularizado en la comparación como referencia honesta, y no por formalidad.
+
+\subsubsection{Los supuestos, y cuál de ellos viola este corpus}
+
+Grinsztajn \textit{et al.} identifican tres propiedades de los datos
+tabulares que explican la ventaja de los árboles
+\cite{grinsztajn_trees_2022}. Las tres se cumplen en este problema, y
+conviene argumentarlo caso por caso en lugar de darlo por supuesto.
+
+\begin{itemize}
+  \item \textbf{Las funciones objetivo no son suaves.} Los árboles aprenden
+        funciones constantes por tramos y no arrastran el sesgo hacia
+        soluciones suaves que presentan las redes neuronales. El estado de
+        una partida de Pok\'emon TCG está gobernado por umbrales duros:
+        reclamar el último premio termina la partida, quedarse sin cartas en
+        el mazo produce una derrota inmediata, y un noqueo altera el
+        panorama en un solo paso. La relación entre el estado y el desenlace
+        contiene discontinuidades y no pendientes.
+  \item \textbf{Abundan las características poco informativas.} Los modelos
+        de tipo perceptrón multicapa resultan menos robustos ante ellas. El
+        diccionario propuesto incluye indicadores de estados alterados y de
+        recursos secundarios que previsiblemente aportarán mucho menos que
+        la diferencia de premios o de puntos de vida.
+  \item \textbf{Las características poseen significado individual.} Los
+        procedimientos que mezclan columnas no pueden aprovechar esa
+        propiedad. Aquí cada variable corresponde a una cantidad que existe
+        en el juego, mientras que una combinación lineal de premios y
+        energías no designa nada.
+\end{itemize}
+
+El supuesto que estos métodos comparten es que las observaciones son
+independientes, y es exactamente el que este corpus incumple. Karbalaie
+\textit{et al.} cuantifican la consecuencia y explican el mecanismo: en
+datos de medidas repetidas, el tamaño muestral efectivo se aproxima al
+número de sujetos y no al de mediciones
+\cite{karbalaie_participantaware_2026}. Sustituyendo sujeto por partida y
+medición por estado se obtiene la restricción que gobierna todo el diseño
+experimental de este trabajo. Se trata de un estudio de biomecánica, citado
+por su argumento estadístico sobre observaciones dependientes y no como
+resultado del dominio de juegos.
+
+\subsubsection{Dos límites del alcance de esta evidencia}
+
+Ambos deben declararse, porque son las objeciones más directas que puede
+recibir la elección del \textit{track}.
+
+El primero procede de Borisov \textit{et al.}, quienes reportan que en el
+mayor de sus conjuntos, con características predominantemente continuas, una
+arquitectura basada en mecanismos de atención supera a los métodos clásicos
+\cite{borisov_tabular_2024}. La observación es pertinente dado el volumen de
+filas disponible aquí. La condición relevante, sin embargo, no es el número
+de filas sino el de unidades independientes, que en este corpus es
+aproximadamente dos órdenes de magnitud menor; y las variables del estado
+son heterogéneas antes que continuas.
+
+El segundo procede de Grinsztajn \textit{et al.}, quienes excluyen de su
+comparación los conjuntos deterministas procedentes de juegos, además de los
+que presentan datos faltantes, variables categóricas de alta cardinalidad u
+observaciones dependientes \cite{grinsztajn_trees_2022}. El problema
+abordado aquí no es determinista: el desenlace no se deduce del estado
+intermedio, sino que depende del orden restante del mazo, de la información
+oculta del oponente y de las decisiones posteriores de ambos jugadores. Esa
+es precisamente la condición que obliga a estimar una probabilidad en lugar
+de deducir una etiqueta. Las otras tres exclusiones sí describen propiedades
+de este corpus, y por eso el diseño las aborda de forma explícita en la
+Sección~\ref{sec:analisistecnico}.
+
+\subsubsection{Dificultad intrínseca de la tarea}
+
+Brill \textit{et al.} examinan qué tan difícil resulta estimar probabilidad
+de victoria mediante un estudio de simulación en el cual la probabilidad
+verdadera es calculable de forma exacta \cite{brill_winprob_2026}. Reportan
+tres resultados que este trabajo adopta como restricciones de diseño. La
+dependencia entre observaciones incrementa el sesgo y la varianza y reduce
+el tamaño de muestra efectivo. Resulta preferible conservar todas las
+observaciones de una unidad antes que retener una sola, porque el conjunto
+completo informa sobre la estructura del espacio de características. Y los
+intervalos de confianza construidos por remuestreo presentan cobertura
+inferior a la nominal, incluso cuando el remuestreo respeta la agrupación.
+
+Los autores declaran de forma explícita que sus hallazgos aplican a
+cualquier conjunto en el cual la variable de resultado sea el desenlace de
+una unidad y las observaciones sean las que conducen a él. El corpus
+empleado aquí satisface esa descripción, de modo que la transferencia del
+argumento no requiere justificación adicional.
+
+\subsubsection{Evaluar la calidad de las probabilidades}
+
+La salida de este trabajo es una probabilidad, y evaluarla exige más de una
+métrica. Silva Filho \textit{et al.} exponen que las reglas de puntuación
+propias se descomponen en dos componentes: la calibración, que mide si los
+porcentajes predichos corresponden a las frecuencias observadas, y el
+refinamiento, que mide si el modelo separa correctamente los casos
+\cite{silvafilho_calibration_2023}. Una métrica basada solo en el
+ordenamiento informa del segundo componente y no dice nada del primero. Esa
+descomposición es la que fundamenta el conjunto de métricas adoptado en la
+Sección~\ref{sec:metodologia}.
+
+Niculescu-Mizil y Caruana convierten esa preocupación general en una
+predicción concreta sobre los modelos que este trabajo empleará: los métodos
+de máximo margen, entre ellos los conjuntos de árboles con potenciación,
+desplazan la masa de probabilidad alejándola de los extremos y producen una
+distorsión característica, mientras que la regresión logística resulta bien
+calibrada sin corrección posterior y puede deteriorarse si se la recalibra
+\cite{niculescumizil_probabilities_2005}. De ahí que el procedimiento
+propuesto mida la calibración de cada modelo antes de decidir si corregirla,
+en lugar de aplicar la corrección de forma uniforme.
+
+Dos trabajos complementan el instrumental. Ojeda \textit{et al.} comparan de
+forma sistemática los métodos de recalibración disponibles, atendiendo entre
+otros aspectos a su capacidad de transferir a poblaciones externas
+\cite{ojeda_calibrating_2023}. Dimitriadis \textit{et al.} abordan la
+inestabilidad de los diagramas de fiabilidad construidos por discretización
+y proponen un procedimiento reproducible con una medida numérica asociada
+\cite{dimitriadis_reliability_2021}.
+
+\subsubsection{Requisitos de calidad de datos propios del \textit{track}}
+
+Dos referencias sostienen decisiones transversales. Emmanuel \textit{et al.}
+muestran que la eficacia relativa de los métodos de imputación se invierte
+según el conjunto evaluado \cite{emmanuel_missing_2021}: el resultado
+relevante no es que una técnica sea superior, sino que la estrategia depende
+del mecanismo de ausencia, de modo que una frecuencia elevada de valores
+ausentes no justifica por sí sola imputarlos.
+
+Van den Goorbergh \textit{et al.} estudian correcciones del desbalance de
+clases sobre modelos de regresión logística y encuentran que no mejoran de
+forma sistemática la capacidad de ordenar, y sí producen una sobreestimación
+pronunciada de la probabilidad de la clase minoritaria
+\cite{vandenGoorbergh_imbalance_2022}. Su alcance debe respetarse: el
+trabajo no evalúa la ponderación de clases ni otras familias de modelos, de
+modo que no puede invocarse para preferir esa técnica.
+
+\subsubsection{Justificación técnica del \textit{track}}
+
+El Track A se elige por la convergencia de esa evidencia y no por descarte.
+El corpus se reduce de forma natural a una tabla de ancho fijo con campos
+numéricos, binarios y categóricos, que es el régimen donde los estudios del
+dominio muestran paridad casi total entre modelos clásicos y profundos, y
+donde la evidencia tabular general favorece a los conjuntos de árboles.
+
+Dos consideraciones adicionales inclinan la decisión. La pregunta de
+investigación es cuáles características del estado transportan información
+sobre la victoria, lo que exige modelos cuyas atribuciones puedan
+inspeccionarse. Y el riesgo dominante es de protocolo antes que de
+capacidad: la contaminación medida de una partición por fila hace que sea el
+diseño de la partición, y no la arquitectura, la variable que determina si
+un resultado significa algo.
+
+Las dos alternativas naturales se descartan por razones distintas. Un modelo
+secuencial profundo sobre la trayectoria completa respondería una pregunta
+más amplia, cuánta información contiene una secuencia, heredando todos
+los riesgos de fuga y ninguna ventaja de interpretabilidad. El aprendizaje
+por refuerzo, lectura natural de un corpus de episodios, se descarta porque
+el objeto de estudio es la función de valor de forma aislada, aprendida a
+partir de desenlaces ya registrados, y no una política de juego.
+
+% EJE C
+% 
+\subsection{Eje C: el conjunto de datos y sus análogos}
+\label{subsec:ejec}
+
+\subsubsection{Ausencia de literatura previa}
+
+No se localizó ninguna publicación arbitrada que utilice este corpus. Fue
+publicado en 2026 y está ligado a una competencia todavía en curso, de modo
+que carece de descripción publicada, de diccionario de datos documentado y
+de resultado de referencia \cite{ptcg_dataset_2026}. Conforme a lo previsto
+para este caso, el eje se cubre con conjuntos análogos del mismo dominio, y
+la sustitución se argumenta a continuación en lugar de darse por supuesta.
+
+\subsubsection{Tres análogos, cada uno comparable en un aspecto distinto}
+
+Ninguno de los tres es equivalente, y conviene precisar en qué lo es cada
+uno.
+
+\textbf{SC2EGSet} es el análogo estructural. Comparte la forma completa del
+procedimiento, repetición cruda, estado analizado, características
+tabulares, etiqueta de desenlace, y el hecho de que los datos fueron
+producidos por competencia y no por experimento
+\cite{bialecki_sc2egset_2023}. Difiere en género, pues se trata de un juego
+de estrategia en tiempo real y no de un juego de cartas por turnos con
+recursos discretos, y en unidad de observación, dado que sus modelos
+consumen resúmenes de la partida completa y no estados individuales.
+
+\textbf{El conjunto del certamen sobre Hearthstone} es el análogo de tarea.
+Es un juego de cartas coleccionables con mazos, mano, tablero e información
+oculta, y su objetivo es exactamente predecir el ganador desde un estado
+intermedio \cite{janusz_hearthstone_2017}. Difiere en la calidad de los
+agentes que generaron los estados y en que la representación tabular fue
+provista por los organizadores en lugar de construirse desde la repetición.
+
+\textbf{El corpus de selección de cartas de Magic: The Gathering} es análogo
+solo en un sentido estrecho, pero el que importa para una decisión concreta:
+es un juego de cartas cuyo contenido cambia con el tiempo y cuya evaluación
+reserva contenido no visto \cite{bertram_cardrepresentations_2024}. Su tarea
+es predecir una elección humana de carta y no un desenlace de partida, de
+modo que sus cifras no deben leerse como resultados de predicción de
+victoria.
+
+\subsubsection{Los problemas de los análogos anticipan los propios}
+
+Lo más útil de estos trabajos es lo que sus autores declaran sobre sus
+propios datos, porque cada limitación tiene una contraparte medida en este
+corpus.
+
+Bia\l ecki \textit{et al.} declaran cuatro: su conjunto contiene únicamente
+repeticiones de nivel de torneo y por tanto no admite análisis entre niveles
+de habilidad; los cambios del juego a lo largo del tiempo hacen que algunos
+campos tomen valor cero, de modo que la representación cambió; la
+completitud dependió de qué organizadores decidieron publicar; y no
+filtraron repeticiones terminadas de forma prematura, para preservar las
+distribuciones originales \cite{bialecki_sc2egset_2023}. Las cuatro tienen
+contraparte aquí: la selección de episodios privilegia a los agentes mejor
+puntuados, varias versiones del motor coexisten en la muestra auditada, y
+los episodios abandonados están presentes y son identificables.
+
+El certamen sobre \emph{Hearthstone} declara dos problemas propios, y el
+segundo merece énfasis. Sus estados provenían de partidas entre agentes que
+elegían acciones al azar, población específica y no representativa; y se
+detectó una fuga de datos involuntaria durante la competencia, que obligó a
+reasignar una porción sustancial del conjunto de prueba
+\cite{janusz_hearthstone_2017}. Un incidente de fuga dentro de una
+competencia organizada profesionalmente, sobre exactamente esta tarea, es la
+evidencia más fuerte disponible de que el riesgo no es hipotético.
+
+\subsubsection{Qué se degrada primero bajo cambio de población}
+
+Los análogos ofrecen además el resultado de generalización más útil del que
+se dispone. El certamen sobre \emph{Hearthstone} entrenó sobre estados de
+juego aleatorio y evaluó sobre estados generados por agentes fuertes,
+observando que el área bajo la curva cae de aproximadamente 0.79 a 0.75
+\cite{janusz_hearthstone_2017}. Un cambio en la calidad de los agentes
+cuesta algo, pero bastante menos de lo que podría temerse.
+
+Lo que ese experimento no mide es la calidad de las probabilidades, y la
+evidencia sistemática indica que es la magnitud en mayor riesgo. Guo
+\textit{et al.} examinaron 4\,457 referencias y retuvieron quince estudios
+que cuantificaban el cambio temporal e implementaban alguna mitigación
+\cite{guo_temporalshift_2021}. Su hallazgo central es una asimetría: los
+once estudios que evaluaron calibración reportaron deterioro, frente a solo
+tres de los doce que evaluaron capacidad de ordenar. Y su síntesis sobre las
+mitigaciones apunta en la misma dirección: todas preservaron la calibración,
+pero ninguna preservó de forma uniforme la discriminación.
+
+Ese trabajo aporta además la terminología que este documento necesita para
+nombrar lo que ocurre entre los primeros y los últimos días del corpus.
+Distinguen dos formas de cambio, que pueden coexistir:
+
+\begin{itemize}
+  \item \textbf{Cambio de covariables.} Cambia la distribución de las
+        características de entrada, pero la relación entre esas
+        características y el desenlace se mantiene. En este corpus
+        correspondería a que los mazos empleados cambien mientras la ventaja
+        que otorga una diferencia de premios siga siendo la misma.
+  \item \textbf{Cambio de concepto.} La distribución de las características
+        se mantiene, pero cambia la relación entre ellas y el desenlace.
+        Correspondería a que una misma configuración de recursos deje de
+        significar lo mismo, por ejemplo tras una modificación del motor del
+        juego.
+\end{itemize}
+
+La distinción importa porque las dos formas exigen respuestas distintas, y
+porque el protocolo temporal propuesto en la Sección~\ref{sec:metodologia}
+puede detectar su efecto conjunto pero no separarlas. Se trata de un trabajo
+de predicción clínica, citado por la asimetría que mide y por la
+terminología que estandariza, no como hallazgo del dominio de juegos.
+
+% TABLA COMPARATIVA
+\subsection{Análisis comparativo}
+\label{subsec:comparativo}
+
+\safeinput{tab/tabla_comparativa}
+
+La Tabla~\ref{tab:comparativa} permite tres lecturas transversales.
+
+\noindent\textbf{Las métricas no son conmensurables.} Los trabajos sobre
+estados de juego reportan escalares distintos, y la mayoría no reporta
+ninguna medida de calidad probabilística. Xenopoulos \textit{et al.}
+constituyen la excepción \cite{xenopoulos_winprob_2022}. En consecuencia,
+afirmar que uno de estos sistemas está mejor calibrado que otro carecería de
+respaldo, sencillamente porque casi ninguno lo midió. Este trabajo reporta
+ambas dimensiones por separado justamente para no heredar esa ambigüedad.
+
+\noindent\textbf{Cada trabajo mide la generalización contra algo distinto, y
+todos encuentran degradación apreciable.} Calidad de los agentes, conjuntos
+de cartas no vistos, identidad del sujeto, tiempo calendario, versiones del
+juego, composiciones de equipo y nivel de habilidad. Las caídas reportadas
+son en todos los casos lo bastante grandes como para importar. La conclusión
+operativa es que una única cifra medida dentro de la distribución de
+entrenamiento resulta la magnitud menos informativa que reporta cualquiera
+de estos trabajos, y que un solo conjunto de prueba aleatorio sería
+insuficiente para sostener una afirmación de generalización.
+
+\noindent\textbf{La unidad de observación es menor que la unidad
+independiente, y los trabajos difieren en si actúan en consecuencia.} El
+certamen sobre \emph{Hearthstone} separa entrenamiento y prueba a nivel de
+partidas completas, de modo que su protocolo está agrupado aunque no lo
+formule así. Karbalaie \textit{et al.} convierten la agrupación en el objeto
+de estudio. Bia\l ecki \textit{et al.} reportan validación cruzada sobre
+muestras derivadas de partidas únicas, con dos filas por partida, sin
+describir restricción alguna de agrupación. Sobre este último punto cabe una
+salvedad de comparabilidad y no una afirmación de error: el artículo no
+declara el particionador empleado, y si los pliegues se extrajeron a nivel
+de fila, ambas filas de una partida podrían haber caído en lados opuestos.
+
+% BRECHAS
+\subsection{Brechas identificadas}
+\label{subsec:brechas}
+
+\noindent\textbf{Carencias encontradas en la literatura.}
+
+\begin{enumerate}
+  \item \textbf{Ningún trabajo arbitrado utiliza este corpus.} No existe
+        descripción publicada, diccionario de datos documentado ni resultado
+        de referencia sobre él \cite{ptcg_dataset_2026}.
+  \item \textbf{La tarea no se ha estudiado en el Pok\'emon TCG.} La
+        predicción de victoria desde el estado está establecida en otros
+        juegos \cite{janusz_hearthstone_2017,bialecki_sc2egset_2023}, pero
+        no en uno cuya estructura de recursos se apoya en cartas de premio,
+        asignación de energía, banca y líneas de evolución.
+  \item \textbf{Se reporta capacidad de ordenar sin reportar calidad
+        probabilística.} La literatura revisada emplea predominantemente
+        métricas de ordenamiento o exactitud, con la excepción de Xenopoulos
+        \textit{et al.} \cite{xenopoulos_winprob_2022}. Karbalaie \textit{et
+        al.} sitúan la calibración explícitamente fuera de su alcance
+        \cite{karbalaie_participantaware_2026}, y Guo \textit{et al.}
+        muestran que es la magnitud que primero se degrada
+        \cite{guo_temporalshift_2021}. Un modelo concebido como evaluador de
+        posiciones está siendo validado, en la mayoría de los casos, sobre
+        la propiedad equivocada.
+  \item \textbf{La evaluación probabilística sigue pendiente en la
+        comparación de modelos tabulares.} Grinsztajn \textit{et al.}
+        identifican esta línea como no cubierta por su comparación
+        \cite{grinsztajn_trees_2022}.
+  \item \textbf{La evaluación agrupada se aplica de forma inconsistente en
+        corpus de estados de juego.} El costo medido de ignorar la
+        dependencia solo está disponible desde otros campos
+        \cite{karbalaie_participantaware_2026,sasse_leakage_2025,figueiredo_leakage_2024};
+        dentro de los conjuntos de juegos, la restricción unas veces se
+        satisface sin nombrarse y otras queda sin describir.
+  \item \textbf{La generalización rara vez se evalúa bajo un cambio
+        declarado, y nunca bajo varios a la vez.} No existe un protocolo que
+        combine partida nueva, mazo no visto y periodo posterior para esta
+        tarea.
+\end{enumerate}
+
+\noindent\textbf{Brechas que este trabajo aborda.} Las brechas 2, 3, 5 y 6.
+La segunda, planteando la tarea en el Pok\'emon TCG y reportando el perfil
+de capacidad predictiva por etapa de la partida. La tercera, reportando
+medidas de calidad probabilística junto a las de ordenamiento y poniendo a
+prueba la hipótesis H3. La quinta, agrupando por partida toda partición,
+todo pliegue y todo intervalo de confianza, y reportando la contaminación
+medida que produciría la alternativa por fila. La sexta, evaluando bajo tres
+escenarios declarados y reportando cada uno por separado en lugar de
+promediarlos.
+
+\noindent\textbf{Brechas fuera del alcance.} La primera se documenta pero no
+se cierra: un proyecto de un semestre no puede establecer una referencia
+arbitrada para el corpus. La cuarta excede el alcance, dado que este no es un
+estudio comparativo de familias de modelos sobre múltiples conjuntos. La
+comparabilidad estricta con el antecedente externo también queda fuera, por
+las razones que detalla la Sección~\ref{sec:baseline}. Y más allá de estas,
+no se persigue construir un agente competitivo, aprender una política,
+separar la evolución del conjunto de estrategias del cambio de versión del
+motor, la muestra confunde ambas causas, ni generalizar ningún hallazgo
+a jugadores humanos.
