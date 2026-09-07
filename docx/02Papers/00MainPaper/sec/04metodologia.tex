@@ -153,7 +153,7 @@ de prueba.
 
 Los empates se excluyen del objetivo binario; su volumen es demasiado
 reducido para sostener una tercera clase. Las partidas terminadas de forma
-anómala ---por agotamiento de tiempo, error o estado inválido--- tienen
+anómala, por agotamiento de tiempo, error o estado inválido, tienen
 ganador identificable, pero su final no procede de la dinámica del juego, de
 modo que se apartan del entrenamiento principal y se reservan para un
 análisis de sensibilidad.
@@ -478,8 +478,8 @@ observaciones que lo sustenta, de modo que un desempeño reducido en la etapa
 temprana pueda distinguirse de una simple escasez de datos en esa región.
 
 Si la distribución de clases sobre la tabla final resultara marcadamente
-desbalanceada ---magnitud que depende de cuántas observaciones aporta cada
-bando y que aún no se ha medido--- se añadirá el área bajo la curva de
+desbalanceada, magnitud que depende de cuántas observaciones aporta cada
+bando y que aún no se ha medido, se añadirá el área bajo la curva de
 precisión y exhaustividad, declarando explícitamente cuál es la clase
 minoritaria.
 
@@ -561,9 +561,9 @@ introducirse una inconsistencia entre ejecuciones.
 
 \subsubsection{Ablaciones por familia de características}
 
-Las ablaciones eliminan un bloque completo del diccionario ---progreso,
+Las ablaciones eliminan un bloque completo del diccionario, progreso,
 recursos, tablero, energía, estados alterados, diferenciales o contexto de
-mazo--- y reejecutan el mismo protocolo, de modo que el aporte marginal de
+mazo, y reejecutan el mismo protocolo, de modo que el aporte marginal de
 cada bloque se mida en lugar de afirmarse.
 
 Una ganancia grande del bloque de contexto de mazo se interpreta como
@@ -607,8 +607,8 @@ Los \textbf{coeficientes de la regresión logística} responden si la
 asociación de una característica con la victoria tiene la dirección que el
 conocimiento del juego predice.
 
-La \textbf{importancia por permutación agrupada} ---permutando dentro de cada
-partida y nunca entre partidas--- responde cuánto aporta una característica
+La \textbf{importancia por permutación agrupada}, permutando dentro de cada
+partida y nunca entre partidas, responde cuánto aporta una característica
 una vez respetada la dependencia. La agrupación forma parte de la medición y
 no es un detalle de ella, porque las estimaciones de importancia dependen del
 diseño de validación y resultan inestables bajo particiones por fila

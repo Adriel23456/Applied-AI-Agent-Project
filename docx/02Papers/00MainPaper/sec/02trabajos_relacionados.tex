@@ -24,9 +24,9 @@ este trabajo. La mayoría de los trabajos retenidos se publicó en 2021 o
 después; los más antiguos se conservan por ser referencias fundacionales del
 campo o el único antecedente publicado de la tarea.
 
-% ------------------------------------------------------------
+% 
 % EJE A
-% ------------------------------------------------------------
+% 
 \subsection{Eje A: el problema y su dominio}
 \label{subsec:ejea}
 
@@ -85,8 +85,8 @@ observaciones en esa región.
 \subsubsection{La ventaja no siempre está donde parece}
 
 Hodge \textit{et al.} organizan las características de la literatura según
-el momento en que están disponibles ---antes, durante y después de la
-partida--- y recogen que las disponibles durante el juego concentran la
+el momento en que están disponibles, antes, durante y después de la
+partida, y recogen que las disponibles durante el juego concentran la
 información más útil \cite{hodge_winprediction_2021}. Su advertencia sobre
 comparabilidad, según la cual la variación en tamaño, composición y versión
 del juego obliga a tratar con cautela las exactitudes reportadas entre
@@ -103,8 +103,8 @@ una probabilidad que pueda leerse como tal.
 
 Xenopoulos \textit{et al.} son el trabajo más cercano en espíritu. Estiman
 probabilidad de victoria por ronda, organizan el estado en información
-global más información agregada por bando ---estructura análoga a la que
-aquí se adopta--- y son de los pocos que reportan calidad de calibración
+global más información agregada por bando, estructura análoga a la que
+aquí se adopta, y son de los pocos que reportan calidad de calibración
 junto a la capacidad de ordenar \cite{xenopoulos_winprob_2022}. Su hallazgo
 de que un modelo entrenado en una población transfiere peor en calibración
 que en discriminación es el antecedente directo de la hipótesis H3.
@@ -165,9 +165,7 @@ suponer que los niveles alcanzados en otros juegos se transfieren, dado que
 difieren las reglas, las unidades de observación, los protocolos y la
 población.
 
-% ------------------------------------------------------------
 % EJE B
-% ------------------------------------------------------------
 \subsection{Eje B: las técnicas del \textit{track} seleccionado}
 \label{subsec:ejeb}
 
@@ -205,7 +203,7 @@ elección.
 Karbalaie \textit{et al.} añaden un argumento que invierte una expectativa.
 Al comparar diez clasificadores bajo distintos diseños de validación,
 encuentran que los modelos lineales son los que menos varían entre el
-protocolo contaminado y el correcto ---0.03 de acierto o menos---, mientras
+protocolo contaminado y el correcto, 0.03 de acierto o menos, mientras
 que los conjuntos de árboles muestran brechas superiores a 0.34
 \cite{karbalaie_participantaware_2026}. Los modelos de alta capacidad no
 son, por tanto, solo más difíciles de interpretar: son los que un protocolo
@@ -361,15 +359,14 @@ un resultado significa algo.
 
 Las dos alternativas naturales se descartan por razones distintas. Un modelo
 secuencial profundo sobre la trayectoria completa respondería una pregunta
-más amplia ---cuánta información contiene una secuencia--- heredando todos
+más amplia, cuánta información contiene una secuencia, heredando todos
 los riesgos de fuga y ninguna ventaja de interpretabilidad. El aprendizaje
 por refuerzo, lectura natural de un corpus de episodios, se descarta porque
 el objeto de estudio es la función de valor de forma aislada, aprendida a
 partir de desenlaces ya registrados, y no una política de juego.
 
-% ------------------------------------------------------------
 % EJE C
-% ------------------------------------------------------------
+% 
 \subsection{Eje C: el conjunto de datos y sus análogos}
 \label{subsec:ejec}
 
@@ -388,8 +385,8 @@ Ninguno de los tres es equivalente, y conviene precisar en qué lo es cada
 uno.
 
 \textbf{SC2EGSet} es el análogo estructural. Comparte la forma completa del
-procedimiento ---repetición cruda, estado analizado, características
-tabulares, etiqueta de desenlace--- y el hecho de que los datos fueron
+procedimiento, repetición cruda, estado analizado, características
+tabulares, etiqueta de desenlace, y el hecho de que los datos fueron
 producidos por competencia y no por experimento
 \cite{bialecki_sc2egset_2023}. Difiere en género, pues se trata de un juego
 de estrategia en tiempo real y no de un juego de cartas por turnos con
@@ -479,9 +476,7 @@ puede detectar su efecto conjunto pero no separarlas. Se trata de un trabajo
 de predicción clínica, citado por la asimetría que mide y por la
 terminología que estandariza, no como hallazgo del dominio de juegos.
 
-% ------------------------------------------------------------
 % TABLA COMPARATIVA
-% ------------------------------------------------------------
 \subsection{Análisis comparativo}
 \label{subsec:comparativo}
 
@@ -519,9 +514,7 @@ salvedad de comparabilidad y no una afirmación de error: el artículo no
 declara el particionador empleado, y si los pliegues se extrajeron a nivel
 de fila, ambas filas de una partida podrían haber caído en lados opuestos.
 
-% ------------------------------------------------------------
 % BRECHAS
-% ------------------------------------------------------------
 \subsection{Brechas identificadas}
 \label{subsec:brechas}
 
@@ -580,5 +573,5 @@ comparabilidad estricta con el antecedente externo también queda fuera, por
 las razones que detalla la Sección~\ref{sec:baseline}. Y más allá de estas,
 no se persigue construir un agente competitivo, aprender una política,
 separar la evolución del conjunto de estrategias del cambio de versión del
-motor ---la muestra confunde ambas causas--- ni generalizar ningún hallazgo
+motor, la muestra confunde ambas causas, ni generalizar ningún hallazgo
 a jugadores humanos.

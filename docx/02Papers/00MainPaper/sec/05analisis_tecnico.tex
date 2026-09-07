@@ -42,8 +42,8 @@ muestra y no caracteriza los días no auditados.
 
 La duración de las partidas está fuertemente sesgada a la derecha. El número
 de pasos por partida tiene mediana 140, percentil 95 de 221 y máximo 6\,900.
-El recuento de turnos es mucho menor ---mediana 13, percentil 95 de 27,
-máximo 1\,035--- porque un solo turno se descompone en muchas acciones
+El recuento de turnos es mucho menor, mediana 13, percentil 95 de 27,
+máximo 1\,035, porque un solo turno se descompone en muchas acciones
 atómicas.
 
 Esa brecha determina cómo debe definirse una etapa de la partida. Fijar el
@@ -73,8 +73,8 @@ tasa de victoria del jugador que mueve primero es 0.5287.
 
 Los diez días auditados no son intercambiables. Medida con la divergencia de
 Jensen-Shannon entre el primer y el último día, la distribución de mazos es
-esencialmente disjunta ---1.0000--- y la de agentes casi tanto ---0.9723---,
-mientras que la duración de las partidas apenas varía ---0.1221.
+esencialmente disjunta, 1.0000, y la de agentes casi tanto, 0.9723,
+mientras que la duración de las partidas apenas varía,0.1221.
 
 La diversidad no decae de forma suave: los mazos distintos por día van de
 1\,268 a 48 entre dos días concretos de la muestra, y los agentes distintos
@@ -203,8 +203,8 @@ Hodge \textit{et al.} incorporan además, para cada característica, el cambio
 respecto del instante anterior \cite{hodge_winprediction_2021}. Este trabajo
 no adopta esa construcción. La pregunta planteada concierne a la información
 contenida en un estado aislado, y añadir variación temporal introduciría un
-vector de fuga adicional ---verificar que el instante anterior sea
-estrictamente anterior--- cuya comprobación excede el alcance de esta etapa.
+vector de fuga adicional, verificar que el instante anterior sea
+estrictamente anterior, cuya comprobación excede el alcance de esta etapa.
 Queda declarada como extensión natural.
 
 \subsection{Calidad de los datos}
@@ -227,16 +227,16 @@ un agente contra sí mismo.
 La duplicación exacta no es, por tanto, una preocupación. La duplicación
 funcional dentro de una partida es otra cuestión: las observaciones
 consecutivas son casi idénticas por construcción. Eso no es un defecto que
-deba eliminarse ---es la estructura de dependencia de los datos--- y se
+deba eliminarse, es la estructura de dependencia de los datos, y se
 aborda agrupando, no deduplicando.
 
 \subsubsection{Verificaciones pendientes}
 
 La auditoría verificó el corpus crudo. Sobre la tabla materializada deben
 reverificarse, y se consignan aquí como pendientes antes que como supuestos:
-la ausencia de valores por columna; los rangos imposibles ---puntos de vida
+la ausencia de valores por columna; los rangos imposibles, puntos de vida
 negativos o superiores al máximo, recuentos negativos, ocupación de banca
-por encima de su límite---; la consistencia lógica entre campos
+por encima de su límite; la consistencia lógica entre campos
 relacionados; las filas duplicadas; y la cardinalidad efectiva de las
 columnas categóricas.
 
@@ -432,7 +432,7 @@ El entorno retiene lo que debe retener, y se comprobó en lugar de suponerlo.
 Sobre 139\,672 observaciones inspeccionadas, la mano del oponente fue nula
 en la totalidad de los casos, mientras que su recuento de cartas estuvo
 siempre disponible como entero. Las 1\,281\,678 ranuras de premio
-inspeccionadas ---propias y del oponente por igual--- fueron todas nulas.
+inspeccionadas, propias y del oponente por igual, fueron todas nulas.
 
 La fuga de información oculta no es, por tanto, un riesgo que deba
 mitigarse: es una propiedad que no debe destruirse. De ahí que las
@@ -504,8 +504,8 @@ intención y no una mitigación.
 
 \subsubsection{Medición de la inflación atribuible a la fuga}
 
-Se ejecutará el modelo B2 bajo dos particiones ---aleatoria por fila y
-agrupada por partida--- y se reportará la diferencia. Ese procedimiento
+Se ejecutará el modelo B2 bajo dos particiones, aleatoria por fila y
+agrupada por partida, y se reportará la diferencia. Ese procedimiento
 convierte la prevención de fuga en un resultado medido sobre los propios
 datos, siguiendo el diseño con que Figueiredo y Mendes cuantifican el efecto
 en su dominio \cite{figueiredo_leakage_2024}.
