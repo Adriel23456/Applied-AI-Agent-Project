@@ -165,29 +165,70 @@ El procedimiento va de la repetición cruda a la tabla evaluable en siete
 etapas, representadas en la Figura~\ref{fig:pipeline}.
 
 \begin{figure}[!t]
+
 \centering
+
 \begin{tikzpicture}[
   font=\scriptsize,
   etapa/.style={
-    draw=tecrule, fill=boxbg, thick, rounded corners=2pt,
-    text width=5.2cm, align=center, inner sep=4pt, minimum height=7mm},
+    draw=tecrule,
+    fill=boxbg,
+    thick,
+    rounded corners=2pt,
+    text width=5.2cm,
+    align=center,
+    inner sep=4pt,
+    minimum height=7mm
+  },
   hito/.style={
-    draw=tecnavy, fill=tecnavy!8, thick, rounded corners=2pt,
-    text width=5.2cm, align=center, inner sep=4pt, minimum height=7mm},
-  flecha/.style={-{Stealth[length=4pt]}, draw=tecsteel, thick},
-  nota/.style={font=\tiny\itshape, text=labelgray, align=left,
-               text width=1.9cm},
-  fase/.style={font=\tiny\bfseries, text=tecnavy, rotate=90,
-               align=center}
+    draw=tecnavy,
+    fill=tecnavy!8,
+    thick,
+    rounded corners=2pt,
+    text width=5.2cm,
+    align=center,
+    inner sep=4pt,
+    minimum height=7mm
+  },
+  flecha/.style={
+    -{Stealth[length=4pt]},
+    draw=tecsteel,
+    thick
+  },
+  nota/.style={
+    font=\tiny\itshape,
+    text=labelgray,
+    align=left,
+    text width=1.9cm
+  },
+  fase/.style={
+    font=\tiny\bfseries,
+    text=tecnavy,
+    align=center,
+    text width=1.3cm
+  }
 ]
 
-\node[etapa] (e1) {1. Lectura y validación de la repetición};
-\node[etapa, below=3.2mm of e1] (e2) {2. Estados del jugador activo, perspectiva normalizada};
-\node[hito,  below=3.2mm of e2] (e3) {3. Filtro de campos excluidos};
-\node[etapa, below=3.2mm of e3] (e4) {4. Construcción de características};
-\node[hito,  below=3.2mm of e4] (e5) {5. Materialización de la tabla};
-\node[hito,  below=3.2mm of e5] (e6) {6. Partición agrupada por partida};
-\node[etapa, below=3.2mm of e6] (e7) {7. Ajuste, selección y evaluación};
+\node[etapa] (e1)
+  {1. Lectura y validación de la repetición};
+
+\node[etapa, below=3.2mm of e1] (e2)
+  {2. Estados del jugador activo, perspectiva normalizada};
+
+\node[hito, below=3.2mm of e2] (e3)
+  {3. Filtro de campos excluidos};
+
+\node[etapa, below=3.2mm of e3] (e4)
+  {4. Construcción de características};
+
+\node[hito, below=3.2mm of e4] (e5)
+  {5. Materialización de la tabla};
+
+\node[hito, below=3.2mm of e5] (e6)
+  {6. Partición agrupada por partida};
+
+\node[etapa, below=3.2mm of e6] (e7)
+  {7. Ajuste, selección y evaluación};
 
 \draw[flecha] (e1) -- (e2);
 \draw[flecha] (e2) -- (e3);
@@ -196,28 +237,62 @@ etapas, representadas en la Figura~\ref{fig:pipeline}.
 \draw[flecha] (e5) -- (e6);
 \draw[flecha] (e6) -- (e7);
 
-\node[nota, right=2.5mm of e2] {propio frente a oponente};
-\node[nota, right=2.5mm of e3] {falla si entra un campo prohibido};
-\node[nota, right=2.5mm of e5] {una sola vez, formato columnar};
-\node[nota, right=2.5mm of e6] {precede a toda transformación};
-\node[nota, right=2.5mm of e7] {escenarios A, B y C};
+\node[nota, right=2.5mm of e2]
+  {propio frente a oponente};
+
+\node[nota, right=2.5mm of e3]
+  {falla si entra un campo prohibido};
+
+\node[nota, right=2.5mm of e5]
+  {una sola vez, formato columnar};
+
+\node[nota, right=2.5mm of e6]
+  {precede a toda transformación};
+
+\node[nota, right=2.5mm of e7]
+  {escenarios A, B y C};
 
 \begin{scope}[on background layer]
-  \node[draw=tecrule, dashed, rounded corners=3pt, inner sep=3pt,
-        fit=(e1)(e5)] (faseA) {};
-  \node[draw=tecrule, dashed, rounded corners=3pt, inner sep=3pt,
-        fit=(e6)(e7)] (faseB) {};
+
+  \node[
+    draw=tecrule,
+    dashed,
+    rounded corners=3pt,
+    inner sep=3pt,
+    fit=(e1)(e5)
+  ] (faseA) {};
+
+  \node[
+    draw=tecrule,
+    dashed,
+    rounded corners=3pt,
+    inner sep=3pt,
+    fit=(e6)(e7)
+  ] (faseB) {};
+
 \end{scope}
 
-\node[fase, left=1mm of faseA] {Construcción\\del conjunto};
-\node[fase, left=1mm of faseB] {Experimentación};
+\node[
+  fase,
+  left=4mm of faseA.west,
+  anchor=east
+] {Construcción\\del conjunto};
+
+\node[
+  fase,
+  left=4mm of faseB.west,
+  anchor=east
+] {Experimentación};
 
 \end{tikzpicture}
+
 \caption{Tubería propuesta. Las etapas 1 a 5 se ejecutan una sola vez y
 producen la tabla; las etapas 6 y 7 operan sobre ella. El filtro de campos
 excluidos y la partición agrupada se imponen mediante pruebas automáticas y
 no por convención.}
+
 \label{fig:pipeline}
+
 \end{figure}
 
 Tres decisiones de esa tubería requieren justificación.
