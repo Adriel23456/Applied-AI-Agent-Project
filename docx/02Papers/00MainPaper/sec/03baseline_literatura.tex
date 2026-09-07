@@ -57,12 +57,14 @@ La comparación es \textbf{parcialmente comparable}. La
 Figura~\ref{fig:comparabilidad} resume qué coincide y qué no.
 
 \begin{figure}[!t]
+
 \centering
+
 \begin{tikzpicture}[
   font=\scriptsize,
   coincide/.style={draw=tecsteel, fill=boxbg, rounded corners=2pt,
-                   text width=3.15cm, align=center, inner sep=3pt,
-                   minimum height=6mm},
+                  text width=3.15cm, align=center, inner sep=3pt,
+                  minimum height=6mm},
   difiere/.style={draw=labelgray, dashed, fill=white, rounded corners=2pt,
                   text width=3.15cm, align=center, inner sep=3pt,
                   minimum height=6mm, text=labelgray},
@@ -71,24 +73,27 @@ Figura~\ref{fig:comparabilidad} resume qué coincide y qué no.
 
 \node[cab] at (-1.85,2.35) {COINCIDE};
 \node[coincide] at (-1.85,1.9) {desenlace binario};
-\node[coincide] at (-1.85,1.25) {estado intra-partida};
-\node[coincide] at (-1.85,0.6) {área bajo la curva ROC};
-\node[coincide] at (-1.85,-0.05) {juego de cartas con información oculta};
+\node[coincide] at (-1.85,1.2) {estado intra-partida};
+\node[coincide] at (-1.85,0.5) {área bajo la curva ROC};
+\node[coincide] at (-1.85,-0.2) {juego de cartas con información oculta};
 
 \node[cab] at (1.85,2.35) {DIFIERE};
 \node[difiere] at (1.85,1.9) {reglas y recursos del juego};
-\node[difiere] at (1.85,1.25) {población de agentes};
-\node[difiere] at (1.85,0.6) {regla de partición};
-\node[difiere] at (1.85,-0.05) {prevalencia de clases};
-\node[difiere] at (1.85,-0.7) {construcción del vector de características};
+\node[difiere] at (1.85,1.2) {población de agentes};
+\node[difiere] at (1.85,0.5) {regla de partición};
+\node[difiere] at (1.85,-0.2) {prevalencia de clases};
+\node[difiere] at (1.85,-0.9) {construcción del vector de características};
 
-\draw[draw=tecrule, thick, dashed] (0,2.15) -- (0,-1.05);
+\draw[draw=tecrule, thin] (0,2.15) -- (0,-1.2);
 
 \end{tikzpicture}
+
 \caption{Comparabilidad del punto de referencia externo. La coincidencia en
 tarea y métrica permite usar la cifra como orden de magnitud; las
 diferencias impiden tratarla como umbral a superar.}
+
 \label{fig:comparabilidad}
+
 \end{figure}
 
 \noindent\textbf{Diferencias que impiden una comparación estricta.}
