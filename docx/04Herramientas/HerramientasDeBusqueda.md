@@ -1,6 +1,6 @@
-## Search Tools
+## Herramientas de búsqueda
 
-| Tool | Link |
+| Herramienta | Enlace |
 |---|---|
 | Biblioteca TEC (recursos suscritos) | https://biblioteca.tec.ac.cr |
 | Scopus | https://www.scopus.com |

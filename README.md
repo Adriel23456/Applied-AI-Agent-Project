@@ -1,101 +1,116 @@
-# Applied AI Agent Project
+# Proyecto de Agente de IA Aplicada
 
-Semester project for **IC-6200 — Artificial Intelligence**, Escuela de Ingeniería en Computación, Instituto Tecnológico de Costa Rica. II Semester, 2026.
+Proyecto semestral del curso **IC-6200 — Inteligencia Artificial**, Escuela de Ingeniería en Computación, Instituto Tecnológico de Costa Rica. II Semestre, 2026.
 
-An applied AI solution built under research methodology, consumed by an intelligent agent in a verifiable way. The project runs across 16 weeks in three mandatory stages.
+Una solución de IA aplicada construida bajo la metodología de la investigación aplicada y consumida de forma verificable por un agente inteligente. El proyecto se desarrolla durante 16 semanas en tres etapas obligatorias.
 
 ---
 
-## Status
+## Estado
 
-| Stage | Deliverable | Deadline | Weight | Status |
+| Etapa | Entregable | Fecha | Peso | Estado |
 | --- | --- | --- | --- | --- |
-| **Stage 1** | State of the art, problem analysis, preliminary IEEE paper | 06/09/2026 | 30% | In progress |
-| **Stage 2** | Methodological workbook: pipeline, baselines, model, ablations | Week 10 | 45% | Not started |
-| **Stage 3** | Functional intelligent agent + final paper | Week 16 | 25% | Not started |
+| **Etapa 1** | Estado del arte, análisis del problema y artículo IEEE preliminar | 06/09/2026 | 30 % | Completa |
+| **Etapa 2** | Cuaderno con el ciclo metodológico: datos, baselines, modelo, explicabilidad y evaluación | Semana 10 | 45 % | En curso |
+| **Etapa 3** | Agente inteligente funcional y artículo final | Semana 16 | 25 % | No iniciada |
 
-**Track:** Track A — Classical machine learning on tabular data.
-**Topic:** Estimating Win Probability from Game State in the Pokémon Trading Card Game: A Tabular Classification Study with Explicit Data Leakage Control.
-**Dataset / Environment:** PTCG AI Battle Challenge replay dataset.
+**Track:** Track A — Aprendizaje automático clásico sobre datos tabulares.
+**Tema:** Estimación de la probabilidad de victoria a partir del estado de juego en el Pokémon Trading Card Game: un estudio de clasificación tabular con control explícito de fuga de información.
+**Conjunto de datos:** repeticiones del PTCG AI Battle Challenge (Kaggle).
+
+### Etapa 2 en curso
+
+La Etapa 2 ejecuta el diseño declarado en el artículo de la Etapa 1. Se desarrolla en Google Colab y comprende:
+
+- Ingesta del corpus y construcción de la tabla, con una fila por estado del jugador que actúa.
+- Particiones agrupadas por partida bajo tres escenarios: partidas nuevas, periodos posteriores y mazos reservados.
+- Pruebas automáticas que impiden la fuga de información.
+- Escalera de modelos: probabilidad a priori, heurística de dominio, regresión logística, árboles y potenciación del gradiente.
+- Búsqueda sistemática de hiperparámetros con validación cruzada agrupada.
+- Explicabilidad con SHAP y calibración de probabilidades.
+- Comparación contra los baselines internos y el baseline de literatura.
+- Modelo final exportado para que el agente de la Etapa 3 lo consuma.
+
+Los pendientes por rama están en `docx/01SeguimientoDeTareas/PlanDeDesarrollo.md`.
 
 ---
 
-## Team
+## Equipo
 
-| Member | ID | Review axis |
+| Integrante | Carné | Eje de revisión |
 | --- | --- | --- |
-| Adriel S. Chaves Salazar | 2021031465 | Axis B — techniques of the selected track |
-| Daniel Duarte Cordero | 2022012866 | Axis A — problem domain |
-| Sebastián Hernández Bonilla | 2022093651 | Axis C — dataset / environment |
+| Adriel S. Chaves Salazar | 2021031465 | Eje B — técnicas del track seleccionado |
+| Daniel Duarte Cordero | 2022012866 | Eje A — problema y dominio |
+| Sebastián Hernández Bonilla | 2022093651 | Eje C — conjunto de datos |
 
-**Professor:** Kenneth Roberto Obando Rodríguez
+**Profesor:** Kenneth Roberto Obando Rodríguez
 
-Individual authorship is determined by commit history. Shared files count as shared authorship.
+La autoría individual se determina por el historial de commits. Los archivos comunes cuentan como autoría compartida.
 
 ---
 
-## Repository Guide
+## Guía del repositorio
 
-| Path | Contents |
+| Ruta | Contenido |
 | --- | --- |
-| `docx/00GitRules/` | Branching, commit and PR conventions |
-| `docx/01AgileTaskDivision/` | Sprint planning and backlog |
-| `docx/02Papers/` | Reviewed literature per member, and the LaTeX source of the paper |
-| `docx/02Papers/00MainPaperLatex/` | IEEE paper: `MainPaper.tex`, sections, bibliography |
-| `docx/03Evidence/` | Meeting notes, agreements, milestones, and the `AI_USAGE.md` declarations — raw material for the work journal |
+| `docx/00ReglasGit/` | Convenciones de ramas, commits y PR |
+| `docx/01SeguimientoDeTareas/` | Plan de desarrollo con los pendientes por rama |
+| `docx/02Papers/` | Literatura revisada por integrante y fuentes LaTeX del artículo |
+| `docx/02Papers/00MainPaper/` | Artículo IEEE: `MainPaper.tex`, secciones y bibliografía |
+| `docx/03Evidence/` | Notas de reunión, acuerdos, hitos y bitácora de trabajo |
+| `docx/03Evidence/01UsoDeIA/` | Declaración de uso de IA por etapa |
+| `docx/04Herramientas/` | Herramientas de búsqueda bibliográfica y de conjuntos de datos |
 
-Some folder carries a `WhatThisContains.md` describing its purpose.
+Algunas carpetas incluyen un `Contenido.md` que describe su propósito.
 
 ---
 
-## Building the Paper
+## Compilación del artículo
 
-Requires a TeX distribution with `IEEEtran` (MiKTeX, TeX Live) and `latexmk`.
+Requiere una distribución TeX con `IEEEtran` (MiKTeX o TeX Live) y `latexmk`.
 
 ```bash
-cd docx/02Papers/00MainPaperLatex
+cd docx/02Papers/00MainPaper
 latexmk -C
 latexmk -pdf MainPaper.tex
-
 ```
 
-Output: MainPaper.pdf.
+Salida: `MainPaper.pdf`.
 
-To verify no placeholders remain, redefine the `\todo` macro in `preamble.tex` as `\newcommand{\todo}[1]{}` and recompile — any section that renders empty is unfinished.
+Para verificar que no quedan marcadores pendientes, redefina la macro `\todo` en `preamble.tex` como `\newcommand{\todo}[1]{}` y recompile: toda sección que aparezca vacía está sin terminar.
 
 ---
 
-## Building the Work Journal
+## Compilación de la bitácora de trabajo
 
 ```bash
-cd docx/02Papers/00WorkJournalLatex
+cd docx/03Evidence/00BitacoraDeTrabajo
 latexmk -C
-latexmk -pdf WorkJournal.tex
-
+latexmk -pdf BitacoraDeTrabajo.tex
 ```
 
 ---
 
-## Reproducing the Experiments
+## Reproducción de los experimentos
 
-> Applies from Stage 2 onward. Not yet available.
+> En desarrollo durante la Etapa 2.
 
-[TO BE COMPLETED: environment setup, dependency installation, dataset download, and the exact command that reproduces each reported number.]
+[POR COMPLETAR: preparación del entorno en Colab, instalación de dependencias, credencial de Kaggle, descarga del conjunto de datos, construcción de la tabla y la orden exacta que reproduce cada cifra reportada.]
 
-**Reproducibility contract.** Every reported result must be reproducible by a third party following this section alone, without contacting the team. Seeds are fixed and committed. Configurations are stored, not passed as ad-hoc flags. Raw data is never committed — only the instructions to obtain it.
-
----
-
-## Conventions
-
-* **Git:** See `docx/00GitRules/CodeControl.md`. Three branch levels: `master` → `stage<N>` → `<NN><IssueName>`. PR for every branch change; approval required only for merges into `master`.
-* **Bibliography:** BibTeX only, key format `author_keyword_year`. Peer-reviewed journal or conference sources; a DOI must resolve and its content must match what is attributed to it before an entry is committed.
-* **Documentation:** Markdown inside the repository. The paper is the deliverable; the Markdown is the working record.
+**Contrato de reproducibilidad.** Todo resultado reportado debe poder reproducirlo un tercero siguiendo solo esta sección, sin contactar al equipo. Las semillas están fijadas y versionadas. Las configuraciones se guardan en archivos, no se pasan como argumentos sueltos. Los datos crudos, las tablas intermedias y las credenciales nunca se versionan; solo las instrucciones para obtenerlos.
 
 ---
 
-## License
+## Convenciones
 
-MIT. See `LICENSE`.
+* **Git:** Ver `docx/00ReglasGit/ReglasGit.md`. Tres niveles de ramas: `master` → `Stage<N>` → `<NN><NombreRama>`. PR para cada integración; la aprobación solo se exige para los merges a `master`.
+* **Bibliografía:** Solo BibTeX, con claves en formato `autor_palabraclave_anio`. Fuentes arbitradas de revista o conferencia; antes de versionar una entrada, su DOI debe resolver y su contenido debe corresponder a lo que se le atribuye.
+* **Documentación:** Markdown dentro del repositorio. El artículo es el entregable; el Markdown es el registro de trabajo.
 
-The license covers this repository's own code and documentation. It does not extend to third-party datasets, environments, or the PDFs of reviewed papers stored under `docx/02Papers/`, each of which retains its original license and terms.
+---
+
+## Licencia
+
+MIT. Ver `LICENSE`.
+
+La licencia cubre el código y la documentación propios del repositorio. No se extiende a conjuntos de datos de terceros ni a los PDF de los artículos revisados guardados en `docx/02Papers/`, que conservan su licencia y términos originales.
