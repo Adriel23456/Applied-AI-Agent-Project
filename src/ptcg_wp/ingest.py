@@ -17,9 +17,12 @@ def load_days(config_path):
 
 def download_day(day, raw_dir):
     out = Path(raw_dir) / day
-    if out.exists() and any(out.glob("*.json")):
+    marker = out / ".completo"
+    if marker.exists():
         return out
-    out.mkdir(parents=True, exist_ok=True)
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
     subprocess.run(
         ["kaggle", "datasets", "download", "-d", SLUG.format(day=day),
          "-p", str(out), "--unzip"],
@@ -27,6 +30,7 @@ def download_day(day, raw_dir):
     )
     for z in out.glob("*.zip"):
         z.unlink()
+    marker.touch()
     return out
 
 
@@ -57,7 +61,14 @@ def game_row(path, day):
 
 
 def build_games_table(raw_day_dir, day):
-    rows = [game_row(p, day) for p in sorted(Path(raw_day_dir).glob("*.json"))]
+    rows, corruptos = [], []
+    for p in sorted(Path(raw_day_dir).glob("*.json")):
+        try:
+            rows.append(game_row(p, day))
+        except json.JSONDecodeError:
+            corruptos.append(p.name)
+    if corruptos:
+        print(f"{day}: {len(corruptos)} archivos corruptos omitidos: {corruptos[:5]}")
     return pd.DataFrame(rows)
 
 
