@@ -2,10 +2,14 @@ import argparse
 import json
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 import pandas as pd
 import yaml
+
+from ptcg_wp.features import game_rows
+
 
 SLUG = "kaggle/pokemon-tcg-ai-battle-episodes-{day}"
 
@@ -34,9 +38,7 @@ def download_day(day, raw_dir):
     return out
 
 
-def game_row(path, day):
-    with open(path, encoding="utf-8") as f:
-        g = json.load(f)
+def game_row(g, path, day):
     rewards = g.get("rewards") or [None, None]
     statuses = g.get("statuses") or [None, None]
     info = g.get("info") or {}
@@ -60,32 +62,44 @@ def game_row(path, day):
     }
 
 
-def build_games_table(raw_day_dir, day):
-    rows, corruptos = [], []
+def build_tables(raw_day_dir, day):
+    games, states, corruptos = [], [], []
     for p in sorted(Path(raw_day_dir).glob("*.json")):
         try:
-            rows.append(game_row(p, day))
+            with open(p, encoding="utf-8") as f:
+                g = json.load(f)
         except json.JSONDecodeError:
             corruptos.append(p.name)
+            continue
+        games.append(game_row(g, p, day))
+        states.extend(game_rows(g, day))
     if corruptos:
         print(f"{day}: {len(corruptos)} archivos corruptos omitidos: {corruptos[:5]}")
-    return pd.DataFrame(rows)
+    return pd.DataFrame(games), pd.DataFrame(states)
 
 
 def ingest_day(day, raw_dir, out_dir, keep_raw=False):
-    out_file = Path(out_dir) / f"partidas_{day}.parquet"
-    if out_file.exists():
+    out_dir = Path(out_dir)
+    games_file = out_dir / f"partidas_{day}.parquet"
+    states_file = out_dir / f"estados_{day}.parquet"
+    if games_file.exists() and states_file.exists():
         print(f"{day}: ya existe, se omite")
-        return out_file
+        return games_file, states_file
+    t0 = time.time()
     raw_day = download_day(day, raw_dir)
-    df = build_games_table(raw_day, day)
-    out_file.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(out_file, index=False)
+    t1 = time.time()
+    games, states = build_tables(raw_day, day)
+    t2 = time.time()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    games.to_parquet(games_file, index=False)
+    states.to_parquet(states_file, index=False)
     if not keep_raw:
         shutil.rmtree(raw_day)
-    print(f"{day}: {len(df)} partidas -> {out_file}")
-    return out_file
-
+    print(
+        f"{day}: {len(games)} partidas, {len(states)} estados | "
+        f"descarga {t1 - t0:.0f}s, procesamiento {t2 - t1:.0f}s"
+    )
+    return games_file, states_file
 
 def main():
     ap = argparse.ArgumentParser()

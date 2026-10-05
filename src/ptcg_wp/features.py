@@ -1,6 +1,6 @@
 SENTINEL = -1
 
-META_COLUMNS = ["game_id", "day", "step", "turn", "acting_index", "anomalous", "y"]
+META_COLUMNS = ["game_id", "day", "step", "turn", "acting_index", "anomalous", "setup", "y"]
 
 FORBIDDEN_IN_X = set(META_COLUMNS) | {"result", "winner", "reward_0", "reward_1", "agent_0", "agent_1"}
 
@@ -109,6 +109,7 @@ def game_rows(game, day):
             "turn": cur["turn"],
             "acting_index": me,
             "anomalous": anomalous,
+            "setup": int(cur["turn"] == 0),
             "y": int(r > 0),
         }
         row.update(extract_features(cur))
