@@ -87,6 +87,8 @@ def game_rows(game, day):
     info = game.get("info") or {}
     game_id = int(info.get("EpisodeId", -1))
     rewards = game.get("rewards") or [None, None]
+    if rewards[0] is None or rewards[1] is None or rewards[0] == rewards[1]:
+        return []
     statuses = game.get("statuses") or []
     anomalous = int(any(s != "DONE" for s in statuses))
 
