@@ -105,9 +105,11 @@ Las pruebas `tests/test_fuga.py` llenan la mano rival y los premios con cartas r
 
 - Las cifras superan a las de la auditoría del artículo (52 085 partidas, 7 038 378 observaciones):
   Kaggle siguió agregando episodios a esos días después de la auditoría. El artículo debe usar estas.
-- **"Gana el índice 0" sube con el tiempo** porque en los días tardíos el jugador que empieza ocupa
-  casi siempre la posición 0 (el artículo mide 0.5089 → 0.9991). Es la ventaja de empezar, no una
-  ventaja de la posición. Por eso las filas usan perspectiva propio/oponente y `first_player_is_me`.
+- **"Gana el índice 0" sube con el tiempo (0.507 → 0.559) porque quien empieza ocupa cada vez más la
+  posición 0:** medido en la celda B7, la posición 0 es la del jugador inicial en el 76.4 % de las
+  partidas del 17 jun y en el 100 % de las del 22 jul. Es la ventaja de empezar, no una ventaja de la
+  posición ni un cambio de estrategias. Por eso las filas usan perspectiva propio/oponente,
+  `acting_index` es meta y `first_player_is_me` es la característica que captura esa ventaja.
 
 ---
 
@@ -247,23 +249,36 @@ de subir otro), `active_present = 0` y los campos `active_*` valen -1. Pasa en e
 
 ## 8. Particiones, cobertura y etapas
 
-| Escenario | Cómo se parte | Pregunta | Proporciones |
+| Escenario | Cómo se parte | Pregunta | Partidas (train / val / calib / test / fuera) |
 |---|---|---|---|
-| A | Partidas al azar | ¿Generaliza a partidas nuevas? | 60/15/10/15 |
-| B | Días completos en orden: train 18 al 25 jun, val 7 jul, calib 11 jul, test 15 y 22 jul. El 17 jun queda fuera (arranque parcial) | ¿Se sostiene en días posteriores? | Por días (ver reporte de la celda 8) |
-| C | Test = partidas con alguno de los 33 Pokémon principales reservados; el resto al azar | ¿Lee el estado o memoriza mazos? | 60/15/10/15 aprox. |
+| A | Partidas al azar | ¿Generaliza a partidas nuevas? | 33 066 / 8 255 / 5 504 / 8 252 / 0 |
+| B | Días completos en orden: train 18 al 25 jun, val 7 jul, calib 11 jul, test 15 y 22 jul. El 17 jun queda fuera (arranque parcial) | ¿Se sostiene en días posteriores? | 27 643 / 5 191 / 5 008 / 9 444 / 7 791 |
+| C | Test = partidas con alguno de los 33 Pokémon principales reservados; el resto al azar | ¿Lee el estado o memoriza mazos? | 33 013 / 8 239 / 5 491 / 8 334 / 0 |
 
-**Cobertura de cartas (regla del artículo).** Toda carta que estuvo activa en el corpus debe aparecer
-en train. En A y C, si falta alguna, se mueve a train la partida más corta que la contiene (en C nunca
-se mueve una partida reservada). En B no se mueve nada, porque rompería la cronología: se reporta la
-cobertura efectiva (antes de la corrección, a lo sumo 0.58 % de filas con una carta no vista).
-El reporte exacto lo imprime la celda 8 de `00_arranque`.
+Prevalencia de `y` por partición: entre 0.497 y 0.527 en todos los escenarios.
 
-**Escenario C mide arquetipos nuevos, no cartas nuevas:** las cartas de un mazo reservado también
-aparecen en otros mazos de train.
+**Días del escenario B.** Ningún día muestra concentración anómala de mazos (criterio: menos del
+25 % de la mediana de mazos distintos; mínimo medido 274 contra una mediana de ~450). La diversidad
+de agentes sí cae con el tiempo (957 el 17 jun, 104 el 15 jul): es parte del cambio de población
+que B debe medir.
+
+**Cobertura de cartas (regla del artículo).** 362 cartas distintas estuvieron activas en el corpus
+(56 en una sola partida). Toda carta debe aparecer en train:
+
+| Escenario | Corrección | Cobertura efectiva |
+|---|---|---|
+| A | 20 partidas cortas movidas a train | Completa: 0 cartas no vistas en val, calib y test |
+| B | Ninguna (mover partidas futuras a train sería fuga) | 157 cartas aparecen solo después de los días de train; afectan entre 0.86 % y 1.20 % de las filas de val, calib y test |
+| C | 18 partidas cortas movidas a train (nunca reservadas) | 11 cartas existen solo en mazos reservados (varias son los propios principales); afectan al 0.061 % de las filas de test |
+
+Como el modelo principal no usa ids de carta, la cobertura solo condiciona la ablación de contexto
+de mazo. En B, las cartas nuevas forman parte del cambio temporal que se quiere medir.
+
+**Escenario C mide arquetipos nuevos, no cartas nuevas:** casi todas las cartas de un mazo reservado
+también aparecen en otros mazos de train.
 
 **Etapas de la partida:** terciles del turno calculados **solo con train** de cada escenario.
-Con los datos actuales: inicio ≤ 5 turnos, medio 6 a 9, final > 9 (iguales en A, B y C).
+Con los datos actuales: inicio ≤ 5 turnos, medio 6 a 9, final > 9.
 
 ---
 
