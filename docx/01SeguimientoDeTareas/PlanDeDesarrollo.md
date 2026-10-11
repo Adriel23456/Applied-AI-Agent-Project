@@ -68,20 +68,22 @@ Contexto obligatorio para trabajar: `docx/05AmbienteDeDesarrollo/DiccionarioDeDa
 
 ### `04MainAIModelTrainingAndDevelopment`
 
-Cuadernos: `02_baselines` y `03_modelo_principal`.
+Cuadernos: `02_baselines` (B0 a B2) y `03_modelo_principal` (B3, B4 y búsqueda).
+Escalera definida en el artículo (Tabla "Escalera de modelos de referencia"). Cada peldaño responde
+una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado del arte en datos tabulares).
 
-- [ ] Registro de cada ejecución en `results/` (escenario, modelo, configuración, semilla, métricas, commit)
+- [ ] Registro de cada ejecución en `results/` (escenario, modelo, configuración, semilla, métricas, tiempo, commit)
 - [ ] Funciones de evaluación comunes: AUC, log loss y Brier, globales y por etapa, con el número de partidas de cada etapa
-- [ ] B0 - probabilidad a priori (prevalencia de train)
-- [ ] B1 - heurística de dominio (diferencias de premios, PV y Pokémon en juego), llevada a probabilidad ajustando solo con train
-- [ ] B2 - regresión logística regularizada dentro de un `Pipeline` (escalado ajustado solo con train)
+- [ ] B0 - probabilidad a priori (prevalencia de train). Piso de referencia
+- [ ] B1 - heurística de dominio sobre diferencias de recursos (premios, PV, Pokémon en juego), llevada a probabilidad ajustando solo con train
+- [ ] B2 - regresión logística regularizada en un `Pipeline` (escalado ajustado solo con train). Referencia "razonable" de la rúbrica
 - [ ] Demostración de inflación: B2 con partición por fila contra partición por partida, midiendo cuántas partidas quedan en ambos lados
-- [ ] B3 - árbol de decisión y bosque aleatorio (bosque sobre una muestra de partidas de train si el costo lo exige, declarado)
-- [ ] B4 - potenciación del gradiente por histogramas (`HistGradientBoostingClassifier`)
-- [ ] Búsqueda sistemática de hiperparámetros con `GroupKFold` por `game_id` sobre train (búsqueda aleatoria u Optuna), con espacio, presupuesto y tiempo justificados; `val` para la elección final
-- [ ] Ablaciones por familia de características (progreso, recursos y tablero, diferenciales)
-- [ ] Prueba de H2: modelo restringido (turno, quien empieza e ids de carta) contra el modelo con el estado completo
-- [ ] Entrenamiento de los modelos de cada escenario (A, B y C) con su propio train
+- [ ] B3 - árbol de decisión y bosque aleatorio (bosque sobre una muestra de partidas de train si el costo lo exige, declarado). Mide si hay interacciones no lineales
+- [ ] B4 - modelo principal: `HistGradientBoostingClassifier` con búsqueda bayesiana de hiperparámetros (Optuna, TPE) y `GroupKFold` por `game_id` sobre train; espacio, número de pruebas y tiempo justificados; parada temprana; `val` para la elección final
+- [ ] Verificación de implementación: LightGBM con la misma búsqueda y el mismo protocolo; si no supera a B4 de forma clara, se reporta y se mantiene B4
+- [ ] Ablaciones por familia de características (progreso, recursos y tablero, diferenciales) sobre B4
+- [ ] Prueba de H2: B4 restringido (turno, quién empieza e ids de carta) contra B4 con el estado completo
+- [ ] Entrenamiento de B0 a B4 en cada escenario (A, B y C) con su propio train
 - [ ] Modelo final exportado (`joblib`) fuera del repo, con una función que convierte una observación del juego en probabilidad (para la Etapa 3)
 
 ### `05FinalModelChecks`
