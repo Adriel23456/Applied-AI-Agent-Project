@@ -35,7 +35,13 @@ def publish(data_dir, dataset_id, message, create=False):
         cmd = ["kaggle", "datasets", "create", "-p", str(data_dir)]
     else:
         cmd = ["kaggle", "datasets", "version", "-p", str(data_dir), "-m", message]
-    subprocess.run(cmd, check=True)
+    # La herramienta kaggle puede fallar sin devolver un codigo de error:
+    # por eso tambien se revisa si su mensaje contiene la palabra "error"
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    salida = (res.stdout or "") + (res.stderr or "")
+    print(salida)
+    if res.returncode != 0 or "error" in salida.lower():
+        raise RuntimeError("la publicacion fallo: revisa el mensaje de kaggle de arriba")
     print(f"publicados {len(files)} archivos en {dataset_id}")
 
 
