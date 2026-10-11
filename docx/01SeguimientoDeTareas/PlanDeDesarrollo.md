@@ -49,18 +49,18 @@ Inteligencia Artificial (IC-6200) - Instituto Tecnológico de Costa Rica
 
 ### `03DataCollectionAndEnvironmentSetup`
 
-- [ ] Entorno en Colab reproducible (Drive, clon del repo, dependencias fijadas, semillas)
-- [ ] Credencial de Kaggle fuera del repositorio
-- [ ] Ingesta de los días auditados día por día hacia Parquet
-- [ ] Extractor de características: una fila por estado del jugador que actúa, perspectiva propio/oponente
-- [ ] Filtro de campos excluidos por fuga
-- [ ] Tratamiento de ausencia estructural (indicador + centinela, sin imputar)
-- [ ] Exclusión de empates y marcado de partidas anómalas
-- [ ] EDA de la tabla: prevalencia por fila, ausencias, rangos imposibles, diccionario de datos final
-- [ ] Cortes de etapa de la partida calculados solo con entrenamiento
-- [ ] Particiones de los escenarios A, B y C, agrupadas por partida
-- [ ] Auditoría de cobertura de cartas en entrenamiento
-- [ ] Pruebas automáticas de los invariantes de fuga
+- [x] Entorno en Colab reproducible (clon del repo, dependencias fijadas, semilla global, datos en dataset privado de Kaggle)
+- [x] Credencial de Kaggle fuera del repositorio
+- [x] Ingesta de los días auditados día por día hacia Parquet
+- [x] Extractor de características: una fila por estado del jugador que actúa, perspectiva propio/oponente
+- [x] Filtro de campos excluidos por fuga
+- [x] Tratamiento de ausencia estructural (indicador + centinela, sin imputar)
+- [x] Exclusión de empates y marcado de partidas anómalas
+- [x] EDA de la tabla: prevalencia por fila, ausencias, rangos imposibles, diccionario de datos final
+- [x] Cortes de etapa de la partida calculados solo con entrenamiento
+- [x] Particiones de los escenarios A, B y C, agrupadas por partida
+- [x] Auditoría de cobertura de cartas en entrenamiento
+- [x] Pruebas automáticas de los invariantes de fuga
 
 ### `04MainAIModelTrainingAndDevelopment`
 
@@ -89,6 +89,13 @@ Inteligencia Artificial (IC-6200) - Instituto Tecnológico de Costa Rica
 - [ ] Confirmar con el profesor si las secciones de metodología y resultados del artículo se exigen en esta etapa
 - [ ] Cuaderno completo, README de reproducción y declaración de uso de IA
 - [ ] Entrega en TecDigital
+
+### `06PendientesDelArticulo`
+
+- [ ] Actualizar la tabla del corpus: 55 196 partidas y 7 540 389 estados (no 52 085 y 7 038 378)
+- [ ] Describir el escenario C como arquetipos de mazo reservados (por Pokémon principal), no cartas nuevas
+- [ ] Mencionar la deriva temporal: la tasa de victoria del índice 0 sube de 0.507 a 0.559 entre junio y julio
+- [ ] Mencionar que casi ninguna partida termina por premios y que se excluyen los estados ya resueltos (0.2 %)
 
 ---
 
