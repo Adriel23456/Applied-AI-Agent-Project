@@ -1,11 +1,12 @@
 """Ingesta: descarga cada dia de Kaggle, lo convierte a tablas Parquet y borra el crudo.
 
 Por cada dia escribe dos archivos en la carpeta de salida:
-  partidas_<dia>.parquet : una fila por partida (resultado, ganador, agentes)
+  partidas_<dia>.parquet : una fila por partida (resultado, ganador, agentes seudonimizados, mazos)
   estados_<dia>.parquet  : una fila por estado del jugador que actua (X e y del modelo)
 """
 
 import argparse
+import hashlib
 import json
 import shutil
 import subprocess
@@ -15,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from ptcg_wp.features import game_rows
+from ptcg_wp.features import deck_signatures, game_rows
 
 # Plantilla del nombre del dataset de Kaggle; {day} se reemplaza por la fecha
 SLUG = "kaggle/pokemon-tcg-ai-battle-episodes-{day}"
@@ -51,6 +52,15 @@ def download_day(day, raw_dir):
     return out
 
 
+def pseudonym(name):
+    """Seudonimo estable de un agente: mismo nombre, mismo codigo, en todos los dias.
+    Los nombres reales nunca se escriben en las tablas (ver etica del articulo).
+    """
+    if name is None:
+        return None
+    return hashlib.sha256(name.encode("utf-8")).hexdigest()[:12]
+
+
 def game_row(g, path, day):
     """Una fila de resumen por partida. 'g' es el JSON ya cargado."""
     rewards = g.get("rewards") or [None, None]
@@ -63,6 +73,8 @@ def game_row(g, path, day):
         winner = -1
     else:
         winner = 0 if r0 > r1 else 1
+    # Mazos observados en la partida completa (solo para particionar, nunca para X)
+    decks, mains = deck_signatures(g)
     return {
         "game_id": int(info.get("EpisodeId", Path(path).stem)),
         "day": day,
@@ -72,9 +84,12 @@ def game_row(g, path, day):
         "status_0": statuses[0],
         "status_1": statuses[1],
         "winner": winner,
-        # Nombres de agentes: no se publican fuera del equipo (ver etica del articulo)
-        "agent_0": agents[0].get("Name"),
-        "agent_1": agents[1].get("Name"),
+        "agent_0": pseudonym(agents[0].get("Name")),
+        "agent_1": pseudonym(agents[1].get("Name")),
+        "deck_0": decks[0],
+        "deck_1": decks[1],
+        "main_0": mains[0],
+        "main_1": mains[1],
     }
 
 

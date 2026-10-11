@@ -4,3 +4,4 @@ pyarrow
 pyyaml
 scikit-learn==1.6.1
 kaggle>=2.0
+pytest

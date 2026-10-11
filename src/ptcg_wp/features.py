@@ -2,19 +2,27 @@
 
 Una fila = el estado del tablero visto por el jugador que actua en un paso.
 La etiqueta y es 1 si ese jugador termina ganando la partida.
-Solo se usa informacion publica del tablero: nunca la mano del oponente,
-ni el contenido de los premios, ni resultados de la partida como caracteristicas.
+Solo se usa informacion que ese jugador ve en ese momento: el tablero publico de
+ambos lados y los tamanos de mano, mazo y premios. Nunca se usa el contenido de la
+mano del oponente, el contenido de los premios, search_begin_input, pasos futuros,
+el resultado de la partida ni los nombres de los agentes.
 """
+
+from collections import Counter
 
 # Valor que se pone cuando algo no existe (por ejemplo, no hay Pokemon activo).
 # Se usa junto con una columna indicadora (active_present) y no se imputa.
 SENTINEL = -1
 
 # Columnas que describen la fila pero NO deben entrar al modelo como caracteristicas
-META_COLUMNS = ["game_id", "day", "step", "turn", "acting_index", "anomalous", "setup", "y"]
+META_COLUMNS = ["game_id", "day", "step", "turn", "acting_index", "anomalous", "setup", "decided", "y"]
 
-# Nombres que jamas pueden aparecer en X (incluye resultados y nombres de agentes)
-FORBIDDEN_IN_X = set(META_COLUMNS) | {"result", "winner", "reward_0", "reward_1", "agent_0", "agent_1"}
+# Nombres que jamas pueden aparecer en X: resultados, agentes y metadatos de mazo
+# (los mazos se calculan con la partida completa y solo sirven para particionar)
+FORBIDDEN_IN_X = set(META_COLUMNS) | {
+    "result", "winner", "reward_0", "reward_1",
+    "agent_0", "agent_1", "deck_0", "deck_1", "main_0", "main_1",
+}
 
 # Condiciones especiales de un Pokemon activo
 STATUS_FLAGS = ("asleep", "burned", "confused", "paralyzed", "poisoned")
@@ -33,13 +41,29 @@ def acting_player(step):
     return None
 
 
+def in_play(p):
+    """Cantidad de Pokemon en juego de un jugador (activo mas banca, sin espacios vacios)."""
+    active = [m for m in (p.get("active") or []) if m]
+    bench = [m for m in (p.get("bench") or []) if m]
+    return len(active) + len(bench)
+
+
+def is_decided(cur):
+    """True si el tablero ya muestra la partida resuelta (fuera de la preparacion):
+    algun jugador ya no tiene premios por tomar o ya no tiene Pokemon en juego.
+    Esas filas no representan una decision real y se excluyen al modelar.
+    """
+    if cur["turn"] == 0:
+        return False
+    return any(len(p.get("prize") or []) == 0 or in_play(p) == 0 for p in cur["players"])
+
+
 def _mon_stats(mon):
-    """Resume un Pokemon en juego: vida, energias, herramientas y marcas de evolucion."""
-    hp = mon.get("hp", SENTINEL)
-    max_hp = mon.get("maxHp", SENTINEL)
+    """Resume un Pokemon en juego: carta, vida, energias, herramientas y marcas de evolucion."""
     return {
-        "hp": hp,
-        "max_hp": max_hp,
+        "card": mon.get("id", SENTINEL),
+        "hp": mon.get("hp", SENTINEL),
+        "max_hp": mon.get("maxHp", SENTINEL),
         "energies": len(mon.get("energies") or []),
         "tools": len(mon.get("tools") or []),
         "evolved": int(bool(mon.get("preEvolution"))),
@@ -50,13 +74,15 @@ def _mon_stats(mon):
 def _side(p, pre):
     """Caracteristicas de un jugador. 'pre' es el prefijo: own_ (propio) u opp_ (oponente)."""
     # El Pokemon activo es el primero de la lista; puede no existir
-    active = p["active"][0] if p.get("active") else None
+    active = [m for m in (p.get("active") or []) if m]
     # La banca puede traer espacios vacios (None); se descartan
     bench = [m for m in (p.get("bench") or []) if m]
-    a = _mon_stats(active) if active else None
+    a = _mon_stats(active[0]) if active else None
     b = [_mon_stats(m) for m in bench]
     # Todos los Pokemon en juego: activo mas banca
     mons = ([a] if a else []) + b
+    # Para sumas solo se usan vidas validas (si faltara hp no se suma el centinela)
+    hp_ok = [m for m in mons if m["hp"] >= 0]
 
     f = {
         f"{pre}deck": p["deckCount"],
@@ -67,21 +93,23 @@ def _side(p, pre):
         f"{pre}bench_n": len(bench),
         # Indicador de que existe Pokemon activo; si no, los campos activos valen SENTINEL
         f"{pre}active_present": int(a is not None),
+        # Id de la carta activa: categoria (no es una cantidad); SENTINEL si no hay activo
+        f"{pre}active_card": a["card"] if a else SENTINEL,
         f"{pre}active_hp": a["hp"] if a else SENTINEL,
         f"{pre}active_max_hp": a["max_hp"] if a else SENTINEL,
-        f"{pre}active_hp_ratio": (a["hp"] / a["max_hp"]) if a and a["max_hp"] > 0 else SENTINEL,
+        f"{pre}active_hp_ratio": (a["hp"] / a["max_hp"]) if a and a["max_hp"] > 0 and a["hp"] >= 0 else SENTINEL,
         f"{pre}active_energies": a["energies"] if a else SENTINEL,
         f"{pre}active_tools": a["tools"] if a else SENTINEL,
         f"{pre}active_evolved": a["evolved"] if a else SENTINEL,
         f"{pre}active_new": a["new"] if a else SENTINEL,
         # Totales sobre la banca y sobre todo el tablero
-        f"{pre}bench_hp": sum(m["hp"] for m in b),
+        f"{pre}bench_hp": sum(m["hp"] for m in b if m["hp"] >= 0),
         f"{pre}bench_energies": sum(m["energies"] for m in b),
-        f"{pre}total_hp": sum(m["hp"] for m in mons),
+        f"{pre}total_hp": sum(m["hp"] for m in hp_ok),
         f"{pre}total_energies": sum(m["energies"] for m in mons),
         f"{pre}total_tools": sum(m["tools"] for m in mons),
         # Cuantos Pokemon tienen vida por debajo de su maximo
-        f"{pre}damaged": sum(1 for m in mons if 0 <= m["hp"] < m["max_hp"]),
+        f"{pre}damaged": sum(1 for m in hp_ok if m["hp"] < m["max_hp"]),
     }
     # Condiciones especiales (dormido, quemado, confundido, paralizado, envenenado)
     for flag in STATUS_FLAGS:
@@ -97,8 +125,10 @@ def extract_features(cur):
     own = cur["players"][me]
     opp = cur["players"][1 - me]
 
-    # Banderas del turno actual
     f = {
+        # Numero de turno: informacion publica en el momento de decidir
+        "game_turn": cur["turn"],
+        # Banderas del turno actual
         "turn_action_count": cur["turnActionCount"],
         "energy_attached": int(bool(cur["energyAttached"])),
         "retreated": int(bool(cur["retreated"])),
@@ -149,12 +179,48 @@ def game_rows(game, day):
             "anomalous": anomalous,
             # Turno 0 es la preparacion (premios sin repartir, tablero vacio)
             "setup": int(cur["turn"] == 0),
+            # Estado ya resuelto (ver is_decided)
+            "decided": int(is_decided(cur)),
             # Etiqueta: 1 si el jugador que actua termina ganando
             "y": int(r > 0),
         }
         row.update(extract_features(cur))
         rows.append(row)
     return rows
+
+
+def deck_signatures(game):
+    """Metadatos de mazo por jugador, calculados con la partida COMPLETA.
+    Solo sirven para particionar (escenario C); nunca entran a X.
+    Devuelve (decks, mains):
+      decks[k]: ids de Pokemon que el jugador k puso en juego, ordenados y unidos con '-'
+      mains[k]: id de Pokemon que mas pasos estuvo como activo del jugador k
+    """
+    seen = [set(), set()]
+    active_count = [Counter(), Counter()]
+    for step in game.get("steps", []):
+        j = acting_player(step)
+        if j is None:
+            continue
+        cur = step[j]["observation"].get("current")
+        if not cur:
+            continue
+        # players esta indexado por jugador absoluto (0 o 1)
+        for k, p in enumerate(cur["players"]):
+            active = [m for m in (p.get("active") or []) if m]
+            bench = [m for m in (p.get("bench") or []) if m]
+            for m in active + bench:
+                seen[k].add(m["id"])
+            if active:
+                active_count[k][active[0]["id"]] += 1
+    decks = ["-".join(str(i) for i in sorted(s)) for s in seen]
+    mains = [c.most_common(1)[0][0] if c else SENTINEL for c in active_count]
+    return decks, mains
+
+
+def usable(df):
+    """Filtro unico de filas para modelar: fuera la preparacion y los estados ya resueltos."""
+    return df[(df["setup"] == 0) & (df["decided"] == 0)]
 
 
 def feature_columns(columns):
