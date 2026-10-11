@@ -46,13 +46,23 @@ def publish(data_dir, dataset_id, message, create=False):
 
 
 def fetch(dataset_id, data_dir):
-    """Descarga y descomprime los Parquet del dataset en data_dir."""
+    """Descarga y descomprime los Parquet del dataset en data_dir.
+    Muestra el mensaje de kaggle y falla con un error claro si no se pudo descargar.
+    """
     Path(data_dir).mkdir(parents=True, exist_ok=True)
-    subprocess.run(
+    res = subprocess.run(
         ["kaggle", "datasets", "download", "-d", dataset_id, "-p", str(data_dir), "--unzip"],
-        check=True,
+        capture_output=True, text=True,
     )
-    print(f"{len(list(Path(data_dir).glob('*.parquet')))} Parquet en {data_dir}")
+    salida = (res.stdout or "") + (res.stderr or "")
+    print(salida)
+    n = len(list(Path(data_dir).glob("*.parquet")))
+    if res.returncode != 0 or n == 0:
+        raise RuntimeError(
+            f"no se pudo bajar {dataset_id}: revisa el mensaje de kaggle de arriba "
+            "(401 = token incorrecto; 403 o 404 = tu usuario no tiene acceso al dataset)"
+        )
+    print(f"{n} Parquet en {data_dir}")
 
 
 def main():
