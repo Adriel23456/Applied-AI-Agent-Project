@@ -223,11 +223,21 @@ def usable(df):
     return df[(df["setup"] == 0) & (df["decided"] == 0)]
 
 
-def feature_columns(columns):
+# Columnas de identidad de carta (contexto de mazo). Por decision del articulo NO entran al
+# modelo principal: solo se usan en la ablacion declarada (prueba de H2) y en la auditoria
+# de cobertura de cartas.
+CARD_COLUMNS = ["own_active_card", "opp_active_card"]
+
+
+def feature_columns(columns, include_cards=False):
     """Devuelve las columnas que van a X (todo menos las meta).
+    - include_cards=False (modelo principal): excluye los ids de carta (CARD_COLUMNS).
+    - include_cards=True: solo para la ablacion de contexto de mazo.
     Falla si alguna columna prohibida se cuela: es la defensa contra fuga de informacion.
     """
     cols = [c for c in columns if c not in META_COLUMNS]
+    if not include_cards:
+        cols = [c for c in cols if c not in CARD_COLUMNS]
     bad = [c for c in cols if c in FORBIDDEN_IN_X]
     if bad:
         raise ValueError(f"columnas prohibidas en X: {bad}")

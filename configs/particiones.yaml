@@ -1,0 +1,10 @@
+# Escenario B (cronologico): asignacion de DIAS COMPLETOS a cada particion.
+# - excluir: el primer dia es un arranque parcial de la competencia (ver articulo).
+#   Si el EDA (celda B7) muestra un dia con concentracion anomala de mazos/agentes, se agrega aqui.
+# - Los escenarios A y C no usan este archivo.
+escenario_B:
+  excluir: ["2026-06-17"]
+  train: ["2026-06-18", "2026-06-19", "2026-06-20", "2026-06-22", "2026-06-25"]
+  val: ["2026-07-07"]
+  calib: ["2026-07-11"]
+  test: ["2026-07-15", "2026-07-22"]

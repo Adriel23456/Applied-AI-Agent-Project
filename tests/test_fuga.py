@@ -13,7 +13,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from ptcg_wp.features import (  # noqa: E402
-    FORBIDDEN_IN_X, META_COLUMNS, deck_signatures, feature_columns, game_rows, usable,
+    CARD_COLUMNS, FORBIDDEN_IN_X, META_COLUMNS, deck_signatures, feature_columns, game_rows, usable,
 )
 
 
@@ -150,6 +150,12 @@ def test_forbidden_columns_never_reach_x():
     with pytest.raises(ValueError):
         feature_columns(cols + ["deck_0"])
 
+def test_card_ids_only_enter_x_when_requested():
+    """Los ids de carta (contexto de mazo) no entran al modelo principal, solo a la ablacion."""
+    cols = list(game_rows(game(), "d")[0].keys())
+    assert not set(CARD_COLUMNS) & set(feature_columns(cols))
+    assert set(CARD_COLUMNS) <= set(feature_columns(cols, include_cards=True))
+    assert len(feature_columns(cols, include_cards=True)) == len(feature_columns(cols)) + 2
 
 # ---------- Metadatos de mazo ----------
 
