@@ -1,0 +1,3 @@
+# Dataset privado de Kaggle donde se guardan las tablas procesadas (Parquet).
+# Lo publica una sola persona; los demas lo bajan (hay que agregarlos como colaboradores).
+kaggle_dataset: "adrielchavessalazar/ptcg-wp-tablas"
