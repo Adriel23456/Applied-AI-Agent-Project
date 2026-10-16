@@ -14,12 +14,17 @@ from sklearn.preprocessing import StandardScaler
 from ptcg_wp.baselines import weights_by_game
 
 
+# Valores de regularización comparados por búsqueda; C pequeño penaliza más los coeficientes.
 C_VALUES = (1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1e3, 1e4)
 STAGES = ("inicio", "medio", "final")
 
 
 def _collect_rows(stream, features, split_name, selected_games=None):
-    """Junta un subconjunto de un escenario en arreglos compactos para sklearn."""
+    """Junta un subconjunto de un escenario en arreglos compactos para sklearn.
+
+    Lee los días uno por uno y conserva solo las filas de la partición solicitada
+    y, si se indica, de las partidas seleccionadas para un pliegue.
+    """
     x_parts, y_parts, game_parts, stage_parts = [], [], [], []
     for day in stream:
         mask = day["split"].eq(split_name)
@@ -43,7 +48,11 @@ def _collect_rows(stream, features, split_name, selected_games=None):
 
 
 def _pipeline(c_value, max_iter):
-    """Crea el Pipeline de B2; el escalador se ajusta dentro de cada train."""
+    """Crea el preprocesamiento y clasificador que forman B2.
+
+    El escalador se ajusta junto con la regresión logística dentro de cada
+    pliegue, para que no use información de las partidas reservadas.
+    """
     return Pipeline([
         ("scale", StandardScaler()),
             ("logit", LogisticRegression(
@@ -53,7 +62,7 @@ def _pipeline(c_value, max_iter):
 
 
 def _metric_rows(y, probability, game_ids, stages, common):
-    """Calcula métricas ponderadas globales y por etapa para un conjunto."""
+    """Calcula métricas globales y por etapa, dando igual peso a cada partida."""
     groups = [("global", np.ones(len(y), dtype=bool))]
     groups.extend((stage, stages == stage) for stage in STAGES)
     rows = []
@@ -78,7 +87,12 @@ def _metric_rows(y, probability, game_ids, stages, common):
 
 def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
                 seed=2026, max_iter=300, max_folds=None):
-    """Evalua cada C con GroupKFold por partida, recorriendo un dia por vez."""
+    """Compara valores de C con GroupKFold, manteniendo juntas las partidas.
+
+    Cada pliegue ajusta con partidas de entrenamiento y mide en partidas
+    reservadas. ``max_folds`` permite ejecutar un piloto corto para estimar
+    tiempo y memoria antes de lanzar toda la búsqueda.
+    """
     train_games = stream._splits.index[stream._splits.eq("train")].to_numpy()
     splitter = GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     results = []
@@ -121,7 +135,10 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
 
 
 def summarize_b2_cv(fold_results):
-    """Promedia los pliegues por C y devuelve hasta tres candidatos por métricas."""
+    """Promedia resultados de los pliegues y propone hasta tres valores de C.
+
+    Conserva el mejor C según AUC, log loss y Brier, eliminando duplicados.
+    """
     global_rows = fold_results.loc[fold_results["etapa"] == "global"]
     summary = global_rows.groupby("C", as_index=False).agg(
         auc=("auc", "mean"),
@@ -141,7 +158,11 @@ def summarize_b2_cv(fold_results):
 
 
 def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=300):
-    """Ajusta finalistas con todo train y los compara en val, sin tocar calib/test."""
+    """Reajusta finalistas con todo train y los compara en val.
+
+    ``val`` sirve para la decisión final; las particiones ``calib`` y ``test``
+    no se leen ni se usan aquí.
+    """
     x_fit, y_fit, g_fit, _ = _collect_rows(stream, features, "train")
     x_val, y_val, g_val, stage_val = _collect_rows(stream, features, "val")
     fit_weights = weights_by_game(g_fit)
@@ -171,7 +192,11 @@ def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=300):
 
 def b2_row_split_demo(stream, features, c_value, test_size=0.2,
                       seed=2026, max_iter=300):
-    """Muestra la fuga de una division por fila usando solo train del escenario A."""
+    """Demuestra por qué dividir filas puede filtrar partidas entre ambos lados.
+
+    Es un diagnóstico: estados de una misma partida pueden acabar en train y
+    evaluación, haciendo que la evaluación parezca más favorable.
+    """
     x_all, y_all, games_all, stages_all = _collect_rows(stream, features, "train")
     row_ids = np.arange(len(y_all))
     fit_idx, held_idx = train_test_split(
