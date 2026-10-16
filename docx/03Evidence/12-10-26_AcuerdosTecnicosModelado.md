@@ -44,6 +44,13 @@
 - Si el costo obliga a submuestrear el bosque, se seleccionarán partidas completas, con semilla fija.
 - Se registrarán la semilla, el número de partidas seleccionadas y la proporción que representan de `train`.
 
+### B2: regresión logística regularizada
+
+- B2 usará las 62 características numéricas del modelo principal, sin IDs de carta, dentro de un `Pipeline` con `StandardScaler` y regresión logística con penalización L2.
+- La regularización se escogerá mediante búsqueda exhaustiva en cuadrícula logarítmica, no mediante Optuna. Solo se explora un hiperparámetro (`C`), por lo que evaluar cada candidato es más simple y auditable que una búsqueda bayesiana.
+- La cuadrícula propuesta es `C = [1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100, 1000, 10000]`. Los valores pequeños imponen una regularización más fuerte; los grandes, una más suave.
+- Cada valor se evaluará en cinco pliegues de `GroupKFold` por `game_id`, con peso total igual por partida. Antes de ejecutar todos los escenarios se medirá el costo de tiempo y memoria en una prueba piloto.
+
 ### Semillas y reproducibilidad
 
 - Se conserva `SEED = 2026` para las particiones existentes.
@@ -69,7 +76,7 @@
 3. Elegir el nivel de confianza y la cantidad de remuestreos para los intervalos. El 95 % y las 2 000 repeticiones se mencionaron solo como ejemplos recomendados, no como acuerdos.
 4. Fijar la versión de scikit-learn que se instalará en Colab para la parada temprana agrupada.
 5. Definir los rangos y límites de tiempo y pruebas de Optuna después de la prueba piloto.
-6. Definir el nivel de ajuste de B2 y B3. Sigue pendiente si usarán configuraciones predeterminadas o una búsqueda pequeña y acotada.
+6. Definir el nivel de ajuste de B3. Sigue pendiente si usará configuración predeterminada o una búsqueda pequeña y acotada.
 7. Cerrar el protocolo de LightGBM: alcance de su búsqueda, presupuesto comparable con B4 y criterio para considerar que supera claramente al modelo principal.
 8. Definir cuántas repeticiones con distintas semillas se harán y si repetirán solo el ajuste final o también la búsqueda completa.
 
