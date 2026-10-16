@@ -19,6 +19,19 @@ C_VALUES = (1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1e3, 1e4)
 STAGES = ("inicio", "medio", "final")
 
 
+def sample_train_games(stream, max_games, seed=2026):
+    """Elige partidas completas de train con una semilla reproducible.
+
+    Limitar por partida, en vez de por fila, mantiene juntos los estados de
+    cada juego y evita que el ajuste de Colab supere la memoria disponible.
+    """
+    games = stream._splits.index[stream._splits.eq("train")].to_numpy()
+    if max_games is None or len(games) <= max_games:
+        return games
+    rng = np.random.default_rng(seed)
+    return rng.choice(games, size=max_games, replace=False)
+
+
 def _collect_rows(stream, features, split_name, selected_games=None):
     """Junta un subconjunto de un escenario en arreglos compactos para sklearn.
 
@@ -86,14 +99,16 @@ def _metric_rows(y, probability, game_ids, stages, common):
 
 
 def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
-                seed=2026, max_iter=300, max_folds=None):
+                seed=2026, max_iter=300, max_folds=None, train_games=None):
     """Compara valores de C con GroupKFold, manteniendo juntas las partidas.
 
     Cada pliegue ajusta con partidas de entrenamiento y mide en partidas
     reservadas. ``max_folds`` permite ejecutar un piloto corto para estimar
     tiempo y memoria antes de lanzar toda la búsqueda.
     """
-    train_games = stream._splits.index[stream._splits.eq("train")].to_numpy()
+    if train_games is None:
+        train_games = stream._splits.index[stream._splits.eq("train")].to_numpy()
+    train_games = np.asarray(train_games)
     splitter = GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     results = []
     folds = splitter.split(train_games, groups=train_games)
@@ -121,6 +136,7 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
                 "escenario": stream.scenario,
                 "C": float(c_value),
                 "fold": fold_number,
+                "partidas_train_muestra": len(train_games),
                 "n_iter": int(model.named_steps["logit"].n_iter_[0]),
                 "max_iter_alcanzado": int(model.named_steps["logit"].n_iter_[0]) >= max_iter,
             }
@@ -157,13 +173,16 @@ def summarize_b2_cv(fold_results):
     return summary.sort_values("C").reset_index(drop=True), ordered
 
 
-def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=300):
+def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=300,
+                          train_games=None):
     """Reajusta finalistas con todo train y los compara en val.
 
     ``val`` sirve para la decisión final; las particiones ``calib`` y ``test``
     no se leen ni se usan aquí.
     """
-    x_fit, y_fit, g_fit, _ = _collect_rows(stream, features, "train")
+    x_fit, y_fit, g_fit, _ = _collect_rows(
+        stream, features, "train", selected_games=train_games
+    )
     x_val, y_val, g_val, stage_val = _collect_rows(stream, features, "val")
     fit_weights = weights_by_game(g_fit)
     results = []
@@ -179,6 +198,7 @@ def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=300):
             "escenario": stream.scenario,
             "modelo": "B2",
             "C": float(c_value),
+            "partidas_train_muestra": pd.Series(g_fit).nunique(),
             "n_iter": int(model.named_steps["logit"].n_iter_[0]),
             "max_iter_alcanzado": int(model.named_steps["logit"].n_iter_[0]) >= max_iter,
         }
