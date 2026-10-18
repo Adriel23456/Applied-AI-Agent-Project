@@ -1,6 +1,11 @@
-"""B2: regresion logistica regularizada con lectura por dia para Colab."""
+"""B2: regresión logística L2 con entrenamiento por lotes y todos los juegos."""
 
 import gc
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import warnings
+
+import joblib
 
 import numpy as np
 import pandas as pd
@@ -12,6 +17,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from ptcg_wp.baselines import weights_by_game
+from ptcg_wp.b2_streaming import (evaluate_stream, fit_incremental, game_counts,
+                                 prepare_training)
 
 
 # Valores de regularización comparados por búsqueda; C pequeño penaliza más los coeficientes.
@@ -22,30 +29,25 @@ STAGES = ("inicio", "medio", "final")
 def sample_train_games(stream, max_games, seed=2026):
     """Elige partidas completas de train con una semilla reproducible.
 
-    Limitar por partida, en vez de por fila, mantiene juntos los estados de
-    cada juego y evita que el ajuste de Colab supere la memoria disponible.
+    Solo para pruebas explícitamente muestreadas; el flujo normal usa todo train.
     """
     games = stream._splits.index[stream._splits.eq("train")].to_numpy()
+    if max_games is not None and max_games < 1:
+        raise ValueError("max_games debe ser positivo o None")
     if max_games is None or len(games) <= max_games:
         return games
     rng = np.random.default_rng(seed)
     return rng.choice(games, size=max_games, replace=False)
 
 
-def _collect_rows(stream, features, split_name, selected_games=None):
-    """Junta un subconjunto de un escenario en arreglos compactos para sklearn.
-
-    Lee los días uno por uno y conserva solo las filas de la partición solicitada
-    y, si se indica, de las partidas seleccionadas para un pliegue.
-    """
+def _collect_rows(stream, features, split_name, selected_games=None, max_rows=100000):
+    """Solo para la demo por filas: falla antes de acumular más de max_rows."""
     x_parts, y_parts, game_parts, stage_parts = [], [], [], []
-    for day in stream:
-        mask = day["split"].eq(split_name)
-        if selected_games is not None:
-            mask &= day["game_id"].isin(selected_games)
-        if not mask.any():
-            continue
-        part = day.loc[mask]
+    total = 0
+    for part in stream.iter_batches(split_name, selected_games, columns=features):
+        total += len(part)
+        if total > max_rows:
+            raise ValueError("demo por fila demasiado grande; reduce max_games (B2 principal no usa esta demo)")
         x_parts.append(part.loc[:, features].to_numpy(dtype=np.float32))
         y_parts.append(part["y"].to_numpy(dtype=np.uint8))
         game_parts.append(part["game_id"].to_numpy())
@@ -61,16 +63,12 @@ def _collect_rows(stream, features, split_name, selected_games=None):
 
 
 def _pipeline(c_value, max_iter):
-    """Crea el preprocesamiento y clasificador que forman B2.
-
-    El escalador se ajusta junto con la regresión logística dentro de cada
-    pliegue, para que no use información de las partidas reservadas.
-    """
+    """LBFGS en memoria, reservado para la demo pequeña de fuga por filas."""
     return Pipeline([
         ("scale", StandardScaler()),
-            ("logit", LogisticRegression(
-                C=float(c_value), penalty="l2", solver="lbfgs", max_iter=max_iter
-            )),
+        ("logit", LogisticRegression(
+            C=float(c_value), penalty="l2", solver="lbfgs", max_iter=max_iter
+        )),
     ])
 
 
@@ -98,17 +96,36 @@ def _metric_rows(y, probability, game_ids, stages, common):
     return rows
 
 
-def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
-                seed=2026, max_iter=300, max_folds=None, train_games=None):
-    """Compara valores de C con GroupKFold, manteniendo juntas las partidas.
+def _training_games(stream, selected):
+    available = game_counts(stream, "train")["global"].index
+    games = available if selected is None else pd.Index(selected)
+    if games.has_duplicates or not games.isin(available).all():
+        raise ValueError("train_games debe contener partidas únicas con estados útiles de train")
+    if not len(games):
+        raise ValueError("train_games está vacío")
+    return games.to_numpy(), len(available)
 
-    Cada pliegue ajusta con partidas de entrenamiento y mide en partidas
-    reservadas. ``max_folds`` permite ejecutar un piloto corto para estimar
-    tiempo y memoria antes de lanzar toda la búsqueda.
+
+def _save_progress(results, output_dir, filename):
+    if output_dir is not None:
+        directory = Path(output_dir)
+        directory.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(results).to_csv(directory / filename, index=False)
+
+
+def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
+                seed=2026, max_iter=20, max_folds=None, train_games=None,
+                cache_dir=None, output_dir=None, eta0=0.05, tolerance=1e-3,
+                verbose=True):
+    """Compara C por partidas; max_iter cuenta épocas completas de SGD.
+
+    train_games=None incluye todo train útil. max_folds=1 reduce el trabajo del
+    piloto, conservando la cobertura de datos. Cachés temporales en disco local
+    se eliminan al terminar cada pliegue, incluso ante una excepción normal.
     """
-    if train_games is None:
-        train_games = stream._splits.index[stream._splits.eq("train")].to_numpy()
-    train_games = np.asarray(train_games)
+    train_games, available = _training_games(stream, train_games)
+    if max_folds is not None and max_folds < 1:
+        raise ValueError("max_folds debe ser positivo o None")
     splitter = GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     results = []
     folds = splitter.split(train_games, groups=train_games)
@@ -116,35 +133,23 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
     for fold_number, (fit_idx, held_idx) in enumerate(folds, start=1):
         fit_games = train_games[fit_idx]
         held_games = train_games[held_idx]
-        x_fit, y_fit, g_fit, _ = _collect_rows(
-            stream, features, "train", selected_games=fit_games
-        )
-        x_held, y_held, g_held, stage_held = _collect_rows(
-            stream, features, "train", selected_games=held_games
-        )
-        fit_weights = weights_by_game(g_fit)
-
-        for c_value in c_values:
-            model = _pipeline(c_value, max_iter)
-            model.fit(
-                x_fit, y_fit,
-                scale__sample_weight=fit_weights,
-                logit__sample_weight=fit_weights,
-            )
-            probability = model.predict_proba(x_held)[:, 1]
-            common = {
-                "escenario": stream.scenario,
-                "C": float(c_value),
-                "fold": fold_number,
-                "partidas_train_muestra": len(train_games),
-                "n_iter": int(model.named_steps["logit"].n_iter_[0]),
-                "max_iter_alcanzado": int(model.named_steps["logit"].n_iter_[0]) >= max_iter,
-            }
-            results.extend(_metric_rows(y_held, probability, g_held, stage_held, common))
-            del model, probability
-
-        del x_fit, y_fit, g_fit, x_held, y_held, g_held, stage_held, fit_weights
-        gc.collect()
+        if verbose:
+            print(f"B2 {stream.scenario}, pliegue {fold_number}/{n_splits}: "
+                  f"{len(fit_games)} partidas fit, {len(held_games)} retenidas; preparando disco", flush=True)
+        with TemporaryDirectory(prefix="b2-fit-", dir=cache_dir) as directory:
+            scaler, paths, n_rows, n_games = prepare_training(stream, features, fit_games, directory)
+            for c_value in c_values:
+                model, info = fit_incremental(scaler, paths, n_rows, n_games, c_value,
+                                             max_iter, seed, eta0, tolerance, verbose)
+                common = {"escenario": stream.scenario, "C": float(c_value), "fold": fold_number,
+                          "partidas_train_muestra": len(train_games),
+                          "partidas_train_disponibles": available,
+                          "fraccion_train": len(train_games) / available,
+                          "batch_size": stream.batch_size, **info}
+                results.extend(evaluate_stream(model, stream, features, "train", held_games,
+                                               directory, common))
+                _save_progress(results, output_dir, f"b2_cv_{stream.scenario}.csv")
+                del model
         if max_folds is not None and fold_number >= max_folds:
             break
     return pd.DataFrame(results)
@@ -156,6 +161,10 @@ def summarize_b2_cv(fold_results):
     Conserva el mejor C según AUC, log loss y Brier, eliminando duplicados.
     """
     global_rows = fold_results.loc[fold_results["etapa"] == "global"]
+    if not global_rows["convergencia"].all():
+        warnings.warn("Hay ajustes B2 sin convergencia: la selección es provisional; "
+                      "revisar gradiente_train y aumentar épocas antes de conclusiones finales.",
+                      RuntimeWarning, stacklevel=2)
     summary = global_rows.groupby("C", as_index=False).agg(
         auc=("auc", "mean"),
         auc_sd=("auc", "std"),
@@ -163,6 +172,8 @@ def summarize_b2_cv(fold_results):
         log_loss_sd=("log_loss", "std"),
         brier=("brier", "mean"),
         brier_sd=("brier", "std"),
+        pliegues_convergentes=("convergencia", "sum"),
+        pliegues_evaluados=("fold", "count"),
     )
     ordered = []
     for metric, ascending in (("auc", False), ("log_loss", True), ("brier", True)):
@@ -173,51 +184,46 @@ def summarize_b2_cv(fold_results):
     return summary.sort_values("C").reset_index(drop=True), ordered
 
 
-def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=300,
-                          train_games=None):
+def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=20,
+                          train_games=None, seed=2026, cache_dir=None, output_dir=None,
+                          eta0=0.05, tolerance=1e-3, verbose=True):
     """Reajusta finalistas con todo train y los compara en val.
 
-    ``val`` sirve para la decisión final; las particiones ``calib`` y ``test``
-    no se leen ni se usan aquí.
+    El escalador y la convergencia se calculan con train. Calib/test no se
+    utilizan, aunque compartan archivos Parquet con estados de train/val.
+    Si output_dir está definido, guarda cada candidata y sus métricas.
     """
-    x_fit, y_fit, g_fit, _ = _collect_rows(
-        stream, features, "train", selected_games=train_games
-    )
-    x_val, y_val, g_val, stage_val = _collect_rows(stream, features, "val")
-    fit_weights = weights_by_game(g_fit)
+    train_games, available = _training_games(stream, train_games)
     results = []
-    for c_value in candidate_cs:
-        model = _pipeline(c_value, max_iter)
-        model.fit(
-            x_fit, y_fit,
-            scale__sample_weight=fit_weights,
-            logit__sample_weight=fit_weights,
-        )
-        probability = model.predict_proba(x_val)[:, 1]
-        common = {
-            "escenario": stream.scenario,
-            "modelo": "B2",
-            "C": float(c_value),
-            "partidas_train_muestra": pd.Series(g_fit).nunique(),
-            "n_iter": int(model.named_steps["logit"].n_iter_[0]),
-            "max_iter_alcanzado": int(model.named_steps["logit"].n_iter_[0]) >= max_iter,
-        }
-        results.extend(_metric_rows(y_val, probability, g_val, stage_val, common))
-        del model, probability
-        gc.collect()
-    del x_fit, y_fit, g_fit, x_val, y_val, g_val, stage_val, fit_weights
-    gc.collect()
+    with TemporaryDirectory(prefix="b2-final-", dir=cache_dir) as directory:
+        scaler, paths, n_rows, n_games = prepare_training(stream, features, train_games, directory)
+        for c_value in candidate_cs:
+            model, info = fit_incremental(scaler, paths, n_rows, n_games, c_value,
+                                         max_iter, seed, eta0, tolerance, verbose)
+            common = {"escenario": stream.scenario, "modelo": "B2", "C": float(c_value),
+                      "partidas_train_muestra": len(train_games),
+                      "partidas_train_disponibles": available, "fraccion_train": len(train_games) / available,
+                      "batch_size": stream.batch_size, **info}
+            results.extend(evaluate_stream(model, stream, features, "val", None, directory, common))
+            _save_progress(results, output_dir, f"b2_val_{stream.scenario}.csv")
+            if output_dir is not None:
+                artifact = {"model": model, "features": list(features), "cuts": stream.cuts, **common}
+                joblib.dump(artifact, Path(output_dir) / f"b2_{stream.scenario}_C{c_value:g}.joblib")
+            del model
     return pd.DataFrame(results)
 
 
 def b2_row_split_demo(stream, features, c_value, test_size=0.2,
-                      seed=2026, max_iter=300):
+                      seed=2026, max_iter=300, max_games=200):
     """Demuestra por qué dividir filas puede filtrar partidas entre ambos lados.
 
     Es un diagnóstico: estados de una misma partida pueden acabar en train y
     evaluación, haciendo que la evaluación parezca más favorable.
+    Usa LBFGS en una muestra explícita y como máximo 100,000 estados; no es
+    directamente comparable con los reportes completos del nuevo B2 SGD.
     """
-    x_all, y_all, games_all, stages_all = _collect_rows(stream, features, "train")
+    games = sample_train_games(stream, max_games, seed)
+    x_all, y_all, games_all, stages_all = _collect_rows(stream, features, "train", games)
     row_ids = np.arange(len(y_all))
     fit_idx, held_idx = train_test_split(
         row_ids, test_size=test_size, random_state=seed, stratify=y_all

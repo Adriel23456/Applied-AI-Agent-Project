@@ -46,6 +46,11 @@
 
 ### B2: regresión logística regularizada
 
+Actualización de implementación del 18 de octubre: B2 pasa a ajuste incremental
+con todos los estados de train. Se conserva el objetivo logístico L2 y se
+convierte C a alpha; consultar [B2 con memoria acotada](18-10-26_B2MemoriaAcotada.md)
+para el optimizador, la evaluación en disco y las comprobaciones de convergencia.
+
 - B2 usará las 62 características numéricas del modelo principal, sin IDs de carta, dentro de un `Pipeline` con `StandardScaler` y regresión logística con penalización L2.
 - La regularización se escogerá mediante búsqueda exhaustiva en cuadrícula logarítmica, no mediante Optuna. Solo se explora un hiperparámetro (`C`), por lo que evaluar cada candidato es más simple y auditable que una búsqueda bayesiana.
 - La cuadrícula propuesta es `C = [1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100, 1000, 10000]`. Los valores pequeños imponen una regularización más fuerte; los grandes, una más suave.
