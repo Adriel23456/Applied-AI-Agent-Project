@@ -1,7 +1,10 @@
 """B2: regresión logística L2 con entrenamiento por lotes y todos los juegos."""
 
 import gc
+import hashlib
+import json
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from tempfile import TemporaryDirectory
 import warnings
 
@@ -9,6 +12,7 @@ import joblib
 
 import numpy as np
 import pandas as pd
+from sklearn import __version__ as sklearn_version
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import brier_score_loss, log_loss, roc_auc_score
 from sklearn.model_selection import GroupKFold
@@ -24,6 +28,7 @@ from ptcg_wp.b2_streaming import (evaluate_stream, fit_incremental, game_counts,
 # Valores de regularización comparados por búsqueda; C pequeño penaliza más los coeficientes.
 C_VALUES = (1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1e3, 1e4)
 STAGES = ("inicio", "medio", "final")
+B2_CHECKPOINT_VERSION = 2
 
 
 def sample_train_games(stream, max_games, seed=2026):
@@ -110,13 +115,58 @@ def _save_progress(results, output_dir, filename):
     if output_dir is not None:
         directory = Path(output_dir)
         directory.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(results).to_csv(directory / filename, index=False)
+        destination = directory / filename
+        with NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".tmp",
+                                prefix=f"{destination.name}.", dir=directory,
+                                delete=False) as temporary:
+            temporary_path = Path(temporary.name)
+        try:
+            pd.DataFrame(results).to_csv(temporary_path, index=False)
+            temporary_path.replace(destination)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+
+
+def _b2_manifest(stream, features, train_games, c_values, n_splits, seed,
+                 max_iter, max_folds, eta0, tolerance):
+    game_ids = json.dumps([str(game) for game in train_games], ensure_ascii=False,
+                          separators=(",", ":")).encode("utf-8")
+    return {
+        "checkpoint_version": B2_CHECKPOINT_VERSION,
+        "sklearn_version": sklearn_version,
+        "scenario": stream.scenario,
+        "features": list(features),
+        "train_games_sha256": hashlib.sha256(game_ids).hexdigest(),
+        "n_train_games": len(train_games),
+        "c_values": [float(value) for value in c_values],
+        "n_splits": n_splits,
+        "max_folds": max_folds,
+        "seed": seed,
+        "max_iter": max_iter,
+        "eta0": eta0,
+        "tolerance": tolerance,
+        "batch_size": stream.batch_size,
+    }
+
+
+def _atomic_json(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".tmp",
+                            prefix=f"{path.name}.", dir=path.parent,
+                            delete=False) as temporary:
+        temporary_path = Path(temporary.name)
+        json.dump(value, temporary, ensure_ascii=False, indent=2, sort_keys=True)
+    try:
+        temporary_path.replace(path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
 
 def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
                 seed=2026, max_iter=20, max_folds=None, train_games=None,
                 cache_dir=None, output_dir=None, eta0=0.05, tolerance=1e-3,
-                verbose=True):
+                verbose=True, resume=True):
     """Compara C por partidas; max_iter cuenta épocas completas de SGD.
 
     train_games=None incluye todo train útil. max_folds=1 reduce el trabajo del
@@ -127,12 +177,58 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
     if max_folds is not None and max_folds < 1:
         raise ValueError("max_folds debe ser positivo o None")
     splitter = GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    c_values = tuple(float(value) for value in c_values)
     results = []
+    completed_folds = set()
+    progress_path = manifest_path = None
+    manifest = _b2_manifest(stream, features, train_games, c_values, n_splits,
+                            seed, max_iter, max_folds, eta0, tolerance)
+    if output_dir is not None:
+        directory = Path(output_dir)
+        directory.mkdir(parents=True, exist_ok=True)
+        progress_path = directory / f"b2_cv_{stream.scenario}.csv"
+        manifest_path = directory / f"b2_cv_{stream.scenario}_manifest.json"
+        if resume and (progress_path.exists() or manifest_path.exists()):
+            if not progress_path.exists() or not manifest_path.exists():
+                raise ValueError(
+                    f"Checkpoint B2 incompleto para escenario {stream.scenario}. "
+                    "No borres los archivos: usa otra carpeta de salida o revisa ambos archivos."
+                )
+            saved_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if saved_manifest != manifest:
+                raise ValueError(
+                    f"La configuración de B2 no coincide con el checkpoint de "
+                    f"escenario {stream.scenario}. Restaura la configuración original "
+                    "o elige una nueva carpeta de salida."
+                )
+            saved = pd.read_csv(progress_path)
+            results = saved.to_dict("records")
+            completed_folds = {
+                int(row["fold"])
+                for row in results if row.get("etapa") == "global"
+            }
+            if verbose:
+                print(f"B2 {stream.scenario}: checkpoint encontrado; "
+                      f"{len(completed_folds)} pliegues completos", flush=True)
+        elif not progress_path.exists() and not manifest_path.exists():
+            _atomic_json(manifest_path, manifest)
+        elif not resume:
+            raise ValueError(
+                f"Ya existe un checkpoint B2 en {directory}. "
+                "Usa otra carpeta de salida para iniciar un experimento nuevo."
+            )
     folds = splitter.split(train_games, groups=train_games)
 
     for fold_number, (fit_idx, held_idx) in enumerate(folds, start=1):
         fit_games = train_games[fit_idx]
         held_games = train_games[held_idx]
+        if fold_number in completed_folds:
+            if verbose:
+                print(f"B2 {stream.scenario}, pliegue {fold_number}/{n_splits}: "
+                      "ya estaba guardado; se omite", flush=True)
+            if max_folds is not None and fold_number >= max_folds:
+                break
+            continue
         if verbose:
             print(f"B2 {stream.scenario}, pliegue {fold_number}/{n_splits}: "
                   f"{len(fit_games)} partidas fit, {len(held_games)} retenidas; preparando disco", flush=True)
@@ -148,8 +244,11 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
                           "batch_size": stream.batch_size, **info}
                 results.extend(evaluate_stream(model, stream, features, "train", held_games,
                                                directory, common))
-                _save_progress(results, output_dir, f"b2_cv_{stream.scenario}.csv")
                 del model
+            # El snapshot se escribe solo cuando todos los C de este fold
+            # tienen sus métricas. Un fallo a mitad del fold lo repite entero.
+            _save_progress(results, output_dir, f"b2_cv_{stream.scenario}.csv")
+            completed_folds.add(fold_number)
         if max_folds is not None and fold_number >= max_folds:
             break
     return pd.DataFrame(results)
@@ -191,13 +290,48 @@ def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=20,
 
     El escalador y la convergencia se calculan con train. Calib/test no se
     utilizan, aunque compartan archivos Parquet con estados de train/val.
-    Si output_dir está definido, guarda cada candidata y sus métricas.
+    Si output_dir está definido, guarda cada candidata y sus métricas y reanuda
+    los candidatos ya terminados tras una interrupción.
     """
     train_games, available = _training_games(stream, train_games)
-    results = []
+    candidate_cs = tuple(float(value) for value in candidate_cs)
+    results, completed = [], set()
+    progress_path = manifest_path = None
+    if output_dir is not None:
+        directory = Path(output_dir)
+        directory.mkdir(parents=True, exist_ok=True)
+        progress_path = directory / f"b2_val_{stream.scenario}.csv"
+        manifest_path = directory / f"b2_val_{stream.scenario}_manifest.json"
+        val_games = game_counts(stream, "val")["global"].index.to_numpy()
+        manifest = _b2_manifest(stream, features, train_games, candidate_cs,
+                                None, seed, max_iter, None, eta0, tolerance)
+        manifest["stage"] = "val_finalists"
+        manifest["val_games_sha256"] = hashlib.sha256(
+            json.dumps([str(game) for game in val_games], ensure_ascii=False,
+                       separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        if progress_path.exists() or manifest_path.exists():
+            if not progress_path.exists() or not manifest_path.exists():
+                raise ValueError(f"Checkpoint de finalistas incompleto para {stream.scenario}")
+            if json.loads(manifest_path.read_text(encoding="utf-8")) != manifest:
+                raise ValueError(
+                    f"La configuración de finalistas no coincide con el checkpoint de "
+                    f"escenario {stream.scenario}; restaura los parámetros o usa otra carpeta."
+                )
+            saved = pd.read_csv(progress_path)
+            results = saved.to_dict("records")
+            completed = {float(row["C"]) for row in results
+                         if row.get("etapa") == "global"}
+            if verbose:
+                print(f"B2 {stream.scenario}: {len(completed)} finalistas ya guardados; "
+                      "se omiten", flush=True)
+        else:
+            _atomic_json(manifest_path, manifest)
     with TemporaryDirectory(prefix="b2-final-", dir=cache_dir) as directory:
         scaler, paths, n_rows, n_games = prepare_training(stream, features, train_games, directory)
         for c_value in candidate_cs:
+            if c_value in completed:
+                continue
             model, info = fit_incremental(scaler, paths, n_rows, n_games, c_value,
                                          max_iter, seed, eta0, tolerance, verbose)
             common = {"escenario": stream.scenario, "modelo": "B2", "C": float(c_value),
@@ -205,10 +339,11 @@ def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=20,
                       "partidas_train_disponibles": available, "fraccion_train": len(train_games) / available,
                       "batch_size": stream.batch_size, **info}
             results.extend(evaluate_stream(model, stream, features, "val", None, directory, common))
-            _save_progress(results, output_dir, f"b2_val_{stream.scenario}.csv")
             if output_dir is not None:
                 artifact = {"model": model, "features": list(features), "cuts": stream.cuts, **common}
                 joblib.dump(artifact, Path(output_dir) / f"b2_{stream.scenario}_C{c_value:g}.joblib")
+            _save_progress(results, output_dir, f"b2_val_{stream.scenario}.csv")
+            completed.add(c_value)
             del model
     return pd.DataFrame(results)
 

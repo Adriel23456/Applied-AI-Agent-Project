@@ -41,8 +41,12 @@
 
 ### B3: bosque aleatorio
 
+- B3 comparará un árbol de decisión y un bosque aleatorio. Cada tipo tendrá su propia búsqueda TPE; AUC, log loss y Brier producirán hasta tres configuraciones finalistas por tipo, sin combinar métricas con pesos arbitrarios.
+- Las búsquedas usarán cinco pliegues agrupados por `game_id` dentro de `train`. `val` solo comparará las finalistas, y `test` seguirá reservado.
+- Espacio inicial implementado para revisión: árbol (`criterion`, `max_depth`, `min_samples_leaf`, `ccp_alpha`); bosque (`n_estimators`, `criterion`, `max_features`, `max_depth`, `min_samples_leaf`). Los límites y cantidad de pruebas son controles explícitos del cuaderno y deben ajustarse con el piloto antes del ciclo completo.
 - Si el costo obliga a submuestrear el bosque, se seleccionarán partidas completas, con semilla fija.
 - Se registrarán la semilla, el número de partidas seleccionadas y la proporción que representan de `train`.
+- El piloto usa 1 000 partidas completas, dos pliegues (ejecuta uno para medir) y una prueba por métrica/modelo. En modo completo, `max_train_games=None` solicita todo train y una guarda de RAM detiene la ejecución antes de agotar Colab.
 
 ### B2: regresión logística regularizada
 
@@ -65,25 +69,23 @@ para el optimizador, la evaluación en disco y las comprobaciones de convergenci
 ### Parada temprana de B4
 
 - La parada temprana deberá respetar partidas completas; no se permitirá una reserva aleatoria de filas que pueda colocar estados de una misma partida en entrenamiento y vigilancia.
-- Se acordó usar la opción de scikit-learn que admite datos de vigilancia externos para `HistGradientBoostingClassifier`, y verificarla en Colab antes del entrenamiento. La versión exacta queda pendiente de fijar.
+- Se usa la opción de scikit-learn que admite datos de vigilancia externos para `HistGradientBoostingClassifier`. Se fija `scikit-learn==1.7.2`, pues esta API incorpora `X_val` e `y_val` desde la versión 1.7; Colab debe reinstalar `requirements.txt` y reiniciar el runtime antes de B4.
 - La partición de vigilancia se formará por `game_id` dentro de los datos de entrenamiento de la ronda correspondiente. El pliegue reservado para evaluar esa ronda se mantendrá aparte.
 
 ### Búsqueda de B4
 
 - Se usará Optuna con TPE, con un espacio de búsqueda acotado y límites tanto de cantidad de pruebas como de tiempo.
 - El espacio inicial propuesto contiene cuatro controles: `learning_rate`, `max_leaf_nodes`, `min_samples_leaf` y `l2_regularization`; la cantidad de árboles se manejará mediante parada temprana.
-- Antes de fijar rangos y límites se hará una medición piloto del tiempo de entrenamiento. Los valores concretos siguen pendientes.
+- El piloto ejecuta una prueba por métrica y dos pliegues para medir tiempo y RAM con el corpus completo. El modo completo inicia con diez pruebas por métrica y cinco pliegues; el límite de tiempo debe fijarse a partir de la medición piloto, antes de la ejecución costosa.
 
 ## Decisiones pendientes
 
 1. Confirmar o ajustar la fórmula propuesta de B1 y su interpretación de escala antes de usar sus resultados como evidencia final.
 2. Elegir el nivel de confianza y el tipo de intervalo para las comparaciones emparejadas de AUC y Brier. El criterio acordado es tratar una diferencia cuyo intervalo incluya cero como empate práctico o ausencia de deterioro claro, según la métrica; esto no prueba equivalencia.
 3. Elegir el nivel de confianza y la cantidad de remuestreos para los intervalos. El 95 % y las 2 000 repeticiones se mencionaron solo como ejemplos recomendados, no como acuerdos.
-4. Fijar la versión de scikit-learn que se instalará en Colab para la parada temprana agrupada.
-5. Definir los rangos y límites de tiempo y pruebas de Optuna después de la prueba piloto.
-6. Definir el nivel de ajuste de B3. Sigue pendiente si usará configuración predeterminada o una búsqueda pequeña y acotada.
-7. Cerrar el protocolo de LightGBM: alcance de su búsqueda, presupuesto comparable con B4 y criterio para considerar que supera claramente al modelo principal.
-8. Definir cuántas repeticiones con distintas semillas se harán y si repetirán solo el ajuste final o también la búsqueda completa.
+4. Definir el límite de tiempo de Optuna para B4 después de la prueba piloto.
+5. Cerrar el protocolo de LightGBM: alcance de su búsqueda, presupuesto comparable con B4 y criterio para considerar que supera claramente al modelo principal.
+6. Definir cuántas repeticiones con distintas semillas se harán y si repetirán solo el ajuste final o también la búsqueda completa.
 
 ## Fuentes internas y técnicas
 

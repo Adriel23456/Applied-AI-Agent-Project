@@ -95,12 +95,22 @@ ejecuta los cinco pliegues en A/B/C y reajusta finalistas con todo train.
 `fraccion_train=1.0` confirma cobertura del experimento. Durante CV,
 `n_partidas_fit` excluye correctamente las partidas del pliegue retenido.
 
-Los avances se guardan tras cada ajuste en `/content/b2_sgd/pilot` o
-`/content/b2_sgd/full`. Las finalistas se guardan como archivos joblib con
-pipeline, orden de características, cortes de etapa y metadatos. Son candidatas,
-no una selección final automática ni modelos calibrados. Los resultados son
-locales al runtime; copiarlos antes de desconectarlo. No hay reanudación
-automática a mitad de época.
+El CSV de progreso se actualiza de forma atómica después de completar cada
+pliegue y todos sus valores de `C`. Un manifiesto valida escenario,
+características, partidas, cuadrícula, semilla, parámetros y versión de
+scikit-learn antes de reanudar. Al repetir la ejecución, B2 omite los pliegues
+completos y vuelve a ejecutar desde el inicio el pliegue que estaba activo.
+Los finalistas de `val` se guardan individualmente, así que se saltan los que ya
+terminaron. Una configuración diferente debe usar otra carpeta de salida para
+no mezclar resultados.
+
+El cuaderno monta Drive y guarda checkpoints bajo
+`MyDrive/Applied-AI-Agent-Project/b2_sgd/pilot` o `.../full`, para que sobrevivan
+si Colab reemplaza el runtime. También se reanudan las finalistas de `val` que
+ya se hubieran completado. La caché de entrenamiento y SQLite siguen en el
+disco local temporal. Las finalistas se guardan como archivos joblib con
+pipeline, orden de características, cortes de etapa y metadatos; son candidatas,
+no una selección final automática ni modelos calibrados.
 
 La demo por filas queda fuera del flujo principal y limitada a una muestra
 pequeña con un máximo de 100,000 estados. Usa LBFGS y requiere un protocolo

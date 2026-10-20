@@ -124,6 +124,7 @@ def fit_incremental(scaler, paths, n_rows, n_games, c_value, max_iter=20,
     best_objective = np.inf
     best_model = None
     mean_coef = mean_intercept = None
+    converged = False
     for epoch in range(1, max_iter + 1):
         # Aleatoriza los lotes; partial_fit aleatoriza las filas dentro de cada lote.
         for index in rng.permutation(len(paths)):
@@ -147,6 +148,8 @@ def fit_incremental(scaler, paths, n_rows, n_games, c_value, max_iter=20,
             print(f"  C={c_value:g}, época {epoch}/{max_iter}: objetivo={objective:.6f}, "
                   f"gradiente={gradient:.3g}", flush=True)
         if best_gradient <= tolerance:
+            converged = True
+        if converged:
             break
     info = {
         "optimizador": "SGD_log_loss_L2",
@@ -156,7 +159,7 @@ def fit_incremental(scaler, paths, n_rows, n_games, c_value, max_iter=20,
         "alpha": alpha,
         "n_iter": epoch,
         "mejor_epoca": best_epoch,
-        "convergencia": bool(best_gradient <= tolerance),
+        "convergencia": bool(converged or best_gradient <= tolerance),
         "max_iter_alcanzado": epoch >= max_iter,
         "objetivo_train": best_objective,
         "gradiente_train": best_gradient,
