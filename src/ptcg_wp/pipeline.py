@@ -18,9 +18,9 @@ from ptcg_wp.features import feature_columns
 
 
 DEFAULT_B2_FINALISTS = {
-    "A": (1.0, 0.01),
-    "B": (1.0, 0.01),
-    "C": (1.0, 0.01),
+    "A": (1.0, 0.1),
+    "B": (1.0, 0.1),
+    "C": (1.0, 0.1),
 }
 
 
@@ -32,7 +32,7 @@ def run_sequential_pipeline(data_dir, checkpoint_root, batch_size=32768,
                             seed=2026, verbose=True):
     """Run B2 finalists, then B3, then B4, persisting each stage as it finishes.
 
-    B2 uses the agreed C finalists (1.0 and 0.01) in each scenario. They are
+    B2 uses the agreed C finalists (1.0 and 0.1) in each scenario. They are
     intentionally fixed here so this extended run checks training stability
     rather than choosing a different set before seeing its results.
     """
@@ -72,7 +72,7 @@ def run_sequential_pipeline(data_dir, checkpoint_root, batch_size=32768,
     for scenario in ("A", "B", "C"):
         finals = DEFAULT_B2_FINALISTS[scenario]
         # Keep this run separate from earlier checkpoints made with different C finalists.
-        b2_dir = checkpoint_root / "b2" / "finalists_c_1_0_01_600" / f"escenario_{scenario}"
+        b2_dir = checkpoint_root / "b2" / "finalists_c_1_0_0_1_600" / f"escenario_{scenario}"
         b2_config = {"scenario": scenario, "finalists": finals,
                      "features_sha256": stable_digest(list(features)),
                      "batch_size": batch_size, "max_epochs": b2_max_epochs,
