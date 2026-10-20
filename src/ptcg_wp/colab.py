@@ -1,5 +1,6 @@
 """Utilidades para trabajar en Colab: lectura de secretos y configuracion de Kaggle."""
 
+import json
 import os
 from getpass import getpass
 
@@ -35,5 +36,50 @@ def read_secret(name, path=SECRETS_PATH):
 
 
 def setup_kaggle():
-    """Deja el token de Kaggle en la variable de entorno que usa la herramienta kaggle."""
-    os.environ["KAGGLE_API_TOKEN"] = read_secret("KAGGLE_API_TOKEN")
+    """Configure Kaggle auth from a token string or legacy credential object.
+
+    Colab secrets may contain either the current API token string or a parsed
+    JSON object copied from Kaggle's legacy ``kaggle.json`` download.
+    """
+    credential = read_secret("KAGGLE_API_TOKEN")
+    if isinstance(credential, str):
+        value = credential.strip()
+        if value.startswith("{"):
+            try:
+                credential = json.loads(value)
+            except json.JSONDecodeError:
+                credential = value
+        else:
+            credential = value
+
+    if isinstance(credential, dict):
+        normalized = {str(key).lower(): value for key, value in credential.items()}
+        token = next((normalized[key] for key in
+                      ("kaggle_api_token", "api_token", "access_token", "token")
+                      if normalized.get(key)), None)
+        if isinstance(token, str) and token.strip():
+            os.environ["KAGGLE_API_TOKEN"] = token.strip()
+            return
+
+        username = normalized.get("username")
+        key = normalized.get("key")
+        if isinstance(username, str) and username.strip() and isinstance(key, str) and key.strip():
+            # Kaggle's legacy JSON credentials use username/key, not an API token.
+            os.environ.pop("KAGGLE_API_TOKEN", None)
+            os.environ["KAGGLE_USERNAME"] = username.strip()
+            os.environ["KAGGLE_KEY"] = key.strip()
+            return
+
+        raise TypeError(
+            "El secreto KAGGLE_API_TOKEN es un objeto, pero no contiene un token "
+            "reconocible ni los campos legacy 'username' y 'key'. Guarda un token "
+            "de Kaggle como texto o un kaggle.json con esos dos campos."
+        )
+
+    if isinstance(credential, str) and credential:
+        os.environ["KAGGLE_API_TOKEN"] = credential
+        return
+
+    raise TypeError(
+        "KAGGLE_API_TOKEN debe ser un token de texto o un objeto de credenciales Kaggle."
+    )
