@@ -189,10 +189,14 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
         progress_path = directory / f"b2_cv_{stream.scenario}.csv"
         manifest_path = directory / f"b2_cv_{stream.scenario}_manifest.json"
         if resume and (progress_path.exists() or manifest_path.exists()):
-            if not progress_path.exists() or not manifest_path.exists():
+            # The manifest is written before starting the first fold, whereas
+            # progress is written only after a whole fold finishes. A runtime
+            # interruption in fold 1 can therefore leave a valid manifest alone.
+            if not manifest_path.exists():
                 raise ValueError(
-                    f"Checkpoint B2 incompleto para escenario {stream.scenario}. "
-                    "No borres los archivos: usa otra carpeta de salida o revisa ambos archivos."
+                    f"Checkpoint B2 incompleto para escenario {stream.scenario}: "
+                    "hay progreso pero falta el manifiesto de configuración. "
+                    "Usa una carpeta nueva para evitar mezclar corridas."
                 )
             saved_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             if saved_manifest != manifest:
@@ -201,15 +205,19 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
                     f"escenario {stream.scenario}. Restaura la configuración original "
                     "o elige una nueva carpeta de salida."
                 )
-            saved = pd.read_csv(progress_path)
-            results = saved.to_dict("records")
-            completed_folds = {
-                int(row["fold"])
-                for row in results if row.get("etapa") == "global"
-            }
-            if verbose:
-                print(f"B2 {stream.scenario}: checkpoint encontrado; "
-                      f"{len(completed_folds)} pliegues completos", flush=True)
+            if progress_path.exists():
+                saved = pd.read_csv(progress_path)
+                results = saved.to_dict("records")
+                completed_folds = {
+                    int(row["fold"])
+                    for row in results if row.get("etapa") == "global"
+                }
+                if verbose:
+                    print(f"B2 {stream.scenario}: checkpoint encontrado; "
+                          f"{len(completed_folds)} pliegues completos", flush=True)
+            elif verbose:
+                print(f"B2 {stream.scenario}: manifiesto válido sin pliegues completos; "
+                      "reiniciando desde el pliegue 1", flush=True)
         elif not progress_path.exists() and not manifest_path.exists():
             _atomic_json(manifest_path, manifest)
         elif not resume:

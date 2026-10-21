@@ -209,6 +209,30 @@ def test_exception_cleans_temporary_cache(corpus, tmp_path, monkeypatch):
     assert not list(cache.iterdir())
 
 
+def test_cv_resumes_when_interruption_left_only_manifest(corpus, tmp_path, monkeypatch):
+    directory, _, _ = corpus
+    stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=256)
+    cache, output = tmp_path / "cache", tmp_path / "output"
+    cache.mkdir()
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("fallo simulado antes de completar el primer pliegue")
+
+    monkeypatch.setattr("ptcg_wp.b2.fit_incremental", fail)
+    with pytest.raises(RuntimeError, match="fallo simulado"):
+        b2_group_cv(stream, FEATURES, c_values=[1], n_splits=2, max_iter=1,
+                    cache_dir=cache, output_dir=output, verbose=False)
+    assert (output / "b2_cv_A_manifest.json").exists()
+    assert not (output / "b2_cv_A.csv").exists()
+
+    monkeypatch.setattr("ptcg_wp.b2.fit_incremental", fit_incremental)
+    resumed = b2_group_cv(stream, FEATURES, c_values=[1], n_splits=2, max_iter=1,
+                          cache_dir=cache, output_dir=output, verbose=False)
+    complete = resumed.loc[resumed.etapa.eq("global")]
+    assert set(complete.fold) == {1, 2}
+    assert (output / "b2_cv_A.csv").exists()
+
+
 def test_row_demo_has_a_hard_row_guard(corpus):
     directory, _, _ = corpus
     stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=16)

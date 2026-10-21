@@ -89,8 +89,13 @@ def run_sequential_pipeline(data_dir, checkpoint_root, batch_size=32768,
                 max_iter=b2_max_epochs, cache_dir="/content", output_dir=b2_dir,
                 eta0=b2_eta0, tolerance=b2_gradient_tol, verbose=verbose,
             )
+            if verbose:
+                print(f"B2 {scenario}: CV terminada; resumiendo pliegues", flush=True)
             b2_summary, _ = summarize_b2_cv(b2_cv)
             atomic_csv(b2_summary.to_dict("records"), b2_dir / "b2_cv_summary.csv")
+            if verbose:
+                print(f"B2 {scenario}: reajustando C={finals} con todo train para evaluar val",
+                      flush=True)
             b2_val = fit_b2_candidates_val(
                 stream, features, finals, max_iter=b2_max_epochs, seed=seed,
                 cache_dir="/content", output_dir=b2_dir, eta0=b2_eta0,
