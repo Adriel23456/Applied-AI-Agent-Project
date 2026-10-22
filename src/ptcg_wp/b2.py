@@ -170,8 +170,9 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
     """Compara C por partidas; max_iter cuenta épocas completas de SGD.
 
     train_games=None incluye todo train útil. max_folds=1 reduce el trabajo del
-    piloto, conservando la cobertura de datos. Cachés temporales en disco local
-    se eliminan al terminar cada pliegue, incluso ante una excepción normal.
+    piloto, conservando la cobertura de datos. Los resultados se guardan tras
+    cada combinación pliegue/C; las cachés temporales locales se eliminan al
+    terminar cada pliegue, incluso ante una excepción normal.
     """
     train_games, available = _training_games(stream, train_games)
     if max_folds is not None and max_folds < 1:
@@ -179,7 +180,7 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
     splitter = GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     c_values = tuple(float(value) for value in c_values)
     results = []
-    completed_folds = set()
+    completed_candidates = set()
     progress_path = manifest_path = None
     manifest = _b2_manifest(stream, features, train_games, c_values, n_splits,
                             seed, max_iter, max_folds, eta0, tolerance)
@@ -208,13 +209,16 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
             if progress_path.exists():
                 saved = pd.read_csv(progress_path)
                 results = saved.to_dict("records")
-                completed_folds = {
-                    int(row["fold"])
+                completed_candidates = {
+                    (int(row["fold"]), float(row["C"]))
                     for row in results if row.get("etapa") == "global"
                 }
                 if verbose:
+                    completed_folds = len({fold for fold, _ in completed_candidates
+                                           if all((fold, c) in completed_candidates for c in c_values)})
                     print(f"B2 {stream.scenario}: checkpoint encontrado; "
-                          f"{len(completed_folds)} pliegues completos", flush=True)
+                          f"{completed_folds} pliegues completos, "
+                          f"{len(completed_candidates)} ajustes C guardados", flush=True)
             elif verbose:
                 print(f"B2 {stream.scenario}: manifiesto válido sin pliegues completos; "
                       "reiniciando desde el pliegue 1", flush=True)
@@ -230,10 +234,12 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
     for fold_number, (fit_idx, held_idx) in enumerate(folds, start=1):
         fit_games = train_games[fit_idx]
         held_games = train_games[held_idx]
-        if fold_number in completed_folds:
+        fold_completed = all((fold_number, c_value) in completed_candidates
+                             for c_value in c_values)
+        if fold_completed:
             if verbose:
                 print(f"B2 {stream.scenario}, pliegue {fold_number}/{n_splits}: "
-                      "ya estaba guardado; se omite", flush=True)
+                      "todos los C ya estaban guardados; se omite", flush=True)
             if max_folds is not None and fold_number >= max_folds:
                 break
             continue
@@ -243,6 +249,11 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
         with TemporaryDirectory(prefix="b2-fit-", dir=cache_dir) as directory:
             scaler, paths, n_rows, n_games = prepare_training(stream, features, fit_games, directory)
             for c_value in c_values:
+                if (fold_number, c_value) in completed_candidates:
+                    if verbose:
+                        print(f"B2 {stream.scenario}, pliegue {fold_number}/{n_splits}, "
+                              f"C={c_value:g}: ya guardado; se omite", flush=True)
+                    continue
                 model, info = fit_incremental(scaler, paths, n_rows, n_games, c_value,
                                              max_iter, seed, eta0, tolerance, verbose)
                 common = {"escenario": stream.scenario, "C": float(c_value), "fold": fold_number,
@@ -253,10 +264,13 @@ def b2_group_cv(stream, features, c_values=C_VALUES, n_splits=5,
                 results.extend(evaluate_stream(model, stream, features, "train", held_games,
                                                directory, common))
                 del model
-            # El snapshot se escribe solo cuando todos los C de este fold
-            # tienen sus métricas. Un fallo a mitad del fold lo repite entero.
-            _save_progress(results, output_dir, f"b2_cv_{stream.scenario}.csv")
-            completed_folds.add(fold_number)
+                # Persist this C before starting the next one. If Colab stops,
+                # resume skips this fit and continues with the first missing C.
+                _save_progress(results, output_dir, f"b2_cv_{stream.scenario}.csv")
+                completed_candidates.add((fold_number, c_value))
+                if verbose:
+                    print(f"B2 {stream.scenario}, pliegue {fold_number}/{n_splits}, "
+                          f"C={c_value:g}: checkpoint guardado", flush=True)
         if max_folds is not None and fold_number >= max_folds:
             break
     return pd.DataFrame(results)

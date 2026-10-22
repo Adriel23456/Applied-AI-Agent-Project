@@ -233,6 +233,40 @@ def test_cv_resumes_when_interruption_left_only_manifest(corpus, tmp_path, monke
     assert (output / "b2_cv_A.csv").exists()
 
 
+def test_cv_checkpoints_each_c_and_skips_it_after_interruption(corpus, tmp_path, monkeypatch):
+    directory, _, _ = corpus
+    stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=256)
+    cache, output = tmp_path / "cache", tmp_path / "output"
+    cache.mkdir()
+    original_fit = fit_incremental
+
+    def interrupt_on_second_c(scaler, paths, n_rows, n_games, c_value, *args, **kwargs):
+        if c_value == 0.1:
+            raise RuntimeError("interrupción simulada antes del segundo C")
+        return original_fit(scaler, paths, n_rows, n_games, c_value, *args, **kwargs)
+
+    monkeypatch.setattr("ptcg_wp.b2.fit_incremental", interrupt_on_second_c)
+    with pytest.raises(RuntimeError, match="segundo C"):
+        b2_group_cv(stream, FEATURES, c_values=[1.0, 0.1], n_splits=2, max_iter=1,
+                    cache_dir=cache, output_dir=output, verbose=False)
+    saved = pd.read_csv(output / "b2_cv_A.csv")
+    assert set(saved.loc[saved.etapa.eq("global"), ["fold", "C"]].itertuples(index=False, name=None)) == {(1, 1.0)}
+
+    resumed_calls = []
+
+    def track_resume(scaler, paths, n_rows, n_games, c_value, *args, **kwargs):
+        resumed_calls.append(c_value)
+        return original_fit(scaler, paths, n_rows, n_games, c_value, *args, **kwargs)
+
+    monkeypatch.setattr("ptcg_wp.b2.fit_incremental", track_resume)
+    resumed = b2_group_cv(stream, FEATURES, c_values=[1.0, 0.1], n_splits=2, max_iter=1,
+                          cache_dir=cache, output_dir=output, verbose=False)
+    assert resumed_calls == [0.1, 1.0, 0.1]
+    complete = resumed.loc[resumed.etapa.eq("global")]
+    assert set(complete.fold) == {1, 2}
+    assert set(complete.C) == {1.0, 0.1}
+
+
 def test_row_demo_has_a_hard_row_guard(corpus):
     directory, _, _ = corpus
     stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=16)
