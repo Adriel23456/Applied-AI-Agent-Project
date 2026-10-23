@@ -267,6 +267,29 @@ def test_cv_checkpoints_each_c_and_skips_it_after_interruption(corpus, tmp_path,
     assert set(complete.C) == {1.0, 0.1}
 
 
+def test_val_resumes_when_interruption_left_only_manifest(corpus, tmp_path, monkeypatch):
+    directory, _, _ = corpus
+    stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=256)
+    cache, output = tmp_path / "cache", tmp_path / "output"
+    cache.mkdir()
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("interrupción simulada en el primer finalista")
+
+    monkeypatch.setattr("ptcg_wp.b2.fit_incremental", fail)
+    with pytest.raises(RuntimeError, match="primer finalista"):
+        fit_b2_candidates_val(stream, FEATURES, [1.0], max_iter=1,
+                              cache_dir=cache, output_dir=output, verbose=False)
+    assert (output / "b2_val_A_manifest.json").exists()
+    assert not (output / "b2_val_A.csv").exists()
+
+    monkeypatch.setattr("ptcg_wp.b2.fit_incremental", fit_incremental)
+    resumed = fit_b2_candidates_val(stream, FEATURES, [1.0], max_iter=1,
+                                    cache_dir=cache, output_dir=output, verbose=False)
+    assert set(resumed.loc[resumed.etapa.eq("global"), "C"]) == {1.0}
+    assert (output / "b2_val_A.csv").exists()
+
+
 def test_row_demo_has_a_hard_row_guard(corpus):
     directory, _, _ = corpus
     stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=16)

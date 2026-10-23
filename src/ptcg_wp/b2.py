@@ -333,20 +333,30 @@ def fit_b2_candidates_val(stream, features, candidate_cs, max_iter=20,
                        separators=(",", ":")).encode("utf-8")
         ).hexdigest()
         if progress_path.exists() or manifest_path.exists():
-            if not progress_path.exists() or not manifest_path.exists():
-                raise ValueError(f"Checkpoint de finalistas incompleto para {stream.scenario}")
+            # As in CV, the manifest precedes fitting; the CSV is written only
+            # after a finalist is evaluated. A stop during the first finalist
+            # therefore leaves a valid manifest with no progress CSV.
+            if not manifest_path.exists():
+                raise ValueError(
+                    f"Checkpoint de finalistas incompleto para {stream.scenario}: "
+                    "hay progreso pero falta el manifiesto. Usa una carpeta nueva."
+                )
             if json.loads(manifest_path.read_text(encoding="utf-8")) != manifest:
                 raise ValueError(
                     f"La configuración de finalistas no coincide con el checkpoint de "
                     f"escenario {stream.scenario}; restaura los parámetros o usa otra carpeta."
                 )
-            saved = pd.read_csv(progress_path)
-            results = saved.to_dict("records")
-            completed = {float(row["C"]) for row in results
-                         if row.get("etapa") == "global"}
-            if verbose:
-                print(f"B2 {stream.scenario}: {len(completed)} finalistas ya guardados; "
-                      "se omiten", flush=True)
+            if progress_path.exists():
+                saved = pd.read_csv(progress_path)
+                results = saved.to_dict("records")
+                completed = {float(row["C"]) for row in results
+                             if row.get("etapa") == "global"}
+                if verbose:
+                    print(f"B2 {stream.scenario}: {len(completed)} finalistas ya guardados; "
+                          "se omiten", flush=True)
+            elif verbose:
+                print(f"B2 {stream.scenario}: manifiesto de val válido sin finalistas guardadas; "
+                      "reiniciando esta fase", flush=True)
         else:
             _atomic_json(manifest_path, manifest)
     with TemporaryDirectory(prefix="b2-final-", dir=cache_dir) as directory:
