@@ -49,7 +49,7 @@ def test_b4_full_train_group_cv_and_val(corpus, tmp_path):
     assert len(train.games) == 18
     cv, candidates = b4_optuna_cv(train, n_splits=2, n_trials=1, seed=7,
                                   max_iter=12, patience=2, max_ram_gib=1,
-                                  output_dir=output)
+                                  output_dir=output, study_cache_dir=tmp_path / "local-one")
     global_rows = cv.loc[cv.etapa.eq("global")]
     # Un estudio por cada métrica y cobertura externa completa de las 18 partidas.
     assert set(global_rows.estudio) == {"auc", "log_loss", "brier"}
@@ -58,13 +58,14 @@ def test_b4_full_train_group_cv_and_val(corpus, tmp_path):
             + global_rows.partidas_evaluacion).eq(18).all()
     assert len(candidates) >= 1
     assert (output / "b4_cv_trials.csv").exists()
+    assert len(list((output / "fold_checkpoints").glob("b4_*.json"))) == 3
 
     storage = optuna.storages.RDBStorage(url=f"sqlite:///{output / 'b4_optuna.sqlite3'}")
     summaries = optuna.study.get_all_study_summaries(storage=storage)
     assert len(summaries) == 3 and sum(summary.n_trials for summary in summaries) == 3
     resumed_cv, resumed_candidates = b4_optuna_cv(
         train, n_splits=2, n_trials=1, seed=7, max_iter=12, patience=2,
-        max_ram_gib=1, output_dir=output,
+        max_ram_gib=1, output_dir=output, study_cache_dir=tmp_path / "local-two",
     )
     assert len(resumed_cv) == len(cv)
     pd.testing.assert_frame_equal(resumed_candidates, candidates)

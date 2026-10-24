@@ -48,7 +48,8 @@ def test_b3_group_sample_cv_and_final_val(corpus, tmp_path):
     cv, candidates = b3_optuna_cv(stream, FEATURES, n_splits=2, n_trials=1,
                                   max_folds=1, max_train_games=10, seed=9,
                                   n_jobs=1, max_ram_gib=1,
-                                  output_dir=output, verbose=False)
+                                  output_dir=output, study_cache_dir=tmp_path / "local-one",
+                                  verbose=False)
     global_rows = cv.loc[cv.etapa.eq("global")]
     assert set(global_rows.modelo) == {"B3_arbol", "B3_bosque"}
     assert set(global_rows.estudio) == {"auc", "log_loss", "brier"}
@@ -60,6 +61,7 @@ def test_b3_group_sample_cv_and_final_val(corpus, tmp_path):
     assert set(candidates.modelo) == {"B3_arbol", "B3_bosque"}
     assert set(candidates.seleccionada_por).issubset({"auc", "log_loss", "brier"})
     assert (output / "b3_cv_A.csv").exists()
+    assert len(list((output / "fold_checkpoints").glob("b3_*.json"))) == 6
 
     storage = optuna.storages.RDBStorage(url=f"sqlite:///{output / 'b3_optuna.sqlite3'}")
     summaries = optuna.study.get_all_study_summaries(storage=storage)
@@ -67,7 +69,7 @@ def test_b3_group_sample_cv_and_final_val(corpus, tmp_path):
     resumed_cv, resumed_candidates = b3_optuna_cv(
         stream, FEATURES, n_splits=2, n_trials=1, max_folds=1,
         max_train_games=10, seed=9, n_jobs=1, max_ram_gib=1,
-        output_dir=output, verbose=False,
+        output_dir=output, study_cache_dir=tmp_path / "local-two", verbose=False,
     )
     assert len(resumed_cv) == len(cv)
     pd.testing.assert_frame_equal(resumed_candidates, candidates)

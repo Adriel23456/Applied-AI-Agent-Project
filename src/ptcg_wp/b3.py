@@ -17,8 +17,9 @@ from sklearn import __version__ as sklearn_version
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GroupKFold
 from sklearn.tree import DecisionTreeClassifier
-from ptcg_wp.checkpoints import (atomic_csv, atomic_joblib, complete_trial_rows,
-                                 ensure_manifest, json_safe_rows, persistent_study,
+from ptcg_wp.checkpoints import (atomic_csv, atomic_joblib, atomic_json, backup_study,
+                                 complete_trial_rows, ensure_manifest, json_safe_rows,
+                                 persistent_study, recover_interrupted_trials,
                                  stable_digest)
 
 from ptcg_wp.b2_streaming import evaluate_stream, game_counts
@@ -95,7 +96,7 @@ def _model(model_name, seed, params, n_jobs=-1):
         # diversidad viene de max_features en cada división.
         return RandomForestClassifier(n_estimators=int(params["n_estimators"]),
                                       criterion=params["criterion"],
-                                      max_features=float(params["max_features"]),
+                                      max_features=params["max_features"],
                                       max_depth=max_depth,
                                       min_samples_leaf=int(params["min_samples_leaf"]),
                                       bootstrap=False, n_jobs=n_jobs, **common)
@@ -103,22 +104,60 @@ def _model(model_name, seed, params, n_jobs=-1):
 
 
 def _suggest_params(trial, model_name):
-    # El árbol busca complejidad y poda; el bosque busca además tamaño y
-    # diversidad de sus árboles. Los rangos son el espacio inicial configurable.
+    # Espacio deliberadamente acotado tras el piloto: evita bosques de 250
+    # árboles casi sin poda que consumían horas por trial. Sigue explorando
+    # complejidad, regularización y diversidad, con controles reproducibles.
     if model_name == "B3_arbol":
         return {
             "criterion": trial.suggest_categorical("criterion", ["gini", "entropy", "log_loss"]),
-            "max_depth": trial.suggest_categorical("max_depth", [None, 4, 8, 12, 20, 32]),
-            "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 100, log=True),
+            "max_depth": trial.suggest_categorical("max_depth", [4, 8, 12]),
+            "min_samples_leaf": trial.suggest_categorical("min_samples_leaf", [10, 20, 50]),
             "ccp_alpha": trial.suggest_float("ccp_alpha", 1e-7, 1e-2, log=True),
         }
     return {
-        "n_estimators": trial.suggest_int("n_estimators", 50, 250, step=50),
+        "n_estimators": trial.suggest_categorical("n_estimators", [25, 50, 100]),
         "criterion": trial.suggest_categorical("criterion", ["gini", "entropy", "log_loss"]),
-        "max_features": trial.suggest_float("max_features", 0.1, 1.0),
-        "max_depth": trial.suggest_categorical("max_depth", [None, 8, 12, 20, 32]),
-        "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 100, log=True),
+        "max_features": trial.suggest_categorical("max_features", ["sqrt", 0.25, 0.5]),
+        "max_depth": trial.suggest_categorical("max_depth", [8, 12]),
+        "min_samples_leaf": trial.suggest_categorical("min_samples_leaf", [20, 50, 100]),
     }
+
+
+def _global_metrics(y, probability, groups, common):
+    """Exact game-weighted global metrics without rereading train from Parquet."""
+    y = np.asarray(y, dtype=np.uint8)
+    probability = np.clip(np.asarray(probability, dtype=float), 1e-15, 1 - 1e-15)
+    groups = np.asarray(groups, dtype=np.int32)
+    weights = 1.0 / np.bincount(groups)[groups]
+    order = np.argsort(probability, kind="mergesort")
+    yy, pp, ww = y[order], probability[order], weights[order]
+    starts = np.flatnonzero(np.r_[True, pp[1:] != pp[:-1]])
+    positive = np.add.reduceat(ww * yy, starts)
+    negative = np.add.reduceat(ww * (1 - yy), starts)
+    positives, negatives = positive.sum(), negative.sum()
+    seen_negative = np.r_[0.0, np.cumsum(negative[:-1])]
+    favorable = np.sum(positive * (seen_negative + 0.5 * negative))
+    log_loss = -np.sum(ww * (yy * np.log(pp) + (1 - yy) * np.log1p(-pp))) / ww.sum()
+    brier = np.sum(ww * (yy - pp) ** 2) / ww.sum()
+    return {**common, "etapa": "global",
+            "auc": favorable / (positives * negatives) if positives and negatives else np.nan,
+            "log_loss": float(log_loss), "brier": float(brier),
+            "n_estados": len(yy), "n_partidas": len(np.unique(groups))}
+
+
+def _fold_checkpoint_path(output_path, scenario, model_name, metric, params):
+    key = stable_digest(params)[:16]
+    return output_path / "fold_checkpoints" / (
+        f"b3_{scenario}_{model_name}_{metric}_{key}.json"
+    )
+
+
+def _load_fold_rows(path, params):
+    if not path.exists():
+        return []
+    import json
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    return saved.get("rows", []) if saved.get("params_sha256") == stable_digest(params) else []
 
 
 def _common(stream, model_name, selected_games, available_games, seed, estimate,
@@ -139,7 +178,7 @@ def _common(stream, model_name, selected_games, available_games, seed, estimate,
 
 def b3_optuna_cv(stream, features, n_splits=5, n_trials=10, max_train_games=None,
                  seed=2026, n_jobs=2, max_ram_gib=10.0, max_folds=None,
-                 cache_dir=None, output_dir=None, verbose=True):
+                 cache_dir=None, output_dir=None, study_cache_dir=None, verbose=True):
     """Busca hiperparámetros para árbol y bosque con GroupKFold dentro de train.
 
     Hay un estudio TPE por modelo y métrica para que ninguna métrica se combine
@@ -167,7 +206,9 @@ def b3_optuna_cv(stream, features, n_splits=5, n_trials=10, max_train_games=None
         for model_name in MODELS:
             for metric in METRICS:
                 direction = "maximize" if metric == "auc" else "minimize"
-                sampler = optuna.samplers.TPESampler(seed=seed + len(candidates), multivariate=True)
+                sampler = optuna.samplers.TPESampler(
+                    seed=seed + len(candidates), n_startup_trials=3, multivariate=True
+                )
                 manifest = {
                     "baseline": "B3",
                     "scenario": str(stream.scenario),
@@ -182,6 +223,8 @@ def b3_optuna_cv(stream, features, n_splits=5, n_trials=10, max_train_games=None
                     "max_train_games": max_train_games,
                     "n_jobs": int(n_jobs),
                     "max_ram_gib": float(max_ram_gib),
+                    "search_policy": "fast_v2_global_metrics_fold_checkpoints",
+                    "tpe_startup_trials": 3,
                     "sklearn_version": sklearn_version,
                 }
                 if output_path is None:
@@ -191,12 +234,39 @@ def b3_optuna_cv(stream, features, n_splits=5, n_trials=10, max_train_games=None
                         output_path, "b3_optuna.sqlite3",
                         f"b3_{stream.scenario}_{model_name}_{metric}",
                         direction, sampler, manifest,
+                        local_storage_dir=study_cache_dir,
                     )
+
+                # A resumed sampler must not restart its random stream from
+                # the original seed (which can repeat an old configuration).
+                completed_before = sum(trial.state == optuna.trial.TrialState.COMPLETE
+                                       for trial in study.trials)
+                study.sampler = optuna.samplers.TPESampler(
+                    seed=seed + len(candidates) + 1009 * completed_before,
+                    n_startup_trials=3, multivariate=True,
+                )
+                recovered = recover_interrupted_trials(study)
+                if recovered and verbose:
+                    print(f"B3 {stream.scenario} {model_name}/{metric}: "
+                          f"se reanudan {recovered} trial(s) interrumpido(s)", flush=True)
+                backup_study(study)
 
                 def objective(trial):
                     params = _suggest_params(trial, model_name)
-                    trial_rows = []
+                    # Publish RUNNING + fixed params before the first costly fit.
+                    # Thus a Drive checkpoint row can always be matched after a
+                    # runtime dies between writing that row and the next backup.
+                    if output_path is not None:
+                        backup_study(study)
+                    checkpoint_path = (_fold_checkpoint_path(output_path, stream.scenario,
+                                                            model_name, metric, params)
+                                       if output_path is not None else None)
+                    trial_rows = (_load_fold_rows(checkpoint_path, params)
+                                  if checkpoint_path is not None else [])
+                    done_folds = {int(row["fold"]) for row in trial_rows}
                     for fold, (fit_idx, held_idx) in enumerate(folds, start=1):
+                        if fold in done_folds:
+                            continue
                         fit_games = selected_games[np.unique(group[fit_idx])]
                         held_games = selected_games[np.unique(group[held_idx])]
                         # Cada partida aporta peso total uno aunque tenga más estados.
@@ -209,11 +279,24 @@ def b3_optuna_cv(stream, features, n_splits=5, n_trials=10, max_train_games=None
                         common.update({"estudio": metric, "trial": trial.number,
                                        "fold": fold, "partidas_fit": len(fit_games),
                                        "partidas_evaluacion": len(held_games)})
-                        rows = evaluate_stream(model, stream, features, "train", held_games,
-                                               directory, common)
-                        trial_rows.extend(rows)
+                        row = _global_metrics(y[held_idx], model.predict_proba(x[held_idx])[:, 1],
+                                              group[held_idx], common)
+                        trial_rows.append(row)
+                        if checkpoint_path is not None:
+                            atomic_json({"params_sha256": stable_digest(params), "params": params,
+                                         "rows": json_safe_rows(trial_rows)}, checkpoint_path)
+                            # Makes the completed folds visible even if the current trial dies.
+                            atomic_csv(results + complete_trial_rows(study) + trial_rows,
+                                       progress_path)
+                            backup_study(study)
+                            if verbose:
+                                print(f"B3 {stream.scenario} {model_name}/{metric}, "
+                                      f"trial {trial.number}, pliegue {fold}/{len(folds)}: "
+                                      "checkpoint guardado", flush=True)
                         del model
                         gc.collect()
+                    for row in trial_rows:
+                        row["trial"] = trial.number
                     global_rows = [row for row in trial_rows if row["etapa"] == "global"]
                     metric_means = {name: float(np.nanmean([row[name] for row in global_rows]))
                                     for name in METRICS}
@@ -229,6 +312,7 @@ def b3_optuna_cv(stream, features, n_splits=5, n_trials=10, max_train_games=None
                 def save_study_progress(current_study, _trial):
                     if progress_path is not None:
                         atomic_csv(results + complete_trial_rows(current_study), progress_path)
+                    backup_study(current_study)
 
                 if remaining:
                     study.optimize(objective, n_trials=remaining, gc_after_trial=True,

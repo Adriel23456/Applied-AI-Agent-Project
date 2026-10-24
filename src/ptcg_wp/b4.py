@@ -19,8 +19,9 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 
 from ptcg_wp.b2_streaming import game_counts
-from ptcg_wp.checkpoints import (atomic_csv, atomic_joblib, complete_trial_rows,
-                                 ensure_manifest, json_safe_rows, persistent_study,
+from ptcg_wp.checkpoints import (atomic_csv, atomic_joblib, atomic_json, backup_study,
+                                 complete_trial_rows, ensure_manifest, json_safe_rows,
+                                 persistent_study, recover_interrupted_trials,
                                  stable_digest)
 
 
@@ -146,11 +147,14 @@ def _weights_for_codes(groups):
     return 1.0 / counts[groups]
 
 
-def _metric_rows(y, probability, groups, stage_codes, common):
+def _metric_rows(y, probability, groups, stage_codes, common, include_stages=True):
     probability = np.clip(np.asarray(probability, dtype=float), 1e-15, 1 - 1e-15)
     y = np.asarray(y, dtype=np.uint8)
     rows = []
-    for code, label in [(None, "global"), *enumerate(STAGES)]:
+    stages = [(None, "global")]
+    if include_stages:
+        stages.extend(enumerate(STAGES))
+    for code, label in stages:
         mask = np.ones(len(y), dtype=bool) if code is None else stage_codes == code
         if not mask.any():
             continue
@@ -161,18 +165,10 @@ def _metric_rows(y, probability, groups, stage_codes, common):
         yy, pp, weights = yy[order], pp[order], weights[order]
         positives = np.sum(weights * yy)
         negatives = np.sum(weights * (1 - yy))
-        favorable = 0.0
-        seen_negative = 0.0
-        start = 0
-        while start < len(pp):
-            end = start + 1
-            while end < len(pp) and pp[end] == pp[start]:
-                end += 1
-            positive = np.sum(weights[start:end] * yy[start:end])
-            negative = np.sum(weights[start:end] * (1 - yy[start:end]))
-            favorable += positive * (seen_negative + 0.5 * negative)
-            seen_negative += negative
-            start = end
+        starts = np.flatnonzero(np.r_[True, pp[1:] != pp[:-1]])
+        positive = np.add.reduceat(weights * yy, starts)
+        negative = np.add.reduceat(weights * (1 - yy), starts)
+        favorable = np.sum(positive * (np.r_[0.0, np.cumsum(negative[:-1])] + 0.5 * negative))
         logloss = -np.sum(weights * (yy * np.log(pp) + (1 - yy) * np.log1p(-pp))) / weights.sum()
         brier = np.sum(weights * (yy - pp) ** 2) / weights.sum()
         rows.append({**common, "etapa": label,
@@ -187,8 +183,8 @@ def _parameters(trial):
     # regularización L2 reduce el efecto de hojas con valores extremos.
     return {
         "learning_rate": trial.suggest_float("learning_rate", 0.02, 0.2, log=True),
-        "max_leaf_nodes": trial.suggest_int("max_leaf_nodes", 8, 63, log=True),
-        "min_samples_leaf": trial.suggest_int("min_samples_leaf", 20, 200, log=True),
+        "max_leaf_nodes": trial.suggest_categorical("max_leaf_nodes", [8, 16, 31]),
+        "min_samples_leaf": trial.suggest_categorical("min_samples_leaf", [20, 50, 100]),
         "l2_regularization": trial.suggest_float("l2_regularization", 1e-6, 10.0, log=True),
     }
 
@@ -230,31 +226,43 @@ def _fit_with_monitor(data, model_groups, monitor_groups, params, seed,
     return model
 
 
-def _fit_outer_fold(data, fit_groups, held_groups, params, seed, monitor_fraction,
-                    max_iter, patience, verbose=0):
+def _fit_outer_fold(data, fit_groups, held_groups, params, model_seed, monitor_seed,
+                    monitor_fraction, max_iter, patience, verbose=0, include_stages=True):
     """Ajusta sin tocar el pliegue externo; vigilancia y evaluación son disjuntas."""
     # Primero se reserva un grupo interno para early stopping. El pliegue externo
     # queda intacto y solo produce la métrica de validación cruzada.
-    split = GroupShuffleSplit(n_splits=1, test_size=monitor_fraction, random_state=seed)
+    split = GroupShuffleSplit(n_splits=1, test_size=monitor_fraction, random_state=monitor_seed)
     inner_idx, monitor_idx = next(split.split(fit_groups, groups=fit_groups))
     model_groups, monitor_groups = fit_groups[inner_idx], fit_groups[monitor_idx]
     groups = data.group
     held_rows = _indices_for_groups(groups, held_groups)
     x_held, y_held = np.asarray(data.x[held_rows]), np.asarray(data.y[held_rows])
-    model = _fit_with_monitor(data, model_groups, monitor_groups, params, seed,
+    model = _fit_with_monitor(data, model_groups, monitor_groups, params, model_seed,
                               max_iter, patience, verbose)
     probability = model.predict_proba(x_held)[:, 1]
     held_groups_rows, held_stages = np.asarray(groups[held_rows]), np.asarray(data.stage[held_rows])
     report = _metric_rows(y_held, probability, held_groups_rows, held_stages, {
         "n_iter": model.n_iter_, "partidas_modelo": len(model_groups),
         "partidas_vigilancia": len(monitor_groups), "partidas_evaluacion": len(held_groups),
-    })
+    }, include_stages=include_stages)
     return report, model.n_iter_
+
+
+def _fold_checkpoint_path(output_path, metric, params):
+    return output_path / "fold_checkpoints" / f"b4_{metric}_{stable_digest(params)[:16]}.json"
+
+
+def _load_fold_rows(path, params):
+    if not path.exists():
+        return []
+    import json
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    return saved.get("rows", []) if saved.get("params_sha256") == stable_digest(params) else []
 
 
 def b4_optuna_cv(data, n_splits=5, n_trials=10, timeout=None, seed=2026,
                  monitor_fraction=0.15, max_iter=500, patience=30,
-                 max_ram_gib=10.0, output_dir=None, verbose=False):
+                 max_ram_gib=10.0, output_dir=None, study_cache_dir=None, verbose=False):
     """Ejecuta un estudio TPE por métrica para evitar ponderaciones arbitrarias."""
     _require_external_validation()
     if not 0 < monitor_fraction < 0.5:
@@ -269,7 +277,8 @@ def b4_optuna_cv(data, n_splits=5, n_trials=10, timeout=None, seed=2026,
     output_path = Path(output_dir) if output_dir is not None else None
     progress_path = output_path / "b4_cv_trials.csv" if output_path is not None else None
     for metric_number, metric in enumerate(METRICS):
-        sampler = optuna.samplers.TPESampler(seed=seed + metric_number, multivariate=True)
+        sampler = optuna.samplers.TPESampler(seed=seed + metric_number,
+                                             n_startup_trials=3, multivariate=True)
         manifest = {
             "baseline": "B4",
             "features_sha256": stable_digest(list(data.features)),
@@ -282,6 +291,8 @@ def b4_optuna_cv(data, n_splits=5, n_trials=10, timeout=None, seed=2026,
             "max_iter": int(max_iter),
             "patience": int(patience),
             "max_ram_gib": float(max_ram_gib),
+            "search_policy": "fast_v2_global_metrics_fold_checkpoints",
+            "tpe_startup_trials": 3,
             "sklearn_version": sklearn_version,
         }
         if output_path is None:
@@ -290,21 +301,54 @@ def b4_optuna_cv(data, n_splits=5, n_trials=10, timeout=None, seed=2026,
             study = persistent_study(
                 output_path, "b4_optuna.sqlite3", f"b4_{metric}",
                 directions[metric], sampler, {**manifest, "metric": metric},
+                local_storage_dir=study_cache_dir,
             )
+
+        completed_before = sum(trial.state == optuna.trial.TrialState.COMPLETE
+                               for trial in study.trials)
+        study.sampler = optuna.samplers.TPESampler(
+            seed=seed + metric_number + 1009 * completed_before,
+            n_startup_trials=3, multivariate=True,
+        )
+        recovered = recover_interrupted_trials(study)
+        if recovered and verbose:
+            print(f"B4/{metric}: se reanudan {recovered} trial(s) interrumpido(s)", flush=True)
+        backup_study(study)
 
         def objective(trial):
             params = _parameters(trial)
-            rows = []
+            # Make RUNNING + fixed params durable before the first expensive fit;
+            # fold JSON written afterwards can then be recovered on a new runtime.
+            if output_path is not None:
+                backup_study(study)
+            checkpoint_path = (_fold_checkpoint_path(output_path, metric, params)
+                               if output_path is not None else None)
+            rows = _load_fold_rows(checkpoint_path, params) if checkpoint_path is not None else []
+            done_folds = {int(row["fold"]) for row in rows}
             started = time.perf_counter()
             for fold_number, (fit_idx, held_idx) in enumerate(folds, start=1):
-                fold_rows, _ = _fit_outer_fold(data, all_groups[fit_idx], all_groups[held_idx], params,
-                                                seed + trial.number * 100 + fold_number,
-                                                monitor_fraction, max_iter, patience, int(verbose))
+                if fold_number in done_folds:
+                    continue
+                fold_rows, _ = _fit_outer_fold(
+                    data, all_groups[fit_idx], all_groups[held_idx], params,
+                    seed + trial.number * 100 + fold_number, seed + fold_number,
+                    monitor_fraction, max_iter, patience, int(verbose), include_stages=False,
+                )
                 for row in fold_rows:
                     row.update({"estudio": metric, "trial": trial.number, "fold": fold_number,
                                 **params, "tiempo_segundos": time.perf_counter() - started,
                                 "memoria_estimada_gib": estimated / 1024**3})
                 rows.extend(fold_rows)
+                if checkpoint_path is not None:
+                    atomic_json({"params_sha256": stable_digest(params), "params": params,
+                                 "rows": json_safe_rows(rows)}, checkpoint_path)
+                    atomic_csv(records + complete_trial_rows(study) + rows, progress_path)
+                    backup_study(study)
+                    if verbose:
+                        print(f"B4/{metric}, trial {trial.number}, pliegue {fold_number}/{len(folds)}: "
+                              "checkpoint guardado", flush=True)
+            for row in rows:
+                row["trial"] = trial.number
             global_rows = [row for row in rows if row["etapa"] == "global"]
             value = float(np.nanmean([row[metric] for row in global_rows]))
             trial.set_user_attr("cv_metrics", {name: float(np.nanmean([row[name] for row in global_rows]))
@@ -320,6 +364,7 @@ def b4_optuna_cv(data, n_splits=5, n_trials=10, timeout=None, seed=2026,
         def save_study_progress(current_study, _trial):
             if progress_path is not None:
                 atomic_csv(records + complete_trial_rows(current_study), progress_path)
+            backup_study(current_study)
 
         if remaining:
             study.optimize(objective, n_trials=remaining, timeout=timeout,
