@@ -260,121 +260,156 @@ def _load_fold_rows(path, params):
     return saved.get("rows", []) if saved.get("params_sha256") == stable_digest(params) else []
 
 
-def b4_optuna_cv(data, n_splits=5, n_trials=10, timeout=None, seed=2026,
-                 monitor_fraction=0.15, max_iter=500, patience=30,
-                 max_ram_gib=10.0, output_dir=None, study_cache_dir=None, verbose=False):
-    """Ejecuta un estudio TPE por métrica para evitar ponderaciones arbitrarias."""
+def b4_optuna_cv(data, n_splits=3, n_trials=20, timeout=None, seed=2026,
+                 monitor_fraction=0.15, max_iter=2000, patience=30,
+                 max_ram_gib=10.0, output_dir=None, study_cache_dir=None, verbose=False,
+                 objective_metric="log_loss", search_fraction=1.0, startup_trials=5,
+                 search_groups=None):
+    """Busqueda bayesiana (TPE) de hiperparametros con validacion cruzada agrupada por partida.
+
+    - UN solo estudio optimiza objective_metric (por defecto log loss, regla de puntuacion
+      propia: premia ordenar bien Y dar probabilidades correctas). AUC y Brier de cada trial
+      quedan registrados, asi que las finalistas por cada metrica salen del mismo estudio
+      sin repetir ajustes (antes eran tres estudios y el triple de costo).
+    - search_groups: codigos de partida (posiciones en data.games) permitidos en la busqueda.
+      Se usa para buscar SOLO con partidas que son train en los tres escenarios, de modo que
+      los hiperparametros nunca vieron partidas de val, calib o test de ningun escenario.
+    - search_fraction < 1 limita ademas la busqueda a una muestra aleatoria de esas PARTIDAS
+      (nunca filas sueltas). El modelo final se reentrena con todo el train de cada escenario
+      en fit_b4_candidates_val, asi que la muestra solo abarata la eleccion de hiperparametros.
+    - max_iter alto + parada temprana: el numero de arboles lo decide la vigilancia agrupada,
+      no un tope fijo.
+    - timeout=None: el presupuesto lo controla n_trials; si Colab se corta, al volver a
+      ejecutar se reanuda desde el ultimo pliegue guardado.
+    """
     _require_external_validation()
+    if objective_metric not in METRICS:
+        raise ValueError(f"objective_metric debe ser una de {METRICS}")
     if not 0 < monitor_fraction < 0.5:
         raise ValueError("monitor_fraction debe estar entre 0 y 0.5")
+    if not 0 < search_fraction <= 1:
+        raise ValueError("search_fraction debe estar en (0, 1]")
     if n_trials < 1 or n_splits < 2:
         raise ValueError("n_trials debe ser positivo y n_splits debe ser al menos 2")
     estimated = _memory_guard(data, max_ram_gib)
+
+    # Partidas usadas en la busqueda: todas, o una muestra reproducible de ellas
     all_groups = np.arange(len(data.games), dtype=np.int32)
-    folds = list(GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed).split(all_groups, groups=all_groups))
+    if search_groups is not None:
+        all_groups = np.unique(np.asarray(search_groups, dtype=np.int32))
+        if len(all_groups) < 2 * n_splits:
+            raise ValueError("search_groups tiene muy pocas partidas para la validacion cruzada")
+    if search_fraction < 1:
+        size = max(2 * n_splits, int(round(search_fraction * len(all_groups))))
+        all_groups = np.sort(np.random.default_rng(seed).choice(all_groups, size=size, replace=False))
+    folds = list(GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+                 .split(all_groups, groups=all_groups))
+
     directions = {"auc": "maximize", "log_loss": "minimize", "brier": "minimize"}
-    records, selected = [], []
+    metric = objective_metric
     output_path = Path(output_dir) if output_dir is not None else None
     progress_path = output_path / "b4_cv_trials.csv" if output_path is not None else None
-    for metric_number, metric in enumerate(METRICS):
-        sampler = optuna.samplers.TPESampler(seed=seed + metric_number,
-                                             n_startup_trials=3, multivariate=True)
-        manifest = {
-            "baseline": "B4",
-            "features_sha256": stable_digest(list(data.features)),
-            "train_games_sha256": stable_digest([str(game) for game in data.games]),
-            "n_train_games": int(len(data.games)),
-            "n_train_rows": int(data.n_rows),
-            "n_splits": int(n_splits),
-            "seed": int(seed),
-            "monitor_fraction": float(monitor_fraction),
-            "max_iter": int(max_iter),
-            "patience": int(patience),
-            "max_ram_gib": float(max_ram_gib),
-            "search_policy": "fast_v2_global_metrics_fold_checkpoints",
-            "tpe_startup_trials": 3,
-            "sklearn_version": sklearn_version,
-        }
-        if output_path is None:
-            study = optuna.create_study(direction=directions[metric], sampler=sampler)
-        else:
-            study = persistent_study(
-                output_path, "b4_optuna.sqlite3", f"b4_{metric}",
-                directions[metric], sampler, {**manifest, "metric": metric},
-                local_storage_dir=study_cache_dir,
-            )
+    manifest = {
+        "baseline": "B4",
+        "metric": metric,
+        "features_sha256": stable_digest(list(data.features)),
+        "train_games_sha256": stable_digest([str(game) for game in data.games]),
+        "search_games_sha256": stable_digest(all_groups.tolist()),
+        "n_train_games": int(len(data.games)),
+        "n_search_games": int(len(all_groups)),
+        "n_train_rows": int(data.n_rows),
+        "n_splits": int(n_splits),
+        "seed": int(seed),
+        "monitor_fraction": float(monitor_fraction),
+        "search_fraction": float(search_fraction),
+        "max_iter": int(max_iter),
+        "patience": int(patience),
+        "max_ram_gib": float(max_ram_gib),
+        "search_policy": "v3_single_study_game_sample",
+        "tpe_startup_trials": int(startup_trials),
+        "sklearn_version": sklearn_version,
+    }
+    sampler = optuna.samplers.TPESampler(seed=seed, n_startup_trials=startup_trials, multivariate=True)
+    if output_path is None:
+        study = optuna.create_study(direction=directions[metric], sampler=sampler)
+    else:
+        study = persistent_study(output_path, "b4_optuna.sqlite3", f"b4_busqueda_{metric}",
+                                 directions[metric], sampler, manifest,
+                                 local_storage_dir=study_cache_dir)
 
-        completed_before = sum(trial.state == optuna.trial.TrialState.COMPLETE
-                               for trial in study.trials)
-        study.sampler = optuna.samplers.TPESampler(
-            seed=seed + metric_number + 1009 * completed_before,
-            n_startup_trials=3, multivariate=True,
-        )
-        recovered = recover_interrupted_trials(study)
-        if recovered and verbose:
-            print(f"B4/{metric}: se reanudan {recovered} trial(s) interrumpido(s)", flush=True)
+    # Semilla distinta al reanudar, para no repetir las mismas propuestas aleatorias
+    completed_before = sum(t.state == optuna.trial.TrialState.COMPLETE for t in study.trials)
+    study.sampler = optuna.samplers.TPESampler(
+        seed=seed + 1009 * completed_before, n_startup_trials=startup_trials, multivariate=True,
+    )
+    recovered = recover_interrupted_trials(study)
+    if recovered and verbose:
+        print(f"B4/{metric}: se reanudan {recovered} trial(s) interrumpido(s)", flush=True)
+    if output_path is not None:
         backup_study(study)
 
-        def objective(trial):
-            params = _parameters(trial)
-            # Make RUNNING + fixed params durable before the first expensive fit;
-            # fold JSON written afterwards can then be recovered on a new runtime.
-            if output_path is not None:
+    def objective(trial):
+        params = _parameters(trial)
+        if output_path is not None:
+            backup_study(study)
+        checkpoint_path = (_fold_checkpoint_path(output_path, metric, params)
+                           if output_path is not None else None)
+        rows = _load_fold_rows(checkpoint_path, params) if checkpoint_path is not None else []
+        done_folds = {int(row["fold"]) for row in rows}
+        started = time.perf_counter()
+        for fold_number, (fit_idx, held_idx) in enumerate(folds, start=1):
+            if fold_number in done_folds:
+                continue
+            fold_rows, _ = _fit_outer_fold(
+                data, all_groups[fit_idx], all_groups[held_idx], params,
+                seed + trial.number * 100 + fold_number, seed + fold_number,
+                monitor_fraction, max_iter, patience, int(verbose), include_stages=False,
+            )
+            for row in fold_rows:
+                row.update({"estudio": metric, "trial": trial.number, "fold": fold_number,
+                            **params, "tiempo_segundos": time.perf_counter() - started,
+                            "memoria_estimada_gib": estimated / 1024**3})
+            rows.extend(fold_rows)
+            if checkpoint_path is not None:
+                atomic_json({"params_sha256": stable_digest(params), "params": params,
+                             "rows": json_safe_rows(rows)}, checkpoint_path)
+                atomic_csv(complete_trial_rows(study) + rows, progress_path)
                 backup_study(study)
-            checkpoint_path = (_fold_checkpoint_path(output_path, metric, params)
-                               if output_path is not None else None)
-            rows = _load_fold_rows(checkpoint_path, params) if checkpoint_path is not None else []
-            done_folds = {int(row["fold"]) for row in rows}
-            started = time.perf_counter()
-            for fold_number, (fit_idx, held_idx) in enumerate(folds, start=1):
-                if fold_number in done_folds:
-                    continue
-                fold_rows, _ = _fit_outer_fold(
-                    data, all_groups[fit_idx], all_groups[held_idx], params,
-                    seed + trial.number * 100 + fold_number, seed + fold_number,
-                    monitor_fraction, max_iter, patience, int(verbose), include_stages=False,
-                )
-                for row in fold_rows:
-                    row.update({"estudio": metric, "trial": trial.number, "fold": fold_number,
-                                **params, "tiempo_segundos": time.perf_counter() - started,
-                                "memoria_estimada_gib": estimated / 1024**3})
-                rows.extend(fold_rows)
-                if checkpoint_path is not None:
-                    atomic_json({"params_sha256": stable_digest(params), "params": params,
-                                 "rows": json_safe_rows(rows)}, checkpoint_path)
-                    atomic_csv(records + complete_trial_rows(study) + rows, progress_path)
-                    backup_study(study)
-                    if verbose:
-                        print(f"B4/{metric}, trial {trial.number}, pliegue {fold_number}/{len(folds)}: "
-                              "checkpoint guardado", flush=True)
-            for row in rows:
-                row["trial"] = trial.number
-            global_rows = [row for row in rows if row["etapa"] == "global"]
-            value = float(np.nanmean([row[metric] for row in global_rows]))
-            trial.set_user_attr("cv_metrics", {name: float(np.nanmean([row[name] for row in global_rows]))
-                                                 for name in METRICS})
-            trial.set_user_attr("cv_rows", json_safe_rows(rows))
-            return value
+                if verbose:
+                    print(f"B4/{metric}, trial {trial.number}, pliegue {fold_number}/{len(folds)}: "
+                          f"checkpoint guardado | arboles={fold_rows[0]['n_iter']}", flush=True)
+        for row in rows:
+            row["trial"] = trial.number
+        global_rows = [row for row in rows if row["etapa"] == "global"]
+        trial.set_user_attr("cv_metrics", {name: float(np.nanmean([row[name] for row in global_rows]))
+                                             for name in METRICS})
+        trial.set_user_attr("cv_rows", json_safe_rows(rows))
+        return float(np.nanmean([row[metric] for row in global_rows]))
 
-        complete_count = sum(
-            trial.state == optuna.trial.TrialState.COMPLETE for trial in study.trials
-        )
-        remaining = max(0, n_trials - complete_count) if output_path is not None else n_trials
+    complete_count = sum(t.state == optuna.trial.TrialState.COMPLETE for t in study.trials)
+    remaining = max(0, n_trials - complete_count) if output_path is not None else n_trials
 
-        def save_study_progress(current_study, _trial):
-            if progress_path is not None:
-                atomic_csv(records + complete_trial_rows(current_study), progress_path)
-            backup_study(current_study)
-
-        if remaining:
-            study.optimize(objective, n_trials=remaining, timeout=timeout,
-                           gc_after_trial=True, show_progress_bar=verbose,
-                           callbacks=[save_study_progress] if progress_path is not None else None)
-        records.extend(complete_trial_rows(study))
+    def save_study_progress(current_study, _trial):
         if progress_path is not None:
-            atomic_csv(records, progress_path)
-        best = study.best_trial
-        selected.append({"seleccionada_por": metric, "trial": best.number,
+            atomic_csv(complete_trial_rows(current_study), progress_path)
+        backup_study(current_study)
+
+    if remaining:
+        study.optimize(objective, n_trials=remaining, timeout=timeout,
+                       gc_after_trial=True, show_progress_bar=verbose,
+                       callbacks=[save_study_progress] if progress_path is not None else None)
+    records = complete_trial_rows(study)
+    if progress_path is not None:
+        atomic_csv(records, progress_path)
+
+    # Finalistas: el mejor trial del MISMO estudio segun cada metrica (sin ajustes extra)
+    complete = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
+    selected = []
+    for name in METRICS:
+        values = [t.user_attrs["cv_metrics"][name] for t in complete]
+        pick = int(np.nanargmax(values) if directions[name] == "maximize" else np.nanargmin(values))
+        best = complete[pick]
+        selected.append({"seleccionada_por": name, "trial": best.number,
                          **best.params, **best.user_attrs["cv_metrics"]})
     return pd.DataFrame(records), pd.DataFrame(selected).drop_duplicates(
         subset=["learning_rate", "max_leaf_nodes", "min_samples_leaf", "l2_regularization"]

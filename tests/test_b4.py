@@ -51,18 +51,20 @@ def test_b4_full_train_group_cv_and_val(corpus, tmp_path):
                                   max_iter=12, patience=2, max_ram_gib=1,
                                   output_dir=output, study_cache_dir=tmp_path / "local-one")
     global_rows = cv.loc[cv.etapa.eq("global")]
-    # Un estudio por cada métrica y cobertura externa completa de las 18 partidas.
-    assert set(global_rows.estudio) == {"auc", "log_loss", "brier"}
-    assert global_rows.groupby("estudio").partidas_evaluacion.sum().eq(18).all()
+    # Un solo estudio (log loss) y cobertura externa completa de las 18 partidas.
+    assert set(global_rows.estudio) == {"log_loss"}
+    assert global_rows.partidas_evaluacion.sum() == 18
     assert (global_rows.partidas_modelo + global_rows.partidas_vigilancia
             + global_rows.partidas_evaluacion).eq(18).all()
-    assert len(candidates) >= 1
+    # Las finalistas salen del mismo estudio: una por metrica, sin duplicados.
+    assert 1 <= len(candidates) <= 3
+    assert set(candidates.seleccionada_por) <= {"auc", "log_loss", "brier"}
     assert (output / "b4_cv_trials.csv").exists()
-    assert len(list((output / "fold_checkpoints").glob("b4_*.json"))) == 3
+    assert len(list((output / "fold_checkpoints").glob("b4_*.json"))) == 1
 
     storage = optuna.storages.RDBStorage(url=f"sqlite:///{output / 'b4_optuna.sqlite3'}")
     summaries = optuna.study.get_all_study_summaries(storage=storage)
-    assert len(summaries) == 3 and sum(summary.n_trials for summary in summaries) == 3
+    assert len(summaries) == 1 and summaries[0].n_trials == 1
     resumed_cv, resumed_candidates = b4_optuna_cv(
         train, n_splits=2, n_trials=1, seed=7, max_iter=12, patience=2,
         max_ram_gib=1, output_dir=output, study_cache_dir=tmp_path / "local-two",
@@ -70,7 +72,7 @@ def test_b4_full_train_group_cv_and_val(corpus, tmp_path):
     assert len(resumed_cv) == len(cv)
     pd.testing.assert_frame_equal(resumed_candidates, candidates)
     summaries = optuna.study.get_all_study_summaries(storage=storage)
-    assert sum(summary.n_trials for summary in summaries) == 3
+    assert summaries[0].n_trials == 1
 
     val_metrics = fit_b4_candidates_val(train, val, candidates, seed=7,
                                         max_iter=12, patience=2, max_ram_gib=1,
@@ -85,3 +87,19 @@ def test_b4_full_train_group_cv_and_val(corpus, tmp_path):
     assert len(resumed_val) == len(val_metrics)
     train.close()
     val.close()
+
+
+def test_b4_search_only_uses_allowed_games(corpus, tmp_path):
+    """Con search_groups, la validacion cruzada solo usa esas partidas de train."""
+    directory, _ = corpus
+    stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=11)
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    train = materialize_split(stream, FEATURES, "train", cache)
+    allowed = np.arange(0, len(train.games), 2)
+    cv, _ = b4_optuna_cv(train, n_splits=2, n_trials=1, seed=7, max_iter=12, patience=2,
+                         max_ram_gib=1, search_groups=allowed)
+    global_rows = cv.loc[cv.etapa.eq("global")]
+    assert global_rows.partidas_evaluacion.sum() == len(allowed)
+    assert (global_rows.partidas_modelo + global_rows.partidas_vigilancia
+            + global_rows.partidas_evaluacion).eq(len(allowed)).all()
