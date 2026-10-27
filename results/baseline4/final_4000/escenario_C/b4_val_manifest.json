@@ -1,0 +1,14 @@
+{
+  "baseline": "B4_val",
+  "candidates_sha256": "bce971e2a082b45b7ac13a4ae5166ec22308b31945ebbe3bcec85662916cefa2",
+  "features_sha256": "3ec7d69022b346f6fbdf410f23b847f4f5fd04af9019167a7e801e07318e31bf",
+  "max_iter": 4000,
+  "max_ram_gib": 10.0,
+  "monitor_fraction": 0.15,
+  "patience": 30,
+  "scenario": "C",
+  "seed": 2026,
+  "sklearn_version": "1.7.2",
+  "train_games_sha256": "4c3d5b88d6aa18afeedda30dc3c29efb9e4b2956f57ce3dd7c7830528b77ace3",
+  "val_games_sha256": "634004b555f71307ba5ca11c3261d7dcdd3159e0669138b69b12e66bd62397c1"
+}

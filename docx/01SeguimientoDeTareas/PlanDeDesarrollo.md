@@ -79,12 +79,12 @@ una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado
 - [ ] B2 - regresión logística regularizada en un `Pipeline` (escalado ajustado solo con train). Referencia "razonable" de la rúbrica
 - [ ] Demostración de inflación: B2 con partición por fila contra partición por partida, midiendo cuántas partidas quedan en ambos lados
 - [ ] B3 - árbol de decisión y bosque aleatorio (bosque sobre una muestra de partidas de train si el costo lo exige, declarado). Mide si hay interacciones no lineales
-- [ ] B4 - modelo principal: `HistGradientBoostingClassifier` con búsqueda bayesiana de hiperparámetros (Optuna, TPE) y `GroupKFold` por `game_id` sobre train; espacio, número de pruebas y tiempo justificados; parada temprana; `val` para la elección final
+- [x] B4 - modelo principal: `HistGradientBoostingClassifier` con búsqueda bayesiana de hiperparámetros (Optuna, TPE, 20 trials) y validación cruzada agrupada por `game_id` sobre las partidas train de A, B y C; parada temprana; reentrenado en cada escenario y medido en `val` (AUC A 0.835, B 0.786, C 0.836). Resultados y modelos en `results/baseline4/`
 - [ ] Verificación de implementación: LightGBM con la misma búsqueda y el mismo protocolo; si no supera a B4 de forma clara, se reporta y se mantiene B4
 - [ ] Ablaciones por familia de características (progreso, recursos y tablero, diferenciales) sobre B4
 - [ ] Prueba de H2: B4 restringido (turno, quién empieza e ids de carta) contra B4 con el estado completo
 - [ ] Entrenamiento de B0 a B4 en cada escenario (A, B y C) con su propio train
-- [ ] Modelo final exportado (`joblib`) fuera del repo, con una función que convierte una observación del juego en probabilidad (para la Etapa 3)
+- [ ] Modelo final exportado, con una función que convierte una observación del juego en probabilidad (para la Etapa 3). Modelos de B4 ya versionados en `results/baseline4/final_4000/`; falta la función de observación a probabilidad
 
 ### `05FinalModelChecks`
 
