@@ -1,0 +1,21 @@
+{
+  "commit": "b8ec38bdc2735010ea63faf47e790a59d8581ac8",
+  "working_tree_dirty": false,
+  "run_id_utc": "20261029T005435Z",
+  "seed": 2026,
+  "escenarios": [
+    "A",
+    "B",
+    "C"
+  ],
+  "split_fit": "train",
+  "split_eval": "val",
+  "ponderacion": "cada partida suma 1 en cada subconjunto",
+  "B1_formula": "(opp_prizes - own_prizes) + diff_total_hp / hp_unit + diff_bench_n",
+  "B1_estado": "propuesta_pendiente_confirmacion",
+  "segundos_por_escenario": {
+    "A": 44.77985760999991,
+    "B": 37.985224547999906,
+    "C": 40.97763942900019
+  }
+}

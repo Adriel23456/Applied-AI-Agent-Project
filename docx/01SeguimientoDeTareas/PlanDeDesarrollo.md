@@ -74,8 +74,8 @@ una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado
 
 - [ ] Registro de cada ejecución en `results/` (escenario, modelo, configuración, semilla, métricas, tiempo, commit)
 - [ ] Funciones de evaluación comunes: AUC, log loss y Brier, globales y por etapa, con el número de partidas de cada etapa
-- [ ] B0 - probabilidad a priori (prevalencia de train). Piso de referencia
-- [ ] B1 - heurística de dominio sobre diferencias de recursos (premios, PV, Pokémon en juego), llevada a probabilidad ajustando solo con train
+- [x] B0 - probabilidad a priori (prevalencia de train). Piso de referencia; métricas globales y por etapa para A/B/C en `results/baseline0_1/`
+- [ ] B1 - heurística de dominio sobre diferencias de recursos (premios, PV, Pokémon en juego), llevada a probabilidad ajustando solo con train. Resultados preliminares en `results/baseline0_1/`; falta confirmar la fórmula antes de declararlos evidencia final.
 - [ ] B2 - regresión logística regularizada en un `Pipeline` (escalado ajustado solo con train). Referencia "razonable" de la rúbrica
 - [ ] Demostración de inflación: B2 con partición por fila contra partición por partida, midiendo cuántas partidas quedan en ambos lados
 - [ ] B3 - árbol de decisión y bosque aleatorio. Para elegir una configuración única común, comparar finalistas con los mismos hiperparámetros en A/B/C por macro-AUC de `val`; después ajustar esa configuración usando el `train` propio de cada escenario y reportar sus métricas por separado.
