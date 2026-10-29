@@ -1,37 +1,50 @@
-# Ejecución de pendientes de baselines
+# Celdas exactas para los cuadernos de baselines
 
-Los cuadernos se ejecutan en Colab con CPU y RAM alta. Los experimentos guardan sus salidas en Google Drive; `RUN_ID` identifica cada sesión en UTC. La fórmula de B1 sigue marcada como propuesta. El protocolo de LightGBM quedó definido el 28 de octubre en `docx/03Evidence/28-10-26_ProtocoloLightGBM.md`. Las métricas de `val` se reportan por escenario y no se usa `calib` ni `test`.
+Los números de celda de abajo empiezan en **0** y corresponden a la versión publicada en la rama `04MainAIModelTrainingAndDevelopment`. Cada cuaderno prepara su propio runtime en la **celda 1**; no hace falta ejecutar `00_arranque` ni compartir runtime. Ejecuta las celdas de código en el orden indicado. Las celdas Markdown solo explican el paso.
 
-## Preparación
+## B0/B1: resultados ya listos
 
-1. Asegúrate de que la rama `04MainAIModelTrainingAndDevelopment` contiene los cambios actuales y abre en Colab el cuaderno del baseline que vas a ejecutar.
-2. Cada cuaderno de baseline prepara **su propio runtime** en la primera celda: conecta Drive, actualiza o clona la rama, instala dependencias y baja las tablas procesadas a `/content/datos` si faltan. No requiere ejecutar `00_arranque` ni comparte el runtime con otro cuaderno. Si Colab inicia un runtime nuevo, vuelve a ejecutar la primera celda de ese cuaderno.
-3. Verifica el commit impreso y que no haya cambios locales. Cada celda de experimento largo tiene un interruptor `False`; actívalo solo para esa sección.
-4. La raíz de las salidas es `MyDrive/Applied-AI-Agent-Project/model_checkpoints/`. Conserva el `RUN_ID` impreso. LightGBM tiene el mismo presupuesto de búsqueda que B4: 20 trials y 3 pliegues, más 6 ajustes para su única configuración finalista. El tiempo real puede variar entre implementaciones.
+B0/B1 ya está versionado en `results/baseline0_1/20261029T005435Z/`; **no vuelvas a ejecutar el ajuste para continuar con los otros baselines**. La fórmula de B1 sigue pendiente de confirmación, así que sus métricas son preliminares.
 
-## Orden sugerido
+Si necesitas repetir toda la corrida, en `02_baselines_B0_B1.ipynb` ejecuta las celdas de código **1 → 3 → 6 → 7 → 9**. No cambies valores. La celda 6 genera un `RUN_ID` nuevo y abre una carpeta nueva en Drive; la celda 7 ajusta B0/B1 para A/B/C; la celda 9 descarga el ZIP. No vuelvas a ejecutar la celda 6 dentro de la misma corrida, porque intenta crear de nuevo la carpeta con ese `RUN_ID`.
 
-1. **B0/B1** (`02_baselines_B0_B1.ipynb`): ejecutar primero la celda de preparación propia y luego las celdas de métricas, registro y ejecución. Las salidas quedan en `b0_b1/<RUN_ID>/`. B1 se guarda como propuesta y requiere confirmación antes de usarla como evidencia final.
-2. **B2** (`03_baseline_B2.ipynb`): ejecutar su celda de preparación, cambiar `EJECUTAR_FUGA` a `True` y ejecutar la celda de la demostración. Guarda métricas y solapamiento en `b2/demo_fuga/<RUN_ID>/escenario_X/`. La demostración usa solo `C=0.1`, la configuración finalista; reajusta para cada partición porque cambia el conjunto de entrenamiento. Es un diagnóstico LBFGS con muestra pequeña, no reutiliza el `.joblib` final SGD. Ejecutar después la celda de recuperación con `BUSCAR_MODELOS_B2=True`; copia solo los finalistas `C=0.1` de A, B y C a `export_repo/baseline2/`. Si no hay artefactos, activa `GENERAR_B2_FINALISTA_SI_FALTA`; reajusta solo `C=0.1` en los escenarios faltantes y guarda los `.joblib` en Drive. Mantiene el tope acordado de 600 épocas y registra que no convergió el gradiente. Luego vuelve a ejecutar la celda de recuperación para copiarlos a `export_repo/baseline2/`.
-3. **B3** (`04_baseline_B3.ipynb`): ejecutar su celda de preparación y la celda de recuperación con `BUSCAR_MODELOS_B3=True`. Se copia solo el modelo de la configuración común finalista de cada escenario (tres ajustes, uno por cada `train` propio) a `export_repo/baseline3/`. No se usan las otras candidatas de búsqueda. Si falta alguno, activa `GENERAR_B3_FINALISTA_SI_FALTA`; ajusta únicamente el bosque seleccionado y solo para los escenarios sin artefacto. Luego vuelve a ejecutar la celda de recuperación para copiarlos a `export_repo/baseline3/`. Si hay varias coincidencias, revisa la ruta antes de copiar.
-4. **B4: LightGBM** (`05_baseline_B4.ipynb`): se recomienda correrlo primero para decidir si B4 sigue como modelo principal antes de invertir en análisis centrados en B4. Ejecuta la instalación de LightGBM 4.6.0, activa `EJECUTAR_LIGHTGBM` y ejecuta la celda. Completa búsqueda, selección de una finalista por AUC de CV, ajustes en A/B/C y comparación con B4 mediante 1000 remuestreos emparejados de partidas. Guarda `comparacion_b4/decision_val.json` y los resultados separados por escenario. LightGBM reemplaza a B4 solo si el intervalo del 95 % para la diferencia de AUC queda por encima de cero en A, B y C y no suben los valores observados de log loss ni Brier en ninguno. Ante resultados mixtos o inciertos, se mantiene B4. Si el runtime se interrumpe, asigna el `RUN_ID` anterior después de la preparación y actualiza `RUN_INFO["run_id_utc"]` antes de continuar; los escenarios con modelo y métricas completos omiten el ajuste final.
-5. **Ablaciones de B4** (mismo cuaderno): después de revisar la decisión de LightGBM, activa `EJECUTAR_ABLACIONES`. Se realizan tres variantes por escenario, cada una con vigilancia y ajuste final. Salen a `b4/ablaciones/<RUN_ID>/escenario_X/`. `familias.json` define las columnas eliminadas.
-6. **H2** (mismo cuaderno): activa `EJECUTAR_H2` para comparar el estado completo de B4 con cuatro entradas. Guarda métricas y el modelo restringido en `b4/h2/<RUN_ID>/escenario_X/`. La pregunta H2 se definió específicamente para B4; la decisión de usar LightGBM como modelo principal no cambia la configuración de esta comparación sin una modificación metodológica registrada.
+## B2: fuga y artefactos finalistas
 
-Al final de B0/B1, B2, B3 y B4 hay una celda **Descargar resultados**. Ejecútala en el mismo runtime después de completar el análisis: crea un ZIP y activa la descarga al equipo. En B4 el ZIP incluye los modelos `.joblib` y el estudio de Optuna, por lo que puede ser grande; la celda imprime su tamaño.
+En `03_baseline_B2.ipynb`:
 
-Se pueden ejecutar los escenarios o secciones por separado cambiando las tuplas `ESCENARIOS_*`. El resumen del cuaderno B4 muestra las salidas que coinciden con el `RUN_ID` actual; para otra sesión, asigna el identificador anterior antes de ejecutar el resumen.
+1. Ejecuta la **celda 1** para preparar ese runtime.
+2. Para demostrar la fuga, cambia `EJECUTAR_FUGA = False` a `True` en la **celda 6** y ejecútala. Deja `ESCENARIOS_FUGA = ('A', 'B', 'C')` y `C=0.1` tal como están.
+3. Cambia `BUSCAR_MODELOS_B2 = False` a `True` en la **celda 8** y ejecútala. Busca solo los finalistas `C=0.1`.
+4. Si falta algún `.joblib`, cambia `GENERAR_B2_FINALISTA_SI_FALTA = False` a `True` en la **celda 10** y ejecútala. Solo ajusta el finalista de los escenarios faltantes, con el tope acordado de 600 épocas. Luego vuelve a ejecutar la **celda 8** para copiar los modelos a `export_repo/baseline2/`.
+5. Ejecuta la **celda 12** para descargar el ZIP.
 
-## Qué copiar desde Drive al repositorio
+Si solo quieres recuperar los `.joblib`, omite las celdas 5–6 y ejecuta 1, 8 y 12. Activa la celda 10 únicamente si la celda 8 informa que falta un artefacto.
 
-| Origen bajo `model_checkpoints/` | Destino sugerido en el repositorio | Contenido |
-|---|---|---|
-| `b0_b1/<RUN_ID>/` | `results/baseline0_1/<RUN_ID>/` | `metricas_B0_B1.csv`, `ajustes_B0_B1.csv`, `registro.json` |
-| `b2/demo_fuga/<RUN_ID>/` | `results/baseline2/demo_fuga/<RUN_ID>/` | `metricas.csv`, `solapamiento.csv`, `config.json`, `registro.json`, por escenario |
-| `export_repo/baseline2/` y, si se generó, `b2/finalista_seleccionada_refit/<RUN_ID>/` | `results/baseline2/modelos/` | Modelos B2 `C=0.1` encontrados o reajustados y verificados |
-| `export_repo/baseline3/` y, si se generó, `b3/finalista_seleccionada_refit/<RUN_ID>/` | `results/baseline3/modelos/` | Modelos B3 finalistas encontrados o reajustados y verificados |
-| `b4/ablaciones/<RUN_ID>/` | `results/baseline4/ablaciones/<RUN_ID>/` | Familias, métricas, manifiestos, tiempos y modelos de cada variante |
-| `b4/h2/<RUN_ID>/` | `results/baseline4/h2/<RUN_ID>/` | Métricas, configuración, registro y modelo restringido, por escenario |
-| `lightgbm/<RUN_ID>/` | `results/lightgbm/<RUN_ID>/` | Estudio SQLite, CV por trial y pliegue, `lightgbm_finalista.csv`, configuración, tiempos, modelos y resultados de `val`; incluir `comparacion_b4/` con métricas, remuestreos y decisión |
+## B3: artefactos finalistas
 
-Copia únicamente carpetas de corridas completadas; si se detuvo una corrida, conserva el estado parcial claramente identificado. Antes de agregar archivos `.joblib` comprueba su tamaño y las reglas del repositorio o de Git LFS. Los resultados copiados deben mantener el manifiesto de la misma corrida. Los resultados de B1 siguen siendo provisionales hasta confirmar la fórmula.
+En `04_baseline_B3.ipynb`:
+
+1. Ejecuta la **celda 1**. La **celda 2** solo muestra los CSV existentes y es opcional.
+2. Cambia `BUSCAR_MODELOS_B3 = False` a `True` en la **celda 5** y ejecútala. Busca solamente el bosque de la configuración común finalista en A/B/C.
+3. Si falta un `.joblib`, cambia `GENERAR_B3_FINALISTA_SI_FALTA = False` a `True` en la **celda 7** y ejecútala. Solo ajusta los finalistas faltantes. Luego repite la **celda 5** para copiarlos a `export_repo/baseline3/`.
+4. Ejecuta la **celda 9** para descargar el ZIP.
+
+Si solo quieres recuperar `.joblib`, ejecuta 1, 5 y 9; activa la celda 7 únicamente si faltan archivos.
+
+## B4: LightGBM, ablaciones y H2
+
+En `05_baseline_B4.ipynb`:
+
+1. Ejecuta la **celda 1**. La **celda 3** muestra las métricas B4 que ya están versionadas; puedes ejecutarla para consultarlas.
+2. **LightGBM, primero:** ejecuta la instalación de la **celda 6**. En la **celda 7**, cambia `EJECUTAR_LIGHTGBM = False` a `True` y ejecútala. Deja la semilla 2026 y los escenarios A/B/C por defecto. La celda hace la búsqueda, ajusta una finalista por escenario y compara con B4. No cambies tamaños de búsqueda, pliegues, presupuesto ni regla de comparación.
+3. **Ablaciones, opcionales:** cuando decidas ejecutarlas, en la **celda 9** cambia `EJECUTAR_ABLACIONES = False` a `True` y ejecútala. Deja `ESCENARIOS_ABLACIONES = ('A', 'B', 'C')`.
+4. **H2, opcional:** en la **celda 11** cambia `EJECUTAR_H2 = False` a `True` y ejecútala. No cambies las cuatro características ni la semilla.
+5. La **celda 13** muestra un resumen si corriste LightGBM o ablaciones. La **celda 15** descarga el ZIP con lo producido bajo el `RUN_ID` actual.
+
+Las celdas 7, 9 y 11 están apagadas por defecto. Activa solo la sección que vas a correr. LightGBM va antes porque su resultado permite decidir si B4 sigue como modelo principal; H2 conserva su definición actual, que compara específicamente las cuatro entradas con B4.
+
+## Archivos descargados
+
+Cada celda de descarga crea un archivo ZIP en Colab y abre la descarga en el navegador. B4 puede generar un ZIP grande porque incluye modelos `.joblib` y el estudio de Optuna. La celda imprime su tamaño.
+
+Los resultados nuevos se guardan primero en Drive, bajo `MyDrive/Applied-AI-Agent-Project/model_checkpoints/`. Si quieres versionarlos, copia la carpeta de la corrida a `results/` conservando el `RUN_ID`, sus CSV y sus archivos `registro`, `config` o `manifest`.
