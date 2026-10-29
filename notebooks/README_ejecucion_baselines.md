@@ -2,6 +2,8 @@
 
 Los números de celda de abajo empiezan en **0** y corresponden a la versión publicada en la rama `04MainAIModelTrainingAndDevelopment`. Cada cuaderno prepara su propio runtime en la **celda 1**; no hace falta ejecutar `00_arranque` ni compartir runtime. Ejecuta las celdas de código en el orden indicado. Las celdas Markdown solo explican el paso.
 
+**Si falla Kaggle en la celda 1:** el secreto `KAGGLE_API_TOKEN` no tiene un formato reconocido. Después de actualizar la rama, vuelve a ejecutar la celda 1: aparecerá un campo oculto donde puedes pegar tu token de Kaggle como texto o un JSON legacy con `username` y `key`. No pegues la credencial en una celda ni en el chat. Como alternativa, corrige el valor del secreto en el panel de secretos de Colab y vuelve a ejecutar la celda 1.
+
 ## B0/B1: resultados ya listos
 
 B0/B1 ya está versionado en `results/baseline0_1/20261029T005435Z/`; **no vuelvas a ejecutar el ajuste para continuar con los otros baselines**. La fórmula de B1 sigue pendiente de confirmación, así que sus métricas son preliminares.
@@ -35,7 +37,7 @@ Si solo quieres recuperar `.joblib`, ejecuta 1, 5 y 9; activa la celda 7 únicam
 
 En `05_baseline_B4.ipynb`:
 
-1. Ejecuta la **celda 1** para preparar ese runtime. La **celda 4** muestra CPU y RAM.
+1. Ejecuta la **celda 1** para preparar ese runtime. Si aparece el aviso de Kaggle, usa el campo oculto como se explica arriba. La **celda 4** muestra CPU y RAM.
 2. Las celdas **5** y **7** contienen, respectivamente, la búsqueda original y el ajuste final de B4. Como B4 ya está entrenado, deja `EJECUTAR_BUSQUEDA_B4 = False` y `EJECUTAR_AJUSTE_FINAL_B4 = False`: la celda 5 consulta la finalista versionada y la celda 7 informa dónde están los modelos. La **celda 9** muestra sus métricas. No se entrena en este paso.
 3. Si alguna vez necesitas reproducir B4 desde cero, cambia `EJECUTAR_BUSQUEDA_B4` a `True` en la **celda 5** y ejecuta después la **celda 7** con `EJECUTAR_AJUSTE_FINAL_B4 = True`. Estas operaciones pueden tardar horas y guardan una reproducción nueva en Drive bajo `b4_reproduccion/<RUN_ID>/`, sin sobrescribir los resultados oficiales. Para reproducir solo el ajuste final con la configuración ya seleccionada, deja la celda 5 en `False`, ejecútala y activa la celda 7.
 4. **LightGBM, primero entre los experimentos pendientes:** ejecuta la instalación de la **celda 12**. En la **celda 13**, cambia `EJECUTAR_LIGHTGBM = False` a `True` y ejecútala. Deja la semilla 2026 y los escenarios A/B/C. Esa celda realiza la búsqueda, ajusta una finalista por escenario y compara con B4.
