@@ -12,11 +12,13 @@ Si necesitas repetir toda la corrida, en `02_baselines_B0_B1.ipynb` ejecuta las 
 
 ## B2: fuga y artefactos finalistas
 
+Los CSV de los ajustes `C=0.1` están versionados en `results/baseline2/`; los `.joblib` se buscan en los archivos locales o en Drive. Los tres ajustes evalúan A/B/C, no son tres modelos para la aplicación.
+
 En `03_baseline_B2.ipynb`:
 
 1. Ejecuta la **celda 1** para preparar ese runtime.
-2. Para demostrar la fuga, cambia `EJECUTAR_FUGA = False` a `True` en la **celda 6** y ejecútala. Deja `ESCENARIOS_FUGA = ('A', 'B', 'C')` y `C=0.1` tal como están.
-3. Cambia `BUSCAR_MODELOS_B2 = False` a `True` en la **celda 8** y ejecútala. Busca solo los finalistas `C=0.1`.
+2. La demostración de fuga ya está guardada. Solo para repetirla, cambia `EJECUTAR_FUGA = False` a `True` en la **celda 6** y ejecútala. Deja `ESCENARIOS_FUGA = ('A', 'B', 'C')` y `C=0.1` tal como están.
+3. Para verificar o exportar los modelos de evaluación disponibles, cambia `BUSCAR_MODELOS_B2 = False` a `True` en la **celda 8** y ejecútala. Busca solo `C=0.1` y verifica que cada ajuste usó todo el `train` del escenario.
 4. Si falta algún `.joblib`, cambia `GENERAR_B2_FINALISTA_SI_FALTA = False` a `True` en la **celda 10** y ejecútala. Solo ajusta el finalista de los escenarios faltantes, con el tope acordado de 600 épocas. Luego vuelve a ejecutar la **celda 8** para copiar los modelos a `export_repo/baseline2/`.
 5. Ejecuta la **celda 12** para descargar el ZIP.
 
@@ -24,11 +26,13 @@ Si solo quieres recuperar los `.joblib`, omite las celdas 5–6 y ejecuta 1, 8 y
 
 ## B3: artefactos finalistas
 
+La configuración común de B3 está documentada en `results/baseline3/`. Cada ajuste se entrenó con todo el `train` propio de su escenario; para la aplicación se escogerá un solo artefacto según el uso previsto. La celda de verificación busca los modelos en archivos locales o en Drive.
+
 En `04_baseline_B3.ipynb`:
 
 1. Ejecuta la **celda 1**. La **celda 2** solo muestra los CSV existentes y es opcional.
-2. Cambia `BUSCAR_MODELOS_B3 = False` a `True` en la **celda 5** y ejecútala. Busca solamente el bosque de la configuración común finalista en A/B/C.
-3. Si falta un `.joblib`, cambia `GENERAR_B3_FINALISTA_SI_FALTA = False` a `True` en la **celda 7** y ejecútala. Solo ajusta los finalistas faltantes. Luego repite la **celda 5** para copiarlos a `export_repo/baseline3/`.
+2. Cambia `BUSCAR_MODELOS_B3 = False` a `True` en la **celda 5** y ejecútala. Busca solamente el bosque de la configuración común finalista en A/B/C y verifica que cada ajuste usó todo el `train` correspondiente.
+3. Si falta un `.joblib`, cambia `GENERAR_B3_FINALISTA_SI_FALTA = False` a `True` en la **celda 7** y ejecútala. Solo ajusta los finalistas faltantes con la configuración común y la semilla efectiva 2030 del bosque original. Luego repite la **celda 5** para copiarlos a `export_repo/baseline3/`.
 4. Ejecuta la **celda 9** para descargar el ZIP.
 
 Si solo quieres recuperar `.joblib`, ejecuta 1, 5 y 9; activa la celda 7 únicamente si faltan archivos.
