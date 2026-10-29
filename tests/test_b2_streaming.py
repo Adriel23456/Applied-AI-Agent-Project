@@ -21,6 +21,8 @@ from ptcg_wp.baselines import ScenarioStream, weights_by_game
 from ptcg_wp.b2 import b2_group_cv, fit_b2_candidates_val, _collect_rows
 from ptcg_wp.b2_streaming import (evaluate_stream, fit_incremental, game_counts,
                                   prepare_training, training_diagnostics)
+from ptcg_wp.data import load_scenario
+from ptcg_wp.evaluation import metric_rows
 
 
 FEATURES = ["x", "z"]
@@ -109,6 +111,42 @@ def test_disk_metrics_match_sklearn_with_ties_and_stage_weights(corpus, tmp_path
         assert row["n_partidas"] == part.game_id.nunique()
         assert row["n_estados"] == len(part)
     assert not list(tmp_path.glob("predictions-*.sqlite"))
+
+
+def test_shared_memory_and_stream_metrics_agree(corpus, tmp_path):
+    directory, _, _ = corpus
+    stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=17)
+    model = TiedPredictions()
+    disk = evaluate_stream(model, stream, FEATURES, "val", None, tmp_path, {})
+    val = pd.concat(stream.iter_batches("val"), ignore_index=True)
+    probability = model.predict_proba(val[FEATURES].to_numpy())[:, 1]
+    memory = metric_rows(val.y, probability, val.game_id, val.stage, {})
+    assert [row["etapa"] for row in disk] == [row["etapa"] for row in memory]
+    for streamed, materialized in zip(disk, memory):
+        for key in ("auc", "log_loss", "brier"):
+            assert streamed[key] == pytest.approx(materialized[key], abs=1e-12)
+        for key in ("n_estados", "n_partidas"):
+            assert streamed[key] == materialized[key]
+
+
+def test_stream_matches_load_scenario_for_train_and_val(corpus):
+    directory, frame, _ = corpus
+    excluded = pd.concat([frame.loc[frame.game_id.eq("g0")].head(1),
+                          frame.loc[frame.game_id.eq("g16")].head(1)], ignore_index=True)
+    excluded.loc[0, "setup"] = 1
+    excluded.loc[1, "decided"] = 1
+    excluded.to_parquet(directory / "estados_3.parquet", index=False)
+    states, _, splits, stages = load_scenario(directory, "A", columns=FEATURES)
+    assert len(states) == len(frame)
+    expected = states.assign(split=splits, stage=stages)
+    stream = ScenarioStream(directory, "A", tuple(FEATURES), batch_size=17)
+    keys = ["game_id", "turn", "y", "split", "stage", *FEATURES]
+    for split in ("train", "val"):
+        actual = pd.concat(stream.iter_batches(split), ignore_index=True)
+        reference = expected.loc[expected.split.eq(split)]
+        actual = actual[keys].sort_values(["game_id", "turn"]).reset_index(drop=True)
+        reference = reference[keys].sort_values(["game_id", "turn"]).reset_index(drop=True)
+        pd.testing.assert_frame_equal(actual, reference, check_dtype=False)
 
 
 @pytest.mark.parametrize("c_value", [0.01, 1.0, 100.0])
@@ -298,12 +336,13 @@ def test_row_demo_has_a_hard_row_guard(corpus):
 
 
 def test_notebook_b2_cells_compile_and_default_to_full_coverage():
-    notebook = json.loads((Path(__file__).parents[1] / "notebooks/02_baselines.ipynb").read_text())
-    cells = {cell["id"]: "".join(cell["source"]) for cell in notebook["cells"]}
-    for name in ("b2-config", "b2-execute"):
-        compile(cells[name], name, "exec")
-        assert "sample_train_games(" not in cells[name]
-        assert "B2_MAX_TRAIN_GAMES" not in cells[name]
+    notebook = json.loads((Path(__file__).parents[1] / "notebooks/03_baseline_B2.ipynb").read_text())
+    code = ["".join(cell["source"]) for cell in notebook["cells"] if cell["cell_type"] == "code"]
+    generation = next(source for source in code if "GENERAR_B2_FINALISTA_SI_FALTA" in source)
+    compile(generation, "generacion_b2", "exec")
+    assert "GENERAR_B2_FINALISTA_SI_FALTA = False" in generation
+    assert "train_games=None" in generation
+    assert "sample_train_games(" not in generation
 
 
 def test_arrow_buffers_do_not_accumulate_across_row_groups(tmp_path):

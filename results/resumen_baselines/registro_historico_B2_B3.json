@@ -1,0 +1,455 @@
+{
+  "alcance": "Registro histórico reconstruido desde CSV, metadatos de los modelos y commits del código. Los tiempos aproximados provienen del recuerdo del usuario y no representan cómputo acumulado.",
+  "corridas": [
+    {
+      "baseline": "B2",
+      "escenario": "A",
+      "split_fit": "train",
+      "split_evaluacion": "val",
+      "configuracion": {
+        "C": 0.1,
+        "max_epocas": 600,
+        "optimizador": "SGD_log_loss_L2",
+        "tolerancia_gradiente": 0.001
+      },
+      "semilla_base": 2026,
+      "semilla_efectiva_modelo": null,
+      "partidas_train": 33066,
+      "fraccion_train": 1.0,
+      "scikit_learn": "1.7.2",
+      "tiempo_segundos": null,
+      "commit_entrenamiento": null,
+      "metricas_val": [
+        {
+          "etapa": "global",
+          "auc": 0.7607393882957081,
+          "log_loss": 0.5773867983115492,
+          "brier": 0.19752059034548647,
+          "n_estados": 1098741,
+          "n_partidas": 8255
+        },
+        {
+          "etapa": "inicio",
+          "auc": 0.6235414996888613,
+          "log_loss": 0.6684860859236748,
+          "brier": 0.23789297690238723,
+          "n_estados": 417190,
+          "n_partidas": 8255
+        },
+        {
+          "etapa": "medio",
+          "auc": 0.7596916157531798,
+          "log_loss": 0.5837854500465348,
+          "brier": 0.1995288893589247,
+          "n_estados": 320392,
+          "n_partidas": 7744
+        },
+        {
+          "etapa": "final",
+          "auc": 0.8694169343440064,
+          "log_loss": 0.45041829686481544,
+          "brier": 0.14556885504010805,
+          "n_estados": 361159,
+          "n_partidas": 6869
+        }
+      ],
+      "archivo_modelo": "results/baseline2/evaluacion/escenario_A/b2_A_C0.1.joblib",
+      "sha256": "2575f393b9be3a6958a34fa2beb2b2b9a536512910b18d64b8bc0edd0c768123",
+      "fuentes": [
+        "results/baseline2/b2_val_A.csv",
+        "docx/03Evidence/28-10-26_VerificacionFinalistasB2B3.json"
+      ],
+      "proceso_historico": "B2",
+      "duracion_proceso_calendario_estimada_dias": 4,
+      "nota_trazabilidad": "La duración corresponde a la búsqueda y sus reanudaciones, estimada por el usuario en días calendario; no es el tiempo exacto de este ajuste. El proceso atravesó varios commits de desarrollo y no tuvo un commit único de entrenamiento."
+    },
+    {
+      "baseline": "B2",
+      "escenario": "B",
+      "split_fit": "train",
+      "split_evaluacion": "val",
+      "configuracion": {
+        "C": 0.1,
+        "max_epocas": 600,
+        "optimizador": "SGD_log_loss_L2",
+        "tolerancia_gradiente": 0.001
+      },
+      "semilla_base": 2026,
+      "semilla_efectiva_modelo": null,
+      "partidas_train": 27643,
+      "fraccion_train": 1.0,
+      "scikit_learn": "1.7.2",
+      "tiempo_segundos": null,
+      "commit_entrenamiento": null,
+      "metricas_val": [
+        {
+          "etapa": "global",
+          "auc": 0.7281125422286013,
+          "log_loss": 0.6308552446972752,
+          "brier": 0.21401834458880897,
+          "n_estados": 738245,
+          "n_partidas": 5191
+        },
+        {
+          "etapa": "inicio",
+          "auc": 0.5940978279048592,
+          "log_loss": 0.6937364681237147,
+          "brier": 0.24866261429418973,
+          "n_estados": 270909,
+          "n_partidas": 5191
+        },
+        {
+          "etapa": "medio",
+          "auc": 0.723623192280623,
+          "log_loss": 0.6458792608516652,
+          "brier": 0.22077159366808838,
+          "n_estados": 221211,
+          "n_partidas": 4965
+        },
+        {
+          "etapa": "final",
+          "auc": 0.8227082755493305,
+          "log_loss": 0.5502210229361544,
+          "brier": 0.17414766818607527,
+          "n_estados": 246125,
+          "n_partidas": 4340
+        }
+      ],
+      "archivo_modelo": "results/baseline2/evaluacion/escenario_B/b2_B_C0.1.joblib",
+      "sha256": "3a768ea717818c39d91c9a256608b81aab73991901973b024d5596f49ebb9368",
+      "fuentes": [
+        "results/baseline2/b2_val_B.csv",
+        "docx/03Evidence/28-10-26_VerificacionFinalistasB2B3.json"
+      ],
+      "proceso_historico": "B2",
+      "duracion_proceso_calendario_estimada_dias": 4,
+      "nota_trazabilidad": "La duración corresponde a la búsqueda y sus reanudaciones, estimada por el usuario en días calendario; no es el tiempo exacto de este ajuste. El proceso atravesó varios commits de desarrollo y no tuvo un commit único de entrenamiento."
+    },
+    {
+      "baseline": "B2",
+      "escenario": "C",
+      "split_fit": "train",
+      "split_evaluacion": "val",
+      "configuracion": {
+        "C": 0.1,
+        "max_epocas": 600,
+        "optimizador": "SGD_log_loss_L2",
+        "tolerancia_gradiente": 0.001
+      },
+      "semilla_base": 2026,
+      "semilla_efectiva_modelo": null,
+      "partidas_train": 33013,
+      "fraccion_train": 1.0,
+      "scikit_learn": "1.7.2",
+      "tiempo_segundos": null,
+      "commit_entrenamiento": null,
+      "metricas_val": [
+        {
+          "etapa": "global",
+          "auc": 0.7602635816099985,
+          "log_loss": 0.5785587573398466,
+          "brier": 0.1976932655979209,
+          "n_estados": 1057443,
+          "n_partidas": 8239
+        },
+        {
+          "etapa": "inicio",
+          "auc": 0.6265106798337661,
+          "log_loss": 0.6679846460617264,
+          "brier": 0.23761880916317885,
+          "n_estados": 407425,
+          "n_partidas": 8239
+        },
+        {
+          "etapa": "medio",
+          "auc": 0.7630007357028538,
+          "log_loss": 0.5804850433482891,
+          "brier": 0.19825619996338673,
+          "n_estados": 300644,
+          "n_partidas": 7669
+        },
+        {
+          "etapa": "final",
+          "auc": 0.8642102900080427,
+          "log_loss": 0.45940027990984883,
+          "brier": 0.14869778681472745,
+          "n_estados": 349374,
+          "n_partidas": 6726
+        }
+      ],
+      "archivo_modelo": "results/baseline2/evaluacion/escenario_C/b2_C_C0.1.joblib",
+      "sha256": "773c6bbd067ce003f49ad6b03fcb657b530de16ba9dda61b0fc634b9fc16537d",
+      "fuentes": [
+        "results/baseline2/b2_val_C.csv",
+        "docx/03Evidence/28-10-26_VerificacionFinalistasB2B3.json"
+      ],
+      "proceso_historico": "B2",
+      "duracion_proceso_calendario_estimada_dias": 4,
+      "nota_trazabilidad": "La duración corresponde a la búsqueda y sus reanudaciones, estimada por el usuario en días calendario; no es el tiempo exacto de este ajuste. El proceso atravesó varios commits de desarrollo y no tuvo un commit único de entrenamiento."
+    },
+    {
+      "baseline": "B3",
+      "escenario": "A",
+      "split_fit": "train",
+      "split_evaluacion": "val",
+      "configuracion": {
+        "criterion": "gini",
+        "max_depth": 12,
+        "min_samples_leaf": 20,
+        "n_estimators": 25,
+        "max_features": 0.5,
+        "bootstrap": false
+      },
+      "semilla_base": 2026,
+      "semilla_efectiva_modelo": 2030,
+      "partidas_train": 33066,
+      "fraccion_train": 1.0,
+      "scikit_learn": "1.7.2",
+      "tiempo_segundos": null,
+      "commit_entrenamiento": null,
+      "metricas_val": [
+        {
+          "etapa": "global",
+          "auc": 0.8029475685882017,
+          "log_loss": 0.5342806167578931,
+          "brier": 0.1808356394257575,
+          "n_estados": 1098741,
+          "n_partidas": 8255
+        },
+        {
+          "etapa": "inicio",
+          "auc": 0.6464434854350853,
+          "log_loss": 0.6552322546119632,
+          "brier": 0.2320185791752687,
+          "n_estados": 417190,
+          "n_partidas": 8255
+        },
+        {
+          "etapa": "medio",
+          "auc": 0.7940374131762636,
+          "log_loss": 0.5492600900301022,
+          "brier": 0.18575336811735393,
+          "n_estados": 320392,
+          "n_partidas": 7744
+        },
+        {
+          "etapa": "final",
+          "auc": 0.918374630252854,
+          "log_loss": 0.3748754317653819,
+          "brier": 0.11714029577200695,
+          "n_estados": 361159,
+          "n_partidas": 6869
+        }
+      ],
+      "archivo_modelo": "results/baseline3/evaluacion/escenario_A/b3_A_B3_bosque_log_loss.joblib",
+      "sha256": "d7ad21e2a95272e9c7ca1f6c74ca8f745a9554932d90ac9c78590ef8912096e7",
+      "fuentes": [
+        "results/baseline3/b3_val_A.csv",
+        "docx/03Evidence/28-10-26_VerificacionFinalistasB2B3.json"
+      ],
+      "proceso_historico": "B3",
+      "duracion_proceso_calendario_estimada_dias": 3,
+      "nota_trazabilidad": "La duración corresponde a la búsqueda y sus reanudaciones, estimada por el usuario en días calendario; no es el tiempo exacto de este ajuste. El proceso atravesó varios commits de desarrollo y no tuvo un commit único de entrenamiento."
+    },
+    {
+      "baseline": "B3",
+      "escenario": "B",
+      "split_fit": "train",
+      "split_evaluacion": "val",
+      "configuracion": {
+        "criterion": "gini",
+        "max_depth": 12,
+        "min_samples_leaf": 20,
+        "n_estimators": 25,
+        "max_features": 0.5,
+        "bootstrap": false
+      },
+      "semilla_base": 2026,
+      "semilla_efectiva_modelo": 2030,
+      "partidas_train": 27643,
+      "fraccion_train": 1.0,
+      "scikit_learn": "1.7.2",
+      "tiempo_segundos": null,
+      "commit_entrenamiento": null,
+      "metricas_val": [
+        {
+          "etapa": "global",
+          "auc": 0.7609455906545652,
+          "log_loss": 0.5727474985751367,
+          "brier": 0.19703738637362858,
+          "n_estados": 738245,
+          "n_partidas": 5191
+        },
+        {
+          "etapa": "inicio",
+          "auc": 0.60896675508405,
+          "log_loss": 0.6791842684955844,
+          "brier": 0.24227144695568584,
+          "n_estados": 270909,
+          "n_partidas": 5191
+        },
+        {
+          "etapa": "medio",
+          "auc": 0.7398905270354793,
+          "log_loss": 0.5982171825327021,
+          "brier": 0.20735164424304223,
+          "n_estados": 221211,
+          "n_partidas": 4965
+        },
+        {
+          "etapa": "final",
+          "auc": 0.8810472430852098,
+          "log_loss": 0.4306154160273732,
+          "brier": 0.14025784883200967,
+          "n_estados": 246125,
+          "n_partidas": 4340
+        }
+      ],
+      "archivo_modelo": "results/baseline3/evaluacion/escenario_B/b3_B_B3_bosque_log_loss.joblib",
+      "sha256": "812691bcda15426f20c306be52222df82432f5c7d6ca8ec10186e2e52f198c2c",
+      "fuentes": [
+        "results/baseline3/b3_val_B.csv",
+        "docx/03Evidence/28-10-26_VerificacionFinalistasB2B3.json"
+      ],
+      "proceso_historico": "B3",
+      "duracion_proceso_calendario_estimada_dias": 3,
+      "nota_trazabilidad": "La duración corresponde a la búsqueda y sus reanudaciones, estimada por el usuario en días calendario; no es el tiempo exacto de este ajuste. El proceso atravesó varios commits de desarrollo y no tuvo un commit único de entrenamiento."
+    },
+    {
+      "baseline": "B3",
+      "escenario": "C",
+      "split_fit": "train",
+      "split_evaluacion": "val",
+      "configuracion": {
+        "criterion": "gini",
+        "max_depth": 12,
+        "min_samples_leaf": 20,
+        "n_estimators": 25,
+        "max_features": 0.5,
+        "bootstrap": false
+      },
+      "semilla_base": 2026,
+      "semilla_efectiva_modelo": 2030,
+      "partidas_train": 33013,
+      "fraccion_train": 1.0,
+      "scikit_learn": "1.7.2",
+      "tiempo_segundos": null,
+      "commit_entrenamiento": null,
+      "metricas_val": [
+        {
+          "etapa": "global",
+          "auc": 0.8062593963740068,
+          "log_loss": 0.5311774221831117,
+          "brier": 0.17939423835311583,
+          "n_estados": 1057443,
+          "n_partidas": 8239
+        },
+        {
+          "etapa": "inicio",
+          "auc": 0.6524085876208563,
+          "log_loss": 0.653795263731272,
+          "brier": 0.2310564327312829,
+          "n_estados": 407425,
+          "n_partidas": 8239
+        },
+        {
+          "etapa": "medio",
+          "auc": 0.7991593112066816,
+          "log_loss": 0.54365934912633,
+          "brier": 0.1833996658643415,
+          "n_estados": 300644,
+          "n_partidas": 7669
+        },
+        {
+          "etapa": "final",
+          "auc": 0.9180051663747956,
+          "log_loss": 0.37554190009481636,
+          "brier": 0.11714672576771747,
+          "n_estados": 349374,
+          "n_partidas": 6726
+        }
+      ],
+      "archivo_modelo": "results/baseline3/evaluacion/escenario_C/b3_C_B3_bosque_log_loss.joblib",
+      "sha256": "c6c641d4acfe32e9bc693a6776e89566aed4513bb789bd174c070ab3b1b3a8d7",
+      "fuentes": [
+        "results/baseline3/b3_val_C.csv",
+        "docx/03Evidence/28-10-26_VerificacionFinalistasB2B3.json"
+      ],
+      "proceso_historico": "B3",
+      "duracion_proceso_calendario_estimada_dias": 3,
+      "nota_trazabilidad": "La duración corresponde a la búsqueda y sus reanudaciones, estimada por el usuario en días calendario; no es el tiempo exacto de este ajuste. El proceso atravesó varios commits de desarrollo y no tuvo un commit único de entrenamiento."
+    }
+  ],
+  "procesos": {
+    "B2": {
+      "duracion_calendario_estimada_dias": 4,
+      "tipo_duracion": "estimación del usuario para la búsqueda de hiperparámetros y sus reanudaciones; días calendario aproximados, incluyendo interrupciones; no equivale a horas de cómputo",
+      "tiempo_exacto_segundos": null,
+      "commit_entrenamiento_unico": null,
+      "explicacion": "El usuario confirma que no existió un commit único asociado al entrenamiento. La búsqueda y sus reanudaciones atravesaron varias revisiones del código. Los siguientes commits muestran desarrollo/reanudación; no atribuyen por sí solos el modelo final a un commit concreto.",
+      "commits_desarrollo_y_reanudacion": [
+        {
+          "hash": "a1447e0bced55fd420554d6aa8d7d2a77432dadf",
+          "fecha_commit": "2026-10-15",
+          "asunto": "feat(baselines): add streamed B2 logistic search"
+        },
+        {
+          "hash": "08dc5900b48786ffcc3d49512ab6565b96b58836",
+          "fecha_commit": "2026-10-15",
+          "asunto": "fix(b2): sample training games for Colab memory"
+        },
+        {
+          "hash": "6a7662d8faeb9db71db569970ccc732349756064",
+          "fecha_commit": "2026-10-15",
+          "asunto": "fix(b2): avoid row-split memory spike in full run"
+        },
+        {
+          "hash": "46210a5b25c9d20beab613ef322ab5dde9c7fe16",
+          "fecha_commit": "2026-10-18",
+          "asunto": "fix(b2): stream full training data within Colab RAM"
+        },
+        {
+          "hash": "6f156378e8a84d7ceae1cb68bc52fb8c0d5bca71",
+          "fecha_commit": "2026-10-19",
+          "asunto": "Add resumable sequential B2 B3 B4 training"
+        },
+        {
+          "hash": "096df70d31fc705187938a68229184e4c1e5054d",
+          "fecha_commit": "2026-10-20",
+          "asunto": "Resume B2 after manifest-only interruption"
+        },
+        {
+          "hash": "983c0edde53f5436e8719857d87c4591b502a1a1",
+          "fecha_commit": "2026-10-22",
+          "asunto": "Checkpoint B2 after each finalist C"
+        },
+        {
+          "hash": "ce3119f9fb3004d6619d217fdf71ab84ca9f0c53",
+          "fecha_commit": "2026-10-22",
+          "asunto": "Resume B2 finalist validation after interruption"
+        }
+      ],
+      "fuente_estimacion": "Declaración del usuario en esta conversación."
+    },
+    "B3": {
+      "duracion_calendario_estimada_dias": 3,
+      "tipo_duracion": "estimación del usuario para la búsqueda de hiperparámetros y sus reanudaciones; días calendario aproximados, incluyendo interrupciones; no equivale a horas de cómputo",
+      "tiempo_exacto_segundos": null,
+      "commit_entrenamiento_unico": null,
+      "explicacion": "El usuario confirma que no existió un commit único asociado al entrenamiento. La búsqueda y sus reanudaciones atravesaron varias revisiones del código. Los siguientes commits muestran desarrollo/reanudación; no atribuyen por sí solos el modelo final a un commit concreto.",
+      "commits_desarrollo_y_reanudacion": [
+        {
+          "hash": "6f156378e8a84d7ceae1cb68bc52fb8c0d5bca71",
+          "fecha_commit": "2026-10-19",
+          "asunto": "Add resumable sequential B2 B3 B4 training"
+        },
+        {
+          "hash": "4658b1ccf34c5b4d13ae8a5fa331107ea33cfaa0",
+          "fecha_commit": "2026-10-23",
+          "asunto": "Optimize resumable B3 and B4 searches"
+        }
+      ],
+      "fuente_estimacion": "Declaración del usuario en esta conversación."
+    }
+  }
+}

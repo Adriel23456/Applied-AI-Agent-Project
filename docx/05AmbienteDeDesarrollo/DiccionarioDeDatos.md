@@ -310,7 +310,9 @@ Sí, y sobran para lo que pide la etapa.
 
 ## 10. Contrato para modelar (obligatorio en los cuadernos 02 en adelante)
 
-1. **Cargar siempre con `load_scenario`**, que aplica `usable` y entrega partición y etapa:
+1. **Cargar con `load_scenario` o con `ScenarioStream` para `train` y `val`**, aplicando el mismo filtro `usable`, las particiones por `game_id` y cortes de etapa calculados solo con `train`. `ScenarioStream` permite trabajar por lotes cuando no cabe el corpus completo en RAM; su equivalencia se comprueba sobre un corpus sintético en `tests/test_b2_streaming.py`. El iterador diario de B0/B1 requiere además que cada partida pertenezca a un solo archivo diario, condición auditada para el corpus original. Para `calib` y `test` no se usa el flujo de desarrollo `ScenarioStream`.
+
+   Ejemplo con `load_scenario`:
 
 ```python
    from ptcg_wp.data import load_scenario
@@ -319,7 +321,7 @@ Sí, y sobran para lo que pide la etapa.
    X_tr, y_tr, g_tr = states.loc[tr, feats], states.loc[tr, "y"], states.loc[tr, "game_id"]
 ```
 
-2. **Todo preprocesamiento va dentro de un `Pipeline` de scikit-learn** ajustado solo con train.
+2. **Ajustar el preprocesamiento solo con train y conservarlo junto al modelo en un `Pipeline` de scikit-learn.** En B2, por memoria, `StandardScaler` se ajusta incrementalmente por lotes de fit antes del clasificador; después ambos componentes ajustados se ensamblan en un `Pipeline` para predecir. Cada pliegue usa su propio escalador ajustado únicamente con su subconjunto de fit. El procedimiento y sus límites están en `docx/03Evidence/18-10-26_B2MemoriaAcotada.md`.
 3. **Validación cruzada siempre agrupada por partida** (`GroupKFold` con `groups=g_tr`). Nunca `KFold`
    ni `StratifiedKFold` a secas.
 4. **`val`** elige hiperparámetros, **`calib`** ajusta la recalibración, **`test` se usa una sola vez**
@@ -373,7 +375,7 @@ Después, en el mismo servidor, se abre el cuaderno de trabajo (`01_exploracion`
 | `00_arranque` | Ambiente, datos, verificación, particiones y publicación |
 | `01_exploracion` | Inspección del JSON crudo (parte A), auditoría de la tabla (parte B), particiones, etapas y cobertura (parte C) |
 | `02_baselines_B0_B1` | B0 (a priori) y B1 (heurística) |
-| `03_baseline_B2` | Resultados B2 y demostración de fuga pendiente |
+| `03_baseline_B2` | Resultados B2 y demostración de fuga ya registrada |
 | `04_baseline_B3` | Resultados y configuración seleccionada de B3 |
 | `05_baseline_B4` | Resultados versionados de B4; no relanza el entrenamiento cerrado |
 | `04_evaluacion_xai_calibracion` | Prueba final, SHAP, curvas, errores y calibración |

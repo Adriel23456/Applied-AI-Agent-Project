@@ -68,12 +68,14 @@ Contexto obligatorio para trabajar: `docx/05AmbienteDeDesarrollo/DiccionarioDeDa
 
 ### `04MainAIModelTrainingAndDevelopment`
 
+La auditoría de cumplimiento de B0–B3 frente a la sección 10 y el estado de las etapas 04–06 está en `docx/03Evidence/29-10-26_AuditoriaBaselinesB0B3.md`. Cerrar B0–B3 no cierra la evaluación final en test ni los entregables del artículo.
+
 Cuadernos: `02_baselines_B0_B1`, `03_baseline_B2`, `04_baseline_B3` y `05_baseline_B4`. Cada uno presenta un baseline; B2 y B3 no relanzan búsquedas cerradas. B4 conserva las celdas de búsqueda y ajuste final, desactivadas por defecto, y presenta los resultados versionados del entrenamiento cerrado.
 Escalera definida en el artículo (Tabla "Escalera de modelos de referencia"). Cada peldaño responde
 una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado del arte en datos tabulares).
 
-- [ ] Registro de cada ejecución en `results/` (escenario, modelo, configuración, semilla, métricas, tiempo, commit)
-- [ ] Funciones de evaluación comunes: AUC, log loss y Brier, globales y por etapa, con el número de partidas de cada etapa
+- [x] Registro de corridas en `results/` (escenario, modelo, configuración, semilla, métricas, duración estimada y trazabilidad de commits). B0/B1 tiene registro de corrida; B2/B3 se reanudaron durante varios commits: duración calendario aproximada de 4 y 3 días, respectivamente, según recuerdo del equipo. No hubo un único commit de entrenamiento ni se conservó tiempo exacto de cómputo; el registro histórico distingue ambos datos.
+- [ ] Funciones de evaluación comunes: AUC, log loss y Brier, globales y por etapa, con el número de partidas de cada etapa. B0–B3 comparten `ptcg_wp.evaluation` con rutas equivalentes en memoria y por lotes; la integración de B4 queda pendiente.
 - [x] B0 - probabilidad a priori (prevalencia de train). Piso de referencia; métricas globales y por etapa para A/B/C en `results/baseline0_1/`
 - [x] B1 - heurística fija de recursos adoptada para esta rama y transformada a probabilidad usando train. Resultados y parámetros en `results/baseline0_1/`; el ajuste original no registró convergencia. La decisión posterior queda documentada en `results/resumen_baselines/`.
 - [x] B2 - regresión logística regularizada (`C=0.1`), ajustada con el `train` de A/B/C y artefactos recuperados en `results/baseline2/evaluacion/`. Se conserva la limitación de convergencia tras 600 épocas.
