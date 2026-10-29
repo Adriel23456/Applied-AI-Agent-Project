@@ -18,6 +18,8 @@ Los cuadernos se ejecutan en Colab con CPU y RAM alta. Los experimentos guardan 
 5. **Ablaciones de B4** (mismo cuaderno): después de revisar la decisión de LightGBM, activa `EJECUTAR_ABLACIONES`. Se realizan tres variantes por escenario, cada una con vigilancia y ajuste final. Salen a `b4/ablaciones/<RUN_ID>/escenario_X/`. `familias.json` define las columnas eliminadas.
 6. **H2** (mismo cuaderno): activa `EJECUTAR_H2` para comparar el estado completo de B4 con cuatro entradas. Guarda métricas y el modelo restringido en `b4/h2/<RUN_ID>/escenario_X/`. La pregunta H2 se definió específicamente para B4; la decisión de usar LightGBM como modelo principal no cambia la configuración de esta comparación sin una modificación metodológica registrada.
 
+Al final de B0/B1, B2, B3 y B4 hay una celda **Descargar resultados**. Ejecútala en el mismo runtime después de completar el análisis: crea un ZIP y activa la descarga al equipo. En B4 el ZIP incluye los modelos `.joblib` y el estudio de Optuna, por lo que puede ser grande; la celda imprime su tamaño.
+
 Se pueden ejecutar los escenarios o secciones por separado cambiando las tuplas `ESCENARIOS_*`. El resumen del cuaderno B4 muestra las salidas que coinciden con el `RUN_ID` actual; para otra sesión, asigna el identificador anterior antes de ejecutar el resumen.
 
 ## Qué copiar desde Drive al repositorio
