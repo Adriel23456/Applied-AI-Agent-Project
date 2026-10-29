@@ -188,8 +188,17 @@ de subir otro), `active_present = 0` y los campos `active_*` valen -1. Pasa en e
 | `diff_total_energies` | -52 a 52 |
 | `diff_deck` | -44 a 43 |
 
-**Modelo principal:** 62 características (todas menos `own_active_card` y `opp_active_card`).
-**Ablación de contexto de mazo (H2):** 64 características (`include_cards=True`).
+**Modelo de estado completo:** 62 características (todas menos `own_active_card` y
+`opp_active_card`).
+
+**Comparación restringida de H2:** usa solo cuatro características: `game_turn`,
+`first_player_is_me`, `own_active_card` y `opp_active_card`. Los dos últimos son
+IDs de los Pokémon activos visibles en ese estado; sirven como aproximación a
+identidad de mazo, pero no describen el mazo completo.
+
+**Estado completo más IDs:** `include_cards=True` conserva las 62 características
+del estado y agrega ambos IDs, para un total de 64. Es una ablación distinta: no
+es la versión restringida de cuatro características descrita en el Plan.
 
 ### 5.2 `partidas_<dia>.parquet`: una fila por partida (14 columnas)
 
@@ -315,11 +324,20 @@ Sí, y sobran para lo que pide la etapa.
    ni `StratifiedKFold` a secas.
 4. **`val`** elige hiperparámetros, **`calib`** ajusta la recalibración, **`test` se usa una sola vez**
    al final de cada escenario.
-5. **Los ids de carta no entran al modelo principal.** Solo en la ablación de contexto de mazo
-   (`include_cards=True`), para probar H2.
+5. **Los IDs de carta no entran al modelo de estado completo.** Para H2 se comparará ese modelo
+   de 62 características con una versión restringida a `game_turn`, `first_player_is_me`,
+   `own_active_card` y `opp_active_card`. Los dos IDs corresponden al Pokémon activo y son una
+   aproximación, no una identificación completa del mazo. La variante de 64 características
+   (`include_cards=True`) es otra ablación y no sustituye la comparación restringida.
 6. **Métricas:** AUC (principal), log loss y Brier, globales y por etapa (`stage`), cada una con su
    número de partidas.
-7. **Los escenarios se reportan por separado**, nunca promediados.
+7. **Reporte y selección entre escenarios:** las métricas finales de A, B y C se reportan por
+   separado; no se promedian ni se mezclan sus filas. Si se necesita elegir una sola configuración
+   común para B3, se permite usar como criterio interno el macro-promedio simple del AUC global de
+   `val` de A, B y C, dando el mismo peso a cada escenario. Solo se comparan configuraciones con
+   los mismos hiperparámetros evaluadas en los tres escenarios. Este promedio sirve únicamente
+   para seleccionar; no se presenta como resultado de desempeño. Log loss y Brier se muestran por
+   escenario y no se combinan en un puntaje.
 8. **Semilla:** `SEED = 2026` (en `ptcg_wp.splits`).
 
 ---
@@ -338,7 +356,7 @@ En `notebooks/00_arranque.ipynb`, en un servidor de Colab (CPU, RAM alta):
 | 6 | Baja las 21 tablas del dataset del equipo (`CONSTRUIR = False`) | `OK: estan los 10 dias` |
 | 7 | Verificación | 55 196 partidas, 7 540 389 estados |
 
-Después, en el mismo servidor, se abre el cuaderno de trabajo (`01_exploracion`, `02_baselines`...).
+Después, en el mismo servidor, se abre el cuaderno de trabajo (`01_exploracion`, `02_baselines_B0_B1`, `03_baseline_B2`, `04_baseline_B3` o `05_baseline_B4`).
 
 ### Solo quien publica (al cambiar `features.py`, `ingest.py`, `splits.py` o los días)
 
@@ -354,8 +372,10 @@ Después, en el mismo servidor, se abre el cuaderno de trabajo (`01_exploracion`
 |---|---|
 | `00_arranque` | Ambiente, datos, verificación, particiones y publicación |
 | `01_exploracion` | Inspección del JSON crudo (parte A), auditoría de la tabla (parte B), particiones, etapas y cobertura (parte C) |
-| `02_baselines` | B0 (a priori), B1 (heurística), B2 (regresión logística) y demostración de inflación por fila vs. por partida |
-| `03_modelo_principal` | B3, B4 y búsqueda de hiperparámetros con validación agrupada |
+| `02_baselines_B0_B1` | B0 (a priori) y B1 (heurística) |
+| `03_baseline_B2` | Resultados B2 y demostración de fuga pendiente |
+| `04_baseline_B3` | Resultados y configuración seleccionada de B3 |
+| `05_baseline_B4` | Resultados versionados de B4; no relanza el entrenamiento cerrado |
 | `04_evaluacion_xai_calibracion` | Prueba final, SHAP, curvas, errores y calibración |
 
 ---

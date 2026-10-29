@@ -401,6 +401,14 @@ Los tres responden preguntas distintas y se reportan por separado, nunca
 promediados. La Tabla~\ref{tab:protocolos} los resume y los liga a las
 dimensiones de la pregunta de investigación.
 
+Para seleccionar una única configuración común de B3, se comparan únicamente
+las configuraciones finalistas con los mismos hiperparámetros evaluadas en los
+tres escenarios. La selección usa el macro-promedio simple del AUC global en
+validación, con el mismo peso para A, B y C. Este valor se usa exclusivamente
+como criterio de selección; no se presenta como una métrica de desempeño. Los
+resultados finales de A, B y C, junto con log loss y Brier, se informan por
+separado.
+
 \begin{table}[!t]
 \centering
 \caption{Escenarios de evaluación y dimensión de la pregunta general que
@@ -640,6 +648,14 @@ Las ablaciones eliminan un bloque completo del diccionario, progreso,
 recursos, tablero, energía, estados alterados, diferenciales o contexto de
 mazo, y reejecutan el mismo protocolo, de modo que el aporte marginal de
 cada bloque se mida en lugar de afirmarse.
+
+Para H2, el modelo de estado completo usa las 62 características públicas y
+excluye los IDs de carta. La versión restringida usa solo `game_turn`,
+`first_player_is_me`, `own_active_card` y `opp_active_card`. Estos dos últimos
+identifican los Pokémon activos visibles y funcionan como aproximación a la
+identidad del mazo, no como representación completa de su composición. El
+modelo de 64 características que añade esos IDs al estado completo es una
+ablación distinta de la comparación restringida.
 
 Una ganancia grande del bloque de contexto de mazo se interpreta como
 evidencia de memorización del conjunto de estrategias dominante y no de

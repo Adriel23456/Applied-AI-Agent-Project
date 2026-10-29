@@ -6,6 +6,7 @@ El rastro del avance del equipo. No son los entregables formales, sino los peque
 
 - **`00BitacoraDeTrabajo/`**: Fuentes LaTeX para compilar la bitácora de trabajo formal.
 - **`01UsoDeIA/`**: Declaraciones de uso de herramientas de IA. Cada etapa tiene su propio archivo Markdown (por ejemplo, `Etapa1UsoDeIA.md`) para mantener un registro claro y acumulativo a lo largo del semestre.
+- **`28-10-26_SeleccionB3yDefinicionH2.md`**: regla de macro-AUC para elegir una configuración global de B3 y definición de las entradas restringidas y completas para H2.
 - **Evidencia en la raíz**: Capturas de pantalla, exportaciones, notas de reunión y registros breves que respaldan el avance, los hitos y los acuerdos del equipo (por ejemplo, `21-8-26_PrimeraReunionDelEquipo.png`, `26-8-26_ConfirmacionDelTema.png`). Capturan el momento en que algo funcionó por primera vez, compiló por primera vez o se decidió.
 
 *Nota: Este no es el lugar para las aprobaciones oficiales del profesor, las figuras finales del artículo ni los artefactos calificados; esos viven junto al entregable correspondiente.*

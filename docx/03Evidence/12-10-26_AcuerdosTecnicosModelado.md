@@ -6,6 +6,25 @@
 
 ## Decisiones acordadas
 
+### Actualización del 28 de octubre de 2026: selección global de B3 y definición de H2
+
+- Los resultados de A, B y C responden preguntas distintas y se publicarán por separado, sin
+  combinar las filas ni presentar un promedio entre escenarios como resultado de desempeño.
+- Para elegir **una sola configuración común de B3**, se usará como criterio interno el
+  macro-promedio simple del AUC global en `val` de A, B y C. Cada escenario aporta el mismo peso,
+  independientemente de su cantidad de partidas. El AUC es la métrica primaria; log loss y Brier
+  se revisan y reportan por escenario, sin combinarlos en un puntaje.
+- El conjunto de configuraciones comparables se limita a las finalistas con exactamente los mismos
+  hiperparámetros evaluadas en `val` para los tres escenarios. El macro-AUC solo decide la
+  configuración compartida y no se presenta como estimación de desempeño general. No se requiere
+  repetir la búsqueda ni ejecutar el bootstrap emparejado para aplicar esta regla; la selección por
+  métricas observadas no demuestra que las diferencias sean estadísticamente significativas.
+- En H2, “estado completo” significa las 62 características públicas del estado, sin IDs de carta.
+  La versión restringida contiene cuatro entradas: `game_turn`, `first_player_is_me`,
+  `own_active_card` y `opp_active_card`. Los IDs activos son una aproximación a la identidad del
+  mazo, no su composición completa. La variante de 64 características (estado completo más los
+  dos IDs) es una ablación diferente.
+
 ### B1: heurística de dominio
 
 - B1 tendrá una regla de puntuación definida por conocimiento del juego; sus pesos no se aprenderán de `y` como en un modelo supervisado general.
@@ -24,13 +43,13 @@
 ### Regla para escoger entre finalistas
 
 - AUC es la métrica principal establecida en el artículo. Si una candidata mejora AUC de forma clara, se favorece esa candidata.
-- Para decidir si una diferencia de AUC es clara o si las candidatas están prácticamente empatadas, se comparará la diferencia emparejada entre candidatas mediante remuestreo de partidas completas de `val`. Si el intervalo de la diferencia incluye cero, se tratará como empate práctico para la selección; esto no demuestra que los modelos sean equivalentes.
+- La actualización del 28 de octubre establece el criterio específico para seleccionar una configuración común de B3 entre escenarios. El remuestreo emparejado descrito abajo puede cuantificar incertidumbre, pero no es requisito para aplicar ese criterio ni convierte diferencias observadas en significancia estadística.
 - Si las AUC son prácticamente comparables, se favorece la candidata con mejores probabilidades.
 - Si log loss y Brier discrepan, se prioriza menor log loss siempre que no haya evidencia clara de deterioro en Brier.
 - Para comparar Brier entre dos finalistas en `val`, se remuestrearán las mismas partidas en ambas candidatas en cada repetición. Se calculará la diferencia `Brier_B − Brier_A`: valores positivos indican que B tiene peor Brier.
 - Si el intervalo de esa diferencia incluye cero, no se considera demostrado que Brier empeore; si queda completamente por encima de cero, se considera evidencia de deterioro. “Incluye cero” significa que los resultados son compatibles con que no haya diferencia; no demuestra que ambas candidatas sean idénticas.
 - Se recomendó usar 1 000 repeticiones del remuestreo. La cantidad de partidas sorteadas en cada repetición será igual al número de partidas de `val`, con reemplazo.
-- El nivel de confianza y el tipo de intervalo siguen pendientes. El 95 % se mencionó como opción, no como acuerdo. Las 2 000 repeticiones fueron una confusión; no son la recomendación vigente.
+- Para cualquier análisis de incertidumbre que se realice, el nivel de confianza y el tipo de intervalo siguen pendientes. El 95 % se mencionó como opción, no como acuerdo. Las 2 000 repeticiones fueron una confusión; no son la recomendación vigente.
 
 ### Peso de partidas y estados
 
@@ -46,6 +65,7 @@
 - Espacio inicial implementado para revisión: árbol (`criterion`, `max_depth`, `min_samples_leaf`, `ccp_alpha`); bosque (`n_estimators`, `criterion`, `max_features`, `max_depth`, `min_samples_leaf`). Los límites y cantidad de pruebas son controles explícitos del cuaderno y deben ajustarse con el piloto antes del ciclo completo.
 - Si el costo obliga a submuestrear el bosque, se seleccionarán partidas completas, con semilla fija.
 - Se registrarán la semilla, el número de partidas seleccionadas y la proporción que representan de `train`.
+- Si el objetivo es entregar una configuración común a A, B y C, la selección final entre las configuraciones idénticas disponibles en los tres escenarios se hará por macro-AUC de `val`, conforme a la actualización del 28 de octubre. Los resultados individuales seguirán visibles por escenario.
 - El piloto usa 1 000 partidas completas, dos pliegues (ejecuta uno para medir) y una prueba por métrica/modelo. En modo completo, `max_train_games=None` solicita todo train y una guarda de RAM detiene la ejecución antes de agotar Colab.
 
 ### B2: regresión logística regularizada
