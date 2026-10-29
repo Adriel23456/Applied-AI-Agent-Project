@@ -30,7 +30,7 @@
 - B1 tendrá una regla de puntuación definida por conocimiento del juego; sus pesos no se aprenderán de `y` como en un modelo supervisado general.
 - `train` se usará para convertir la puntuación fija en una probabilidad de victoria.
 - La propuesta concreta incorporada en `notebooks/02_baselines.ipynb` es `(opp_prizes - own_prizes) + diff_total_hp / hp_unit + diff_bench_n`. `hp_unit` se calcula como el promedio de PV máximos activos positivos observado en `train`, con peso igual por partida; no usa etiquetas ni IDs de carta. Una regresión logística de una variable ajusta solo la pendiente y el intercepto con `train`.
-- Esta fórmula y su escala son una propuesta para revisión, no un acuerdo final. Falta confirmarlas antes de interpretar resultados como evidencia final.
+- Actualización del cierre de entregables: se adopta esta fórmula y escala como B1 para la rama 04, mediante la decisión técnica delegada. La corrida original la registró como propuesta y ese registro histórico no se modifica. El ajuste de Newton no guardó un indicador de convergencia. Véase `results/resumen_baselines/README.md`.
 
 ### Validación cruzada y selección de configuraciones
 
@@ -100,7 +100,7 @@ para el optimizador, la evaluación en disco y las comprobaciones de convergenci
 
 ## Decisiones pendientes
 
-1. Confirmar o ajustar la fórmula propuesta de B1 y su interpretación de escala antes de usar sus resultados como evidencia final.
+1. **Cerrado:** se adopta la fórmula de B1 y la escala descritas arriba; el diagnóstico de convergencia del ajuste original no está disponible.
 2. Elegir el nivel de confianza y el tipo de intervalo para las comparaciones emparejadas de AUC y Brier. El criterio acordado es tratar una diferencia cuyo intervalo incluya cero como empate práctico o ausencia de deterioro claro, según la métrica; esto no prueba equivalencia.
 3. Elegir el nivel de confianza y la cantidad de remuestreos para los intervalos de los análisis distintos de LightGBM. El 95 % y las 2 000 repeticiones se mencionaron solo como ejemplos recomendados, no como acuerdos.
 4. Definir el límite de tiempo de Optuna para B4 después de la prueba piloto.

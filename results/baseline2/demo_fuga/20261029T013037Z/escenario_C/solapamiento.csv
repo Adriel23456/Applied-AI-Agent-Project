@@ -1,0 +1,3 @@
+escenario,division,C,semilla,partidas_ajuste,partidas_evaluacion,partidas_en_ambos_lados,fraccion_evaluacion_con_partida_vista,n_iter
+C,fila,0.1,2026,200,200,200,1.0,14
+C,partida,0.1,2026,160,40,0,0.0,13

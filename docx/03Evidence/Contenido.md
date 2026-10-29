@@ -9,6 +9,7 @@ El rastro del avance del equipo. No son los entregables formales, sino los peque
 - **`28-10-26_SeleccionB3yDefinicionH2.md`**: regla de macro-AUC para elegir una configuración global de B3 y definición de las entradas restringidas y completas para H2.
 - **`28-10-26_ProtocoloLightGBM.md`**: presupuesto comparable con B4 y regla de comparación por escenario, definidos antes de ejecutar LightGBM.
 - **`05_entrenamiento_B4_independiente_original.ipynb`**: copia exacta del cuaderno de B4 del commit `ba41520`, preservada como evidencia del procedimiento original.
+- **`28-10-26_VerificacionFinalistasB2B3.json`**: metadatos y hashes de los ajustes seleccionados por escenario recuperados de los ZIP descargados.
 - **Evidencia en la raíz**: Capturas de pantalla, exportaciones, notas de reunión y registros breves que respaldan el avance, los hitos y los acuerdos del equipo (por ejemplo, `21-8-26_PrimeraReunionDelEquipo.png`, `26-8-26_ConfirmacionDelTema.png`). Capturan el momento en que algo funcionó por primera vez, compiló por primera vez o se decidió.
 
 *Nota: Este no es el lugar para las aprobaciones oficiales del profesor, las figuras finales del artículo ni los artefactos calificados; esos viven junto al entregable correspondiente.*

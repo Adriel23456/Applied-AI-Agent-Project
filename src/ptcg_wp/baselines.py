@@ -134,7 +134,7 @@ def weights_by_game(game_ids):
 
 
 def b1_score(frame, hp_unit):
-    """Puntuación fija de recursos propuesta para B1."""
+    """Puntuación fija de recursos adoptada para B1."""
     prize_advantage = frame["opp_prizes"] - frame["own_prizes"]
     return (prize_advantage + frame["diff_total_hp"] / hp_unit + frame["diff_bench_n"]).to_numpy(float)
 

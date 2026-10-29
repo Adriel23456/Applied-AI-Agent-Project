@@ -84,15 +84,16 @@ se resolverá al integrar el modelo.
   criterio macro-AUC descrito arriba, pero las diferencias pequeñas no se
   presentan como estadísticamente concluyentes. No se repitió la búsqueda.
 - `test` permanece reservado para la evaluación final del proyecto.
-- Los CSV confirman que la configuración fue evaluada y reentrenada para medir
-  `val`; este directorio todavía **no contiene los modelos B3 serializados**
-  (`.joblib`) para cargarlos y hacer predicciones posteriormente.
+- Los CSV y los metadatos de los `.joblib` recuperados confirman que la configuración se ajustó con todo el `train` propio de cada escenario para medir `val`. Los modelos están en `evaluacion/escenario_X/`. Son artefactos para evaluar tres protocolos; el modelo único para la aplicación se decidirá al integrar el sistema. La [verificación y los hashes](../../docx/03Evidence/28-10-26_VerificacionFinalistasB2B3.json) se hicieron inspeccionando metadatos sin ejecutar predicciones.
 
 ## Archivos disponibles
 
 ```text
 results/baseline3/
 ├── README.md
+├── evaluacion/escenario_A/   # .joblib del finalista ajustado con train de A
+├── evaluacion/escenario_B/   # .joblib del finalista ajustado con train de B
+├── evaluacion/escenario_C/   # .joblib del finalista ajustado con train de C
 ├── b3_candidatas.csv          # candidatas de B
 ├── b3_candidatas (1).csv      # candidatas de C
 ├── b3_candidatas (2).csv      # duplicado de las candidatas de C
@@ -121,5 +122,4 @@ no se usan para contar resultados dos veces.
 - `val` contiene 8 255 partidas en A, 5 191 en B y 8 239 en C.
 - Las métricas por etapa (`inicio`, `medio`, `final`) también están en cada
   `b3_val_*.csv`; la decisión resumida aquí se basa en las métricas globales.
-- Los modelos se generaron con scikit-learn 1.7.2, según la columna
-  `version_sklearn` de los CSV de validación.
+- Los modelos se generaron con scikit-learn 1.7.2. El registro indica semilla base 2026; el `random_state` efectivo de estos bosques es 2030, por la posición de la candidata en el ajuste original.

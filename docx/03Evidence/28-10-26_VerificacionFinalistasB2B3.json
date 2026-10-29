@@ -1,0 +1,70 @@
+{
+  "fuentes_zip": [
+    "resultados_B2_20261029T013037Z.zip",
+    "resultados_B3_20261029T013620Z.zip"
+  ],
+  "metodo": "Inspección de opcodes pickle sin deserializar; comparación de metadatos con CSV de val",
+  "alcance": "Verifica metadatos de ajuste y configuración; no ejecuta predicciones ni reevalúa los modelos.",
+  "artefactos": [
+    {
+      "baseline": "B2",
+      "escenario": "A",
+      "partidas_train": 33066,
+      "fraccion_train": 1.0,
+      "semilla_base": 2026,
+      "semilla_modelo": null,
+      "sha256": "2575f393b9be3a6958a34fa2beb2b2b9a536512910b18d64b8bc0edd0c768123",
+      "archivo": "results/baseline2/evaluacion/escenario_A/b2_A_C0.1.joblib"
+    },
+    {
+      "baseline": "B2",
+      "escenario": "B",
+      "partidas_train": 27643,
+      "fraccion_train": 1.0,
+      "semilla_base": 2026,
+      "semilla_modelo": null,
+      "sha256": "3a768ea717818c39d91c9a256608b81aab73991901973b024d5596f49ebb9368",
+      "archivo": "results/baseline2/evaluacion/escenario_B/b2_B_C0.1.joblib"
+    },
+    {
+      "baseline": "B2",
+      "escenario": "C",
+      "partidas_train": 33013,
+      "fraccion_train": 1.0,
+      "semilla_base": 2026,
+      "semilla_modelo": null,
+      "sha256": "773c6bbd067ce003f49ad6b03fcb657b530de16ba9dda61b0fc634b9fc16537d",
+      "archivo": "results/baseline2/evaluacion/escenario_C/b2_C_C0.1.joblib"
+    },
+    {
+      "baseline": "B3",
+      "escenario": "A",
+      "partidas_train": 33066,
+      "fraccion_train": 1.0,
+      "semilla_base": 2026,
+      "semilla_modelo": 2030,
+      "sha256": "d7ad21e2a95272e9c7ca1f6c74ca8f745a9554932d90ac9c78590ef8912096e7",
+      "archivo": "results/baseline3/evaluacion/escenario_A/b3_A_B3_bosque_log_loss.joblib"
+    },
+    {
+      "baseline": "B3",
+      "escenario": "B",
+      "partidas_train": 27643,
+      "fraccion_train": 1.0,
+      "semilla_base": 2026,
+      "semilla_modelo": 2030,
+      "sha256": "812691bcda15426f20c306be52222df82432f5c7d6ca8ec10186e2e52f198c2c",
+      "archivo": "results/baseline3/evaluacion/escenario_B/b3_B_B3_bosque_log_loss.joblib"
+    },
+    {
+      "baseline": "B3",
+      "escenario": "C",
+      "partidas_train": 33013,
+      "fraccion_train": 1.0,
+      "semilla_base": 2026,
+      "semilla_modelo": 2030,
+      "sha256": "c6c641d4acfe32e9bc693a6776e89566aed4513bb789bd174c070ab3b1b3a8d7",
+      "archivo": "results/baseline3/evaluacion/escenario_C/b3_C_B3_bosque_log_loss.joblib"
+    }
+  ]
+}

@@ -25,9 +25,9 @@ Los escenarios responden a protocolos distintos: A partidas nuevas, B días post
 | B | 0.5491 | 163.19 | 0.1882 | 0.1600 |
 | C | 0.5384 | 164.71 | 0.1340 | 0.1362 |
 
-B0 predice la prevalencia de victoria observada en `train`. B1 usa la puntuación propuesta `(opp_prizes - own_prizes) + diff_total_hp / hp_unit + diff_bench_n` y una transformación logística de un predictor, ajustada con `train`.
+B0 predice la prevalencia de victoria observada en `train`. B1 usa la puntuación adoptada `(opp_prizes - own_prizes) + diff_total_hp / hp_unit + diff_bench_n` y una transformación logística de un predictor, ajustada con `train`.
 
-**B1 es preliminar:** `registro.json` mantiene `B1_estado=propuesta_pendiente_confirmacion`. Por eso sus métricas quedan versionadas como resultados exploratorios y no como evidencia final hasta confirmar la fórmula.
+**Decisión posterior:** se adopta esta fórmula como B1 para la rama 04. La decisión se tomó al cerrar los entregables; el `registro.json` original conserva su estado de propuesta para reflejar fielmente lo que se sabía al ejecutar la corrida. El ajuste tuvo un máximo de seis iteraciones de Newton y no registró un indicador de convergencia; esa limitación acompaña sus resultados. Véase [la decisión y el resumen](../resumen_baselines/README.md).
 
 ## Duración
 

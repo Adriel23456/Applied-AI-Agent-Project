@@ -6,7 +6,7 @@ Los números de celda de abajo empiezan en **0** y corresponden a la versión pu
 
 ## B0/B1: resultados ya listos
 
-B0/B1 ya está versionado en `results/baseline0_1/20261029T005435Z/`; **no vuelvas a ejecutar el ajuste para continuar con los otros baselines**. La fórmula de B1 sigue pendiente de confirmación, así que sus métricas son preliminares.
+B0/B1 ya está versionado en `results/baseline0_1/20261029T005435Z/`; **no vuelvas a ejecutar el ajuste para continuar con los otros baselines**. La fórmula de B1 se adoptó para esta rama; su registro original conserva el estado de propuesta y el diagnóstico de convergencia del ajuste no está disponible.
 
 Si necesitas repetir toda la corrida, en `02_baselines_B0_B1.ipynb` ejecuta las celdas de código **1 → 3 → 6 → 7 → 9**. No cambies valores. La celda 6 genera un `RUN_ID` nuevo y abre una carpeta nueva en Drive; la celda 7 ajusta B0/B1 para A/B/C; la celda 9 descarga el ZIP. No vuelvas a ejecutar la celda 6 dentro de la misma corrida, porque intenta crear de nuevo la carpeta con ese `RUN_ID`.
 
