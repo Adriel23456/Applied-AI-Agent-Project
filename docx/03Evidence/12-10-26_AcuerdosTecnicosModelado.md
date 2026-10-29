@@ -49,7 +49,7 @@
 - Para comparar Brier entre dos finalistas en `val`, se remuestrearán las mismas partidas en ambas candidatas en cada repetición. Se calculará la diferencia `Brier_B − Brier_A`: valores positivos indican que B tiene peor Brier.
 - Si el intervalo de esa diferencia incluye cero, no se considera demostrado que Brier empeore; si queda completamente por encima de cero, se considera evidencia de deterioro. “Incluye cero” significa que los resultados son compatibles con que no haya diferencia; no demuestra que ambas candidatas sean idénticas.
 - Se recomendó usar 1 000 repeticiones del remuestreo. La cantidad de partidas sorteadas en cada repetición será igual al número de partidas de `val`, con reemplazo.
-- Para cualquier análisis de incertidumbre que se realice, el nivel de confianza y el tipo de intervalo siguen pendientes. El 95 % se mencionó como opción, no como acuerdo. Las 2 000 repeticiones fueron una confusión; no son la recomendación vigente.
+- Para los análisis de incertidumbre distintos de la comparación LightGBM fijada el 28 de octubre, el nivel de confianza y el tipo de intervalo siguen pendientes. El 95 % se mencionó como opción, no como acuerdo. Las 2 000 repeticiones fueron una confusión; no son la recomendación vigente.
 
 ### Peso de partidas y estados
 
@@ -102,9 +102,9 @@ para el optimizador, la evaluación en disco y las comprobaciones de convergenci
 
 1. Confirmar o ajustar la fórmula propuesta de B1 y su interpretación de escala antes de usar sus resultados como evidencia final.
 2. Elegir el nivel de confianza y el tipo de intervalo para las comparaciones emparejadas de AUC y Brier. El criterio acordado es tratar una diferencia cuyo intervalo incluya cero como empate práctico o ausencia de deterioro claro, según la métrica; esto no prueba equivalencia.
-3. Elegir el nivel de confianza y la cantidad de remuestreos para los intervalos. El 95 % y las 2 000 repeticiones se mencionaron solo como ejemplos recomendados, no como acuerdos.
+3. Elegir el nivel de confianza y la cantidad de remuestreos para los intervalos de los análisis distintos de LightGBM. El 95 % y las 2 000 repeticiones se mencionaron solo como ejemplos recomendados, no como acuerdos.
 4. Definir el límite de tiempo de Optuna para B4 después de la prueba piloto.
-5. Cerrar el protocolo de LightGBM: alcance de su búsqueda, presupuesto comparable con B4 y criterio para considerar que supera claramente al modelo principal.
+5. **Cerrado para LightGBM el 28 de octubre:** 20 trials, 3 pliegues y una configuración seleccionada en CV; comparación de AUC con 1000 remuestreos emparejados e intervalos percentiles del 95 % por escenario, sin incremento observado en log loss ni Brier. Detalles y limitaciones en `28-10-26_ProtocoloLightGBM.md`. Los pendientes generales de intervalos se mantienen para los otros análisis.
 6. Definir cuántas repeticiones con distintas semillas se harán y si repetirán solo el ajuste final o también la búsqueda completa.
 
 ## Fuentes internas y técnicas

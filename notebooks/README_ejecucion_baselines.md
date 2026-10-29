@@ -1,13 +1,13 @@
 # Ejecución de pendientes de baselines
 
-Los cuadernos se ejecutan en Colab con CPU y RAM alta. Los experimentos guardan sus salidas en Google Drive; `RUN_ID` identifica cada sesión en UTC. B1 y el protocolo de LightGBM están marcados como propuestas. Las métricas de `val` se reportan por escenario y no se usa `calib` ni `test`.
+Los cuadernos se ejecutan en Colab con CPU y RAM alta. Los experimentos guardan sus salidas en Google Drive; `RUN_ID` identifica cada sesión en UTC. La fórmula de B1 sigue marcada como propuesta. El protocolo de LightGBM quedó definido el 28 de octubre en `docx/03Evidence/28-10-26_ProtocoloLightGBM.md`. Las métricas de `val` se reportan por escenario y no se usa `calib` ni `test`.
 
 ## Preparación
 
 1. Asegúrate de que la rama `04MainAIModelTrainingAndDevelopment` contiene los cambios actuales y abre en Colab el cuaderno del baseline que vas a ejecutar.
 2. Cada cuaderno de baseline prepara **su propio runtime** en la primera celda: conecta Drive, actualiza o clona la rama, instala dependencias y baja las tablas procesadas a `/content/datos` si faltan. No requiere ejecutar `00_arranque` ni comparte el runtime con otro cuaderno. Si Colab inicia un runtime nuevo, vuelve a ejecutar la primera celda de ese cuaderno.
 3. Verifica el commit impreso y que no haya cambios locales. Cada celda de experimento largo tiene un interruptor `False`; actívalo solo para esa sección.
-4. La raíz de las salidas es `MyDrive/Applied-AI-Agent-Project/model_checkpoints/`. Conserva el `RUN_ID` impreso. LightGBM es costoso y su criterio para declarar una mejora clara sigue pendiente de acuerdo.
+4. La raíz de las salidas es `MyDrive/Applied-AI-Agent-Project/model_checkpoints/`. Conserva el `RUN_ID` impreso. LightGBM tiene el mismo presupuesto de búsqueda que B4: 20 trials y 3 pliegues, más 6 ajustes para su única configuración finalista. El tiempo real puede variar entre implementaciones.
 
 ## Orden sugerido
 
@@ -16,7 +16,7 @@ Los cuadernos se ejecutan en Colab con CPU y RAM alta. Los experimentos guardan 
 3. **B3** (`04_baseline_B3.ipynb`): ejecutar su celda de preparación y la celda de recuperación con `BUSCAR_MODELOS_B3=True`. Se copia solo el modelo de la configuración común finalista de cada escenario (tres ajustes, uno por cada `train` propio) a `export_repo/baseline3/`. No se usan las otras candidatas de búsqueda. Si falta alguno, activa `GENERAR_B3_FINALISTA_SI_FALTA`; ajusta únicamente el bosque seleccionado y solo para los escenarios sin artefacto. Luego vuelve a ejecutar la celda de recuperación para copiarlos a `export_repo/baseline3/`. Si hay varias coincidencias, revisa la ruta antes de copiar.
 4. **B4: ablaciones** (`05_baseline_B4.ipynb`): ejecutar su celda de preparación y activar `EJECUTAR_ABLACIONES`. Se realizan tres variantes por escenario, cada una con vigilancia y ajuste final. Salen a `b4/ablaciones/<RUN_ID>/escenario_X/`. `familias.json` define las columnas eliminadas.
 5. **H2** (mismo cuaderno): activar `EJECUTAR_H2`. Guarda las métricas y el modelo de la variante restringida, y muestra la comparación con B4 en `b4/h2/<RUN_ID>/escenario_X/`. Si la cardinalidad de un ID supera 255, la implementación se detiene y requiere otra codificación.
-6. **LightGBM** (mismo cuaderno): revisar primero el protocolo propuesto con el equipo. Para ejecutarlo, instalar LightGBM 4.6.0 en la celda indicada y activar `EJECUTAR_LIGHTGBM`. La búsqueda y sus finalistas salen a `lightgbm/<RUN_ID>/`. No declarar una mejora clara sin acordar el criterio. Si el runtime se interrumpe, asignar el `RUN_ID` anterior después de ejecutar la preparación y actualizar `RUN_INFO["run_id_utc"]` antes de reutilizar esa carpeta para continuar el estudio; los ajustes finales pueden repetirse.
+6. **LightGBM** (mismo cuaderno): ejecutar la instalación de LightGBM 4.6.0, activar `EJECUTAR_LIGHTGBM` y ejecutar la celda. Completa búsqueda, selección de una finalista por AUC de CV, ajustes en A/B/C y comparación con B4 mediante 1000 remuestreos emparejados de partidas. Guarda `comparacion_b4/decision_val.json` y los resultados separados por escenario. LightGBM reemplaza a B4 solo si el intervalo del 95 % para la diferencia de AUC queda por encima de cero en A, B y C y no suben los valores observados de log loss ni Brier en ninguno. Ante resultados mixtos o inciertos, se mantiene B4. Si el runtime se interrumpe, asigna el `RUN_ID` anterior después de la preparación y actualiza `RUN_INFO["run_id_utc"]` antes de continuar; los escenarios con modelo y métricas completos omiten el ajuste final.
 
 Se pueden ejecutar los escenarios o secciones por separado cambiando las tuplas `ESCENARIOS_*`. El resumen del cuaderno B4 muestra las salidas que coinciden con el `RUN_ID` actual; para otra sesión, asigna el identificador anterior antes de ejecutar el resumen.
 
@@ -30,6 +30,6 @@ Se pueden ejecutar los escenarios o secciones por separado cambiando las tuplas 
 | `export_repo/baseline3/` y, si se generó, `b3/finalista_seleccionada_refit/<RUN_ID>/` | `results/baseline3/modelos/` | Modelos B3 finalistas encontrados o reajustados y verificados |
 | `b4/ablaciones/<RUN_ID>/` | `results/baseline4/ablaciones/<RUN_ID>/` | Familias, métricas, manifiestos, tiempos y modelos de cada variante |
 | `b4/h2/<RUN_ID>/` | `results/baseline4/h2/<RUN_ID>/` | Métricas, configuración, registro y modelo restringido, por escenario |
-| `lightgbm/<RUN_ID>/` | `results/lightgbm/<RUN_ID>/` | Estudio SQLite, CV por trial y pliegue, candidatas, configuración, tiempos y resultados de `val`; conservar los modelos necesarios para la decisión final |
+| `lightgbm/<RUN_ID>/` | `results/lightgbm/<RUN_ID>/` | Estudio SQLite, CV por trial y pliegue, `lightgbm_finalista.csv`, configuración, tiempos, modelos y resultados de `val`; incluir `comparacion_b4/` con métricas, remuestreos y decisión |
 
 Copia únicamente carpetas de corridas completadas; si se detuvo una corrida, conserva el estado parcial claramente identificado. Antes de agregar archivos `.joblib` comprueba su tamaño y las reglas del repositorio o de Git LFS. Los resultados copiados deben mantener el manifiesto de la misma corrida. Los resultados de B1 siguen siendo provisionales hasta confirmar la fórmula.

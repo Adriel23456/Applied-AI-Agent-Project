@@ -642,6 +642,17 @@ B3, de modo que los cinco niveles se ejecutan bajo el mismo procedimiento sin
 código específico por modelo, lo que reduce la superficie donde puede
 introducirse una inconsistencia entre ejecuciones.
 
+Como verificación de implementación se comparará B4 con LightGBM, con
+20 configuraciones y tres pliegues agrupados sobre las partidas comunes a
+los subconjuntos de entrenamiento de A, B y C. Una configuración se elegirá
+por AUC de validación cruzada antes de consultar la validación fija, y se
+reajustará con el entrenamiento propio de cada escenario. Para sustituir B4,
+se exigirá en cada escenario que el intervalo percentil del 95\,\% para la
+diferencia de AUC sea positivo, usando 1000 remuestreos emparejados de
+partidas, y que no aumenten los valores observados de log loss ni Brier.
+En caso contrario se mantendrá B4. Esta regla sirve para selección y no
+sustituye la evaluación final ni demuestra relevancia práctica de la mejora.
+
 \subsubsection{Ablaciones por familia de características}
 
 Las ablaciones eliminan un bloque completo del diccionario, progreso,
