@@ -31,17 +31,21 @@ En `04_baseline_B3.ipynb`:
 
 Si solo quieres recuperar `.joblib`, ejecuta 1, 5 y 9; activa la celda 7 únicamente si faltan archivos.
 
-## B4: LightGBM, ablaciones y H2
+## B4: entrenamiento original y experimentos posteriores
 
 En `05_baseline_B4.ipynb`:
 
-1. Ejecuta la **celda 1**. La **celda 3** muestra las métricas B4 que ya están versionadas; puedes ejecutarla para consultarlas.
-2. **LightGBM, primero:** ejecuta la instalación de la **celda 6**. En la **celda 7**, cambia `EJECUTAR_LIGHTGBM = False` a `True` y ejecútala. Deja la semilla 2026 y los escenarios A/B/C por defecto. La celda hace la búsqueda, ajusta una finalista por escenario y compara con B4. No cambies tamaños de búsqueda, pliegues, presupuesto ni regla de comparación.
-3. **Ablaciones, opcionales:** cuando decidas ejecutarlas, en la **celda 9** cambia `EJECUTAR_ABLACIONES = False` a `True` y ejecútala. Deja `ESCENARIOS_ABLACIONES = ('A', 'B', 'C')`.
-4. **H2, opcional:** en la **celda 11** cambia `EJECUTAR_H2 = False` a `True` y ejecútala. No cambies las cuatro características ni la semilla.
-5. La **celda 13** muestra un resumen si corriste LightGBM o ablaciones. La **celda 15** descarga el ZIP con lo producido bajo el `RUN_ID` actual.
+1. Ejecuta la **celda 1** para preparar ese runtime. La **celda 4** muestra CPU y RAM.
+2. Las celdas **5** y **7** contienen, respectivamente, la búsqueda original y el ajuste final de B4. Como B4 ya está entrenado, deja `EJECUTAR_BUSQUEDA_B4 = False` y `EJECUTAR_AJUSTE_FINAL_B4 = False`: la celda 5 consulta la finalista versionada y la celda 7 informa dónde están los modelos. La **celda 9** muestra sus métricas. No se entrena en este paso.
+3. Si alguna vez necesitas reproducir B4 desde cero, cambia `EJECUTAR_BUSQUEDA_B4` a `True` en la **celda 5** y ejecuta después la **celda 7** con `EJECUTAR_AJUSTE_FINAL_B4 = True`. Estas operaciones pueden tardar horas y guardan una reproducción nueva en Drive bajo `b4_reproduccion/<RUN_ID>/`, sin sobrescribir los resultados oficiales. Para reproducir solo el ajuste final con la configuración ya seleccionada, deja la celda 5 en `False`, ejecútala y activa la celda 7.
+4. **LightGBM, primero entre los experimentos pendientes:** ejecuta la instalación de la **celda 12**. En la **celda 13**, cambia `EJECUTAR_LIGHTGBM = False` a `True` y ejecútala. Deja la semilla 2026 y los escenarios A/B/C. Esa celda realiza la búsqueda, ajusta una finalista por escenario y compara con B4.
+5. **Ablaciones:** en la **celda 15** cambia `EJECUTAR_ABLACIONES = False` a `True` cuando vayas a ejecutarlas. Conserva `ESCENARIOS_ABLACIONES = ('A', 'B', 'C')`.
+6. **H2:** en la **celda 17** cambia `EJECUTAR_H2 = False` a `True` cuando vayas a ejecutarla. Conserva los escenarios y las cuatro características definidos.
+7. La **celda 19** muestra un resumen de LightGBM o ablaciones. La **celda 21** descarga el ZIP de los experimentos guardados bajo el `RUN_ID` actual, incluidas las reproducciones de B4 si las ejecutaste.
 
-Las celdas 7, 9 y 11 están apagadas por defecto. Activa solo la sección que vas a correr. LightGBM va antes porque su resultado permite decidir si B4 sigue como modelo principal; H2 conserva su definición actual, que compara específicamente las cuatro entradas con B4.
+Las celdas 5, 7, 13, 15 y 17 están desactivadas por defecto. Si se ejecutan así, imprimen que no entrenaron: un tiempo muy corto indica que se consultaron o saltaron las tareas, no que se completó un entrenamiento. B4 original ya está entrenado; LightGBM, ablaciones y H2 siguen pendientes hasta activar sus celdas y obtener sus salidas. La pregunta H2 sigue definida específicamente para B4.
+
+El [cuaderno original exacto de B4](../docx/03Evidence/05_entrenamiento_B4_independiente_original.ipynb) está preservado como evidencia. En Git ese cuaderno no contenía salidas de celda; los CSV, manifiestos y modelos de la ejecución original están en `results/baseline4/`.
 
 ## Archivos descargados
 

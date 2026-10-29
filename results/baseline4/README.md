@@ -1,7 +1,7 @@
 # Resultados de B4 (modelo principal)
 
 B4 = potenciación del gradiente por histogramas (`HistGradientBoostingClassifier`, scikit-learn 1.7.2),
-entrenada con `notebooks/05_entrenamiento_B4_independiente.ipynb`.
+entrenada con `notebooks/05_entrenamiento_B4_independiente.ipynb`. La copia exacta de ese cuaderno se preserva en `docx/03Evidence/05_entrenamiento_B4_independiente_original.ipynb`; el cuaderno de trabajo `notebooks/05_baseline_B4.ipynb` recupera las celdas de búsqueda y ajuste final con ejecución explícita.
 
 Estos archivos se **copiaron manualmente** desde Google Drive
 (`MyDrive/Applied-AI-Agent-Project/model_checkpoints/b4_independiente/busqueda_v3/`) para dejar

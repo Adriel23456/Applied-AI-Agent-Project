@@ -68,7 +68,7 @@ Contexto obligatorio para trabajar: `docx/05AmbienteDeDesarrollo/DiccionarioDeDa
 
 ### `04MainAIModelTrainingAndDevelopment`
 
-Cuadernos: `02_baselines_B0_B1`, `03_baseline_B2`, `04_baseline_B3` y `05_baseline_B4`. Cada uno presenta un baseline; B2 y B3 no relanzan búsquedas cerradas. B4 presenta los resultados versionados sin relanzar el entrenamiento cerrado.
+Cuadernos: `02_baselines_B0_B1`, `03_baseline_B2`, `04_baseline_B3` y `05_baseline_B4`. Cada uno presenta un baseline; B2 y B3 no relanzan búsquedas cerradas. B4 conserva las celdas de búsqueda y ajuste final, desactivadas por defecto, y presenta los resultados versionados del entrenamiento cerrado.
 Escalera definida en el artículo (Tabla "Escalera de modelos de referencia"). Cada peldaño responde
 una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado del arte en datos tabulares).
 
