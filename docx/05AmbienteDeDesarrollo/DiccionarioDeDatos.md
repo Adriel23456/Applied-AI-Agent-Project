@@ -194,7 +194,10 @@ de subir otro), `active_present = 0` y los campos `active_*` valen -1. Pasa en e
 **Comparación restringida de H2:** usa solo cuatro características: `game_turn`,
 `first_player_is_me`, `own_active_card` y `opp_active_card`. Los dos últimos son
 IDs de los Pokémon activos visibles en ese estado; sirven como aproximación a
-identidad de mazo, pero no describen el mazo completo.
+identidad de mazo, pero no describen el mazo completo. En el modelo restringido (HistGradientBoosting, máximo 255 categorías por
+columna) cada id conserva todas sus categorías de `train` (en A, 359 cartas activas): se reparte sin
+pérdida en bloques categóricos de hasta 255 valores, ordenados por frecuencia en `train`; un id
+no visto en `train` queda ausente. Ver `h2_config.json`.
 
 **Estado completo más IDs:** `include_cards=True` conserva las 62 características
 del estado y agrega ambos IDs, para un total de 64. Es una ablación distinta: no

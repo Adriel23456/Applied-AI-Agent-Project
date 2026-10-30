@@ -49,6 +49,7 @@ INDICE_LOCAL = TRABAJO_DIR / ".ptcg_indice_publicado.csv"
 
 PREFIJO = "results__"
 INDICE = "results__indice.csv"
+META = "__publicacion__"  # fila del indice con la fecha de la version (no es un archivo)
 CAMPOS = ["ruta", "archivo_kaggle", "tipo", "bytes", "sha256", "fecha_utc", "commit"]
 
 
@@ -228,11 +229,17 @@ def leer_indice(dataset_id=None, requerido=True, intentos=10, espera_s=60):
                                f"la celda. Mensaje de kaggle:\n{texto.strip()}")
         print(f"aviso: {INDICE} no esta en Kaggle (dataset sin resultados publicados todavia)")
         remoto = {}
+    # La copia local (ultima publicacion hecha desde este servidor) reemplaza a la de Kaggle
+    # solo si es MAS NUEVA: Kaggle tarda en servir una version recien subida, y una version
+    # posterior de un companero debe ganar sobre la copia local.
     if INDICE_LOCAL.exists():
         local = _leer_csv_indice(INDICE_LOCAL)
-        if local.get("__dataset__", {}).get("archivo_kaggle") == dataset_id:
-            remoto.update({r: f for r, f in local.items() if r != "__dataset__"})
-    return remoto
+        fecha_local = local.get(META, {}).get("fecha_utc", "")
+        fecha_remota = remoto.get(META, {}).get("fecha_utc", "")
+        if (local.get("__dataset__", {}).get("archivo_kaggle") == dataset_id
+                and fecha_local > fecha_remota):
+            remoto = local
+    return {r: f for r, f in remoto.items() if f.get("tipo") in ("tabla", "resultado")}
 
 
 def faltantes(rutas, dataset_id=None, indice=None):
@@ -286,19 +293,20 @@ def _enlazar(origen, destino):
 
 
 def publicar(rutas, mensaje, raiz=None, actualizar_tablas=False,
-             datos_dir=None, dataset_id=None):
+             datos_dir=None, dataset_id=None, excluir=()):
     """Sube una version nueva del dataset con: tablas + todos los resultados ya indexados +
     las 'rutas' nuevas (que deben existir en raiz). Crea el dataset si no existe.
 
     actualizar_tablas=False exige que las tablas locales sean IDENTICAS a las del indice (asi
     publicar un resultado nunca cambia las tablas por accidente). Solo 00_arranque usa True,
     cuando reconstruyo tablas a proposito.
+    excluir: rutas de resultados que NO pasan a la version nueva (las usa eliminar()).
     """
     dataset_id = dataset_id or load_dataset_id()
     raiz, datos_dir = Path(raiz or RESULTADOS_DIR), Path(datos_dir or DATOS_DIR)
     existe = dataset_existe(dataset_id)
     indice = leer_indice(dataset_id, requerido=False) if existe else {}
-    fecha = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    fecha = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     commit = _commit()
     nuevo = {}
 
@@ -325,8 +333,9 @@ def publicar(rutas, mensaje, raiz=None, actualizar_tablas=False,
 
     # 2) Resultados que ya estaban: se traen si no estan locales (Kaggle reemplaza todo)
     rutas = [Path(r).as_posix() for r in rutas]
+    excluir = {Path(r).as_posix() for r in excluir}
     for r, fila in indice.items():
-        if fila.get("tipo") == "resultado" and r not in rutas:
+        if fila.get("tipo") == "resultado" and r not in rutas and r not in excluir:
             _traer(dataset_id, fila, raiz)
             nuevo[r] = fila
 
@@ -351,7 +360,9 @@ def publicar(rutas, mensaje, raiz=None, actualizar_tablas=False,
         for r, fila in nuevo.items():
             origen = datos_dir / r if fila["tipo"] == "tabla" else raiz / r
             _enlazar(origen, tmp / fila["archivo_kaggle"])
-        _escribir_csv_indice(nuevo, tmp / INDICE)
+        nuevo_con_fecha = dict(nuevo)
+        nuevo_con_fecha[META] = {"ruta": META, "tipo": "meta", "fecha_utc": fecha, "commit": commit}
+        _escribir_csv_indice(nuevo_con_fecha, tmp / INDICE)
         meta = {"title": "PTCG WP tablas procesadas", "id": dataset_id,
                 "licenses": [{"name": "CC0-1.0"}]}
         (tmp / "dataset-metadata.json").write_text(json.dumps(meta), encoding="utf-8")
@@ -367,7 +378,7 @@ def publicar(rutas, mensaje, raiz=None, actualizar_tablas=False,
                                "Los archivos siguen en este servidor; vuelve a ejecutar la celda.")
 
     # 5) Copia local del indice publicado (Kaggle tarda en mostrar la version nueva)
-    copia = dict(nuevo)
+    copia = dict(nuevo_con_fecha)
     copia["__dataset__"] = {"ruta": "__dataset__", "archivo_kaggle": dataset_id}
     _escribir_csv_indice(copia, INDICE_LOCAL)
     n_res = sum(1 for f in nuevo.values() if f["tipo"] == "resultado")
@@ -395,6 +406,31 @@ def asegurar(rutas, entrenar, mensaje, raiz=None):
         raise RuntimeError(f"el entrenamiento no produjo estos archivos: {sin_crear}")
     publicar(rutas, mensaje, raiz)
     return "publicado"
+
+
+def eliminar(prefijo, mensaje, raiz=None, datos_dir=None, dataset_id=None):
+    """Quita de Kaggle y de este servidor todos los resultados cuya ruta empieza con 'prefijo'
+    (por ejemplo "b4/h2/"). Publica una version nueva sin ellos; las tablas y el resto de los
+    resultados se conservan. Si en Kaggle no hay nada con ese prefijo, solo limpia lo local.
+    Devuelve la lista de rutas quitadas de Kaggle."""
+    if not prefijo or prefijo.strip("/") == "" or ".." in prefijo:
+        raise ValueError("indica un prefijo concreto, por ejemplo 'b4/h2/'")
+    dataset_id = dataset_id or load_dataset_id()
+    raiz = Path(raiz or RESULTADOS_DIR)
+    indice = leer_indice(dataset_id)
+    quitar = sorted(r for r, f in indice.items() if f["tipo"] == "resultado" and r.startswith(prefijo))
+    locales = [p for p in sorted((raiz / prefijo).parent.rglob("*"))
+               if p.is_file() and p.relative_to(raiz).as_posix().startswith(prefijo)]
+    for p in locales:
+        p.unlink()
+        print("borrado local:", p.relative_to(raiz).as_posix())
+    if not quitar:
+        print(f"En Kaggle no hay resultados que empiecen con '{prefijo}': no se publica nada.")
+        return []
+    for r in quitar:
+        print("se quita de Kaggle:", r)
+    publicar([], mensaje, raiz=raiz, datos_dir=datos_dir, dataset_id=dataset_id, excluir=quitar)
+    return quitar
 
 
 def archivos_de(carpeta):

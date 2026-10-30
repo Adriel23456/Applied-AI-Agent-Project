@@ -154,3 +154,31 @@ def test_sin_indice_no_se_asume_vacio(entorno, monkeypatch):
     with pytest.raises(RuntimeError, match="no se pudo bajar"):
         store.listo(["b2/uno.csv"], raiz=tmp / "r", dataset_id="u/d")
     assert store.leer_indice("u/d", requerido=False) == {}
+
+def test_eliminar_quita_solo_el_prefijo(entorno):
+    tmp, datos = entorno
+    raiz = tmp / "res"
+    _resultados(raiz, {"b4/h2/escenario_A/h2_val.csv": "malo", "b4/final/m.csv": "bueno"})
+    store.publicar(store.archivos_de(raiz), "base", raiz=raiz, datos_dir=datos, dataset_id="u/d")
+    quitados = store.eliminar("b4/h2/", "quitar h2", raiz=raiz, datos_dir=datos, dataset_id="u/d")
+    assert quitados == ["b4/h2/escenario_A/h2_val.csv"]
+    assert not (raiz / "b4/h2/escenario_A/h2_val.csv").exists()
+    assert not (tmp / "dataset" / "results__b4__h2__escenario_A__h2_val.csv").exists()
+    assert (tmp / "dataset" / "results__b4__final__m.csv").exists()
+    assert "b4/h2/escenario_A/h2_val.csv" not in store.leer_indice("u/d")
+    store.INDICE_LOCAL.unlink()  # otro servidor ve lo mismo
+    assert set(store.leer_indice("u/d")) == {"b4/final/m.csv", *store.expected_files(["2026-01-01"])}
+    assert store.eliminar("b4/h2/", "otra vez", raiz=raiz, datos_dir=datos, dataset_id="u/d") == []
+    with pytest.raises(ValueError):
+        store.eliminar("/", "todo", raiz=raiz, dataset_id="u/d")
+
+
+def test_indice_local_viejo_no_tapa_publicacion_nueva_de_otro(entorno):
+    tmp, datos = entorno
+    _resultados(tmp / "a", {"b2/uno.csv": "1"})
+    store.publicar(["b2/uno.csv"], "a", raiz=tmp / "a", datos_dir=datos, dataset_id="u/d")
+    viejo = store.INDICE_LOCAL.read_text()
+    _resultados(tmp / "b", {"b3/dos.csv": "2"})
+    store.publicar(["b3/dos.csv"], "b", raiz=tmp / "b", datos_dir=datos, dataset_id="u/d")
+    store.INDICE_LOCAL.write_text(viejo)  # este servidor solo conoce su publicacion anterior
+    assert "b3/dos.csv" in store.leer_indice("u/d")
