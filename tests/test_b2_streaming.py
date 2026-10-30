@@ -17,7 +17,7 @@ from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ptcg_wp.baselines import ScenarioStream, weights_by_game
+from ptcg_wp.data import ScenarioStream, weights_by_game
 from ptcg_wp.b2 import b2_group_cv, fit_b2_candidates_val, _collect_rows
 from ptcg_wp.b2_streaming import (evaluate_stream, fit_incremental, game_counts,
                                   prepare_training, training_diagnostics)

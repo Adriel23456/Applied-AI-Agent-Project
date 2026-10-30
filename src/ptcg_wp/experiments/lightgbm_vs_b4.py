@@ -13,9 +13,10 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupShuffleSplit
 
-from ptcg_wp.b4 import (_memory_guard, _metric_rows as b4_metrics, _weights_for_codes,
+from ptcg_wp.b4 import (_memory_guard, _weights_for_codes,
                         materialize_split)
 from ptcg_wp.data import ScenarioStream
+from ptcg_wp.evaluation import metric_rows_codes
 from ptcg_wp.model_comparison import paired_game_auc_bootstrap
 
 
@@ -92,7 +93,7 @@ def run_lightgbm(data_dir, features, output_dir, seed=2026, cache_dir='/content'
                     mdl = fit_monitor(train, search[fit], params, 2000, monitor_seed=seed+fold,
                                       model_seed=seed+trial.number*100+fold)
                     ix = np.flatnonzero(np.isin(g, search[held]))
-                    metrics = b4_metrics(np.asarray(train.y[ix]), mdl.predict_proba(tabla(train.x[ix]))[:, 1],
+                    metrics = metric_rows_codes(np.asarray(train.y[ix]), mdl.predict_proba(tabla(train.x[ix]))[:, 1],
                                          g[ix], np.asarray(train.stage[ix]), {'fold': fold}, include_stages=False)[0]
                     metrics['n_iter_vigilancia'] = int(mdl.best_iteration_)
                     rows.append(metrics)
@@ -140,7 +141,7 @@ def run_lightgbm(data_dir, features, output_dir, seed=2026, cache_dir='/content'
                     final.fit(tabla(train.x), np.asarray(train.y), sample_weight=_weights_for_codes(g))
                     common = {'escenario': scenario, 'modelo': 'LightGBM', 'trial': trial.number,
                               'n_iter_vigilancia': iterations, 'semilla': seed}
-                    rows.extend(b4_metrics(np.asarray(val.y), final.predict_proba(tabla(val.x))[:, 1],
+                    rows.extend(metric_rows_codes(np.asarray(val.y), final.predict_proba(tabla(val.x))[:, 1],
                                            np.asarray(val.group), np.asarray(val.stage), common))
                     joblib.dump({'model': final, 'features': list(features), 'params': trial.params,
                                  'scenario': scenario, 'lightgbm_version': lgb.__version__},
@@ -178,8 +179,8 @@ def compare_lightgbm_b4(data_dir, b4_root, lightgbm_root, seed=2026):
         y = np.concatenate(yy); codes, _ = pd.factorize(np.concatenate(gg), sort=True)
         stage = np.concatenate(stages)
         ref_p, cand_p = np.clip(np.concatenate(p_ref), 1e-15, 1-1e-15), np.clip(np.concatenate(p_cand), 1e-15, 1-1e-15)
-        ref_metrics = b4_metrics(y, ref_p, codes, stage, {'escenario': scenario, 'modelo': 'B4'})
-        cand_metrics = b4_metrics(y, cand_p, codes, stage, {'escenario': scenario, 'modelo': 'LightGBM'})
+        ref_metrics = metric_rows_codes(y, ref_p, codes, stage, {'escenario': scenario, 'modelo': 'B4'})
+        cand_metrics = metric_rows_codes(y, cand_p, codes, stage, {'escenario': scenario, 'modelo': 'LightGBM'})
         metric_rows.extend(ref_metrics + cand_metrics)
         ref, cand = ref_metrics[0], cand_metrics[0]
         interval, differences = paired_game_auc_bootstrap(y, ref_p, cand_p, codes, seed=seed)

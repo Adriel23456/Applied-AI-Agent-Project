@@ -34,6 +34,7 @@ minutos en mostrar la versión nueva a otros servidores.
 | `04_baseline_B3` | 1 → 3 → 5 | segundos | bosque final por escenario |
 | `05_baseline_B4` | 1 → 3 → 5 | segundos | búsqueda ~2 h 20 min; final ~50 min por escenario (8 núcleos) |
 | `05_baseline_B4` (experimentos) | 7 → 8 (LightGBM), 10 (ablaciones), 12 (H2), 14 (resumen) | segundos | horas |
+| `05_baseline_B4` (modelo final) | 16 (exportar `modelo_final/`) → 17 (verificar con `val` de A) | segundos | 16: segundos (no reentrena); 17: ~1 min |
 
 En `05`, la celda 5 usa la finalista de la celda 3. LightGBM, ablaciones y H2 ya están en Kaggle:
 al ejecutarlas solo se bajan. Su código está en `src/ptcg_wp/experiments/`.

@@ -15,9 +15,10 @@ from sklearn import __version__ as sklearn_version
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import GroupShuffleSplit
 
-from ptcg_wp.b4 import (_memory_guard, _metric_rows as b4_metrics, _require_external_validation,
+from ptcg_wp.b4 import (_memory_guard, _require_external_validation,
                         _weights_for_codes, materialize_split)
 from ptcg_wp.data import ScenarioStream
+from ptcg_wp.evaluation import metric_rows_codes
 
 
 # Maximo de categorias por columna que acepta HistGradientBoostingClassifier (max_bins=255).
@@ -117,7 +118,7 @@ def run_h2(data_dir, scenario, output_dir, seed=2026, cache_dir='/content'):
             model.fit(x_train, y, sample_weight=_weights_for_codes(groups))
             common = {'escenario': scenario, 'modelo': 'H2_restringido', 'semilla': seed,
                       'n_iter_vigilancia': int(monitor.n_iter_)}
-            result = b4_metrics(np.asarray(val.y), model.predict_proba(x_val)[:, 1],
+            result = metric_rows_codes(np.asarray(val.y), model.predict_proba(x_val)[:, 1],
                                 np.asarray(val.group), np.asarray(val.stage), common)
             pd.DataFrame(result).to_csv(root / 'h2_val.csv', index=False)
             joblib.dump({'model': model, 'features': features, 'columnas_modelo': columnas,

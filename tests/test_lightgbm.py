@@ -15,7 +15,7 @@ lgb = pytest.importorskip("lightgbm")
 
 from sklearn.ensemble import HistGradientBoostingClassifier  # noqa: E402
 
-from ptcg_wp.pending_experiments import compare_lightgbm_b4, run_lightgbm  # noqa: E402
+from ptcg_wp.experiments.lightgbm_vs_b4 import compare_lightgbm_b4, run_lightgbm  # noqa: E402
 
 FEATURES = ["x", "z"]
 

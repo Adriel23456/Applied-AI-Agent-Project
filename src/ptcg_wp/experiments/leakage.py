@@ -12,8 +12,9 @@ import pandas as pd
 from sklearn import __version__ as sklearn_version
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
 
-from ptcg_wp.b2 import _collect_rows, _metric_rows, _pipeline, sample_train_games
+from ptcg_wp.b2 import _collect_rows, _pipeline, sample_train_games
 from ptcg_wp.data import weights_by_game
+from ptcg_wp.evaluation import metric_rows
 
 
 def leakage_comparison(stream, features, output_dir, seed=2026, max_games=200, c_value=0.1):
@@ -31,7 +32,7 @@ def leakage_comparison(stream, features, output_dir, seed=2026, max_games=200, c
         w = weights_by_game(groups[fit])
         model.fit(x[fit], y[fit], scale__sample_weight=w, logit__sample_weight=w)
         common = {'escenario': stream.scenario, 'division': name, 'C': c_value, 'semilla': seed}
-        rows.extend(_metric_rows(y[held], model.predict_proba(x[held])[:, 1],
+        rows.extend(metric_rows(y[held], model.predict_proba(x[held])[:, 1],
                                  groups[held], stages[held], common))
         fit_games, held_games = np.unique(groups[fit]), np.unique(groups[held])
         overlap = np.intersect1d(fit_games, held_games)

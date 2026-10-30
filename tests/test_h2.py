@@ -11,7 +11,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ptcg_wp.pending_experiments import (codificar_ids_por_bloques, run_h2,  # noqa: E402
+from ptcg_wp.experiments.h2 import (codificar_ids_por_bloques, run_h2,  # noqa: E402
                                          vocabulario_ids)
 
 

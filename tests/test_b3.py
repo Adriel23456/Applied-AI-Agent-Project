@@ -10,7 +10,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ptcg_wp.baselines import ScenarioStream
+from ptcg_wp.data import ScenarioStream
 from ptcg_wp.b3 import b3_optuna_cv, fit_b3_candidates_val, select_train_games
 
 

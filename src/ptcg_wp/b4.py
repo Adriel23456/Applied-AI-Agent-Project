@@ -19,6 +19,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 
 from ptcg_wp.b2_streaming import game_counts
+from ptcg_wp.evaluation import metric_rows_codes
 from ptcg_wp.checkpoints import (atomic_csv, atomic_joblib, atomic_json, backup_study,
                                  complete_trial_rows, ensure_manifest, json_safe_rows,
                                  persistent_study, recover_interrupted_trials,
@@ -147,37 +148,6 @@ def _weights_for_codes(groups):
     return 1.0 / counts[groups]
 
 
-def _metric_rows(y, probability, groups, stage_codes, common, include_stages=True):
-    probability = np.clip(np.asarray(probability, dtype=float), 1e-15, 1 - 1e-15)
-    y = np.asarray(y, dtype=np.uint8)
-    rows = []
-    stages = [(None, "global")]
-    if include_stages:
-        stages.extend(enumerate(STAGES))
-    for code, label in stages:
-        mask = np.ones(len(y), dtype=bool) if code is None else stage_codes == code
-        if not mask.any():
-            continue
-        yy, pp, gg = y[mask], probability[mask], groups[mask]
-        weights = _weights_for_codes(gg)
-        # AUC ponderado por partida, incluyendo el caso de empates de probabilidad.
-        order = np.argsort(pp, kind="mergesort")
-        yy, pp, weights = yy[order], pp[order], weights[order]
-        positives = np.sum(weights * yy)
-        negatives = np.sum(weights * (1 - yy))
-        starts = np.flatnonzero(np.r_[True, pp[1:] != pp[:-1]])
-        positive = np.add.reduceat(weights * yy, starts)
-        negative = np.add.reduceat(weights * (1 - yy), starts)
-        favorable = np.sum(positive * (np.r_[0.0, np.cumsum(negative[:-1])] + 0.5 * negative))
-        logloss = -np.sum(weights * (yy * np.log(pp) + (1 - yy) * np.log1p(-pp))) / weights.sum()
-        brier = np.sum(weights * (yy - pp) ** 2) / weights.sum()
-        rows.append({**common, "etapa": label,
-                     "auc": favorable / (positives * negatives) if positives and negatives else np.nan,
-                     "log_loss": logloss, "brier": brier,
-                     "n_estados": len(yy), "n_partidas": len(np.unique(gg))})
-    return rows
-
-
 def _parameters(trial):
     # Tasas pequeñas y árboles menos anchos favorecen ajustes graduales; la
     # regularización L2 reduce el efecto de hojas con valores extremos.
@@ -241,7 +211,7 @@ def _fit_outer_fold(data, fit_groups, held_groups, params, model_seed, monitor_s
                               max_iter, patience, verbose)
     probability = model.predict_proba(x_held)[:, 1]
     held_groups_rows, held_stages = np.asarray(groups[held_rows]), np.asarray(data.stage[held_rows])
-    report = _metric_rows(y_held, probability, held_groups_rows, held_stages, {
+    report = metric_rows_codes(y_held, probability, held_groups_rows, held_stages, {
         "n_iter": model.n_iter_, "partidas_modelo": len(model_groups),
         "partidas_vigilancia": len(monitor_groups), "partidas_evaluacion": len(held_groups),
     }, include_stages=include_stages)
@@ -474,7 +444,7 @@ def fit_b4_candidates_val(train_data, val_data, candidates, seed=2026,
                                                random_state=seed + number, categorical_features=None, **params)
         final.fit(x_train, y_train, sample_weight=_weights_for_codes(train_groups))
         probability = final.predict_proba(np.asarray(val_data.x))[:, 1]
-        rows = _metric_rows(np.asarray(val_data.y), probability, np.asarray(val_data.group),
+        rows = metric_rows_codes(np.asarray(val_data.y), probability, np.asarray(val_data.group),
                             np.asarray(val_data.stage), {"escenario": scenario, "modelo": "B4", **candidate,
                                                          "n_iter_vigilancia": n_iter,
                                                          "partidas_train": len(train_data.games),

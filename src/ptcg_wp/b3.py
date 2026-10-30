@@ -23,7 +23,7 @@ from ptcg_wp.checkpoints import (atomic_csv, atomic_joblib, atomic_json, backup_
                                  stable_digest)
 
 from ptcg_wp.b2_streaming import game_counts
-from ptcg_wp.evaluation import evaluate_stream
+from ptcg_wp.evaluation import evaluate_stream, metric_rows_codes
 
 
 MODELS = ("B3_arbol", "B3_bosque")
@@ -125,25 +125,8 @@ def _suggest_params(trial, model_name):
 
 
 def _global_metrics(y, probability, groups, common):
-    """Exact game-weighted global metrics without rereading train from Parquet."""
-    y = np.asarray(y, dtype=np.uint8)
-    probability = np.clip(np.asarray(probability, dtype=float), 1e-15, 1 - 1e-15)
-    groups = np.asarray(groups, dtype=np.int32)
-    weights = 1.0 / np.bincount(groups)[groups]
-    order = np.argsort(probability, kind="mergesort")
-    yy, pp, ww = y[order], probability[order], weights[order]
-    starts = np.flatnonzero(np.r_[True, pp[1:] != pp[:-1]])
-    positive = np.add.reduceat(ww * yy, starts)
-    negative = np.add.reduceat(ww * (1 - yy), starts)
-    positives, negatives = positive.sum(), negative.sum()
-    seen_negative = np.r_[0.0, np.cumsum(negative[:-1])]
-    favorable = np.sum(positive * (seen_negative + 0.5 * negative))
-    log_loss = -np.sum(ww * (yy * np.log(pp) + (1 - yy) * np.log1p(-pp))) / ww.sum()
-    brier = np.sum(ww * (yy - pp) ** 2) / ww.sum()
-    return {**common, "etapa": "global",
-            "auc": favorable / (positives * negatives) if positives and negatives else np.nan,
-            "log_loss": float(log_loss), "brier": float(brier),
-            "n_estados": len(yy), "n_partidas": len(np.unique(groups))}
+    """Metricas globales ponderadas por partida: la misma funcion comun que el resto."""
+    return metric_rows_codes(y, probability, groups, None, common, include_stages=False)[0]
 
 
 def _fold_checkpoint_path(output_path, scenario, model_name, metric, params):
