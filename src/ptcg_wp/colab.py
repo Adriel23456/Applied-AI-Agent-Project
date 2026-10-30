@@ -87,6 +87,11 @@ def setup_kaggle(prompt_on_invalid=True):
     interacción, ``prompt_on_invalid=False`` conserva el error original.
     Nunca imprime el secreto ni los valores ingresados.
     """
+    # Si este kernel ya tiene credenciales (celda ejecutada antes), no se vuelve a pedir nada
+    if os.environ.get("KAGGLE_API_TOKEN") or (os.environ.get("KAGGLE_USERNAME")
+                                              and os.environ.get("KAGGLE_KEY")):
+        print("Kaggle ya estaba configurado en este kernel")
+        return
     credential = read_secret("KAGGLE_API_TOKEN")
     try:
         _configure_kaggle(credential)
@@ -100,3 +105,28 @@ def setup_kaggle(prompt_on_invalid=True):
             _configure_kaggle(replacement)
         except TypeError as exc:
             raise TypeError("La credencial ingresada no tiene un formato válido para Kaggle.") from exc
+
+
+def recursos():
+    """Imprime y devuelve los nucleos de CPU y la RAM del servidor (total y disponible).
+    Sirve para confirmar que Colab entrego el tipo de servidor esperado (CPU + RAM alta:
+    8 nucleos y unos 51 GiB) antes de entrenar."""
+    nucleos = os.cpu_count()
+    try:
+        nucleos_usables = len(os.sched_getaffinity(0))
+    except AttributeError:
+        nucleos_usables = nucleos
+    memoria = {}
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as f:
+            for linea in f:
+                nombre, valor = linea.split(":", 1)
+                memoria[nombre] = int(valor.split()[0]) / 1024 ** 2  # kB -> GiB
+    except OSError:
+        pass
+    total, libre = memoria.get("MemTotal"), memoria.get("MemAvailable")
+    texto_ram = (f"RAM total {total:.1f} GiB | disponible {libre:.1f} GiB"
+                 if total is not None else "RAM: no disponible en este sistema")
+    print(f"Nucleos de CPU: {nucleos} (usables por este proceso: {nucleos_usables}) | {texto_ram}")
+    return {"nucleos": nucleos, "nucleos_usables": nucleos_usables,
+            "ram_total_gib": total, "ram_disponible_gib": libre}

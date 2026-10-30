@@ -68,23 +68,25 @@ Contexto obligatorio para trabajar: `docx/05AmbienteDeDesarrollo/DiccionarioDeDa
 
 ### `04MainAIModelTrainingAndDevelopment`
 
+La auditoría de cumplimiento de B0–B3 frente a la sección 10 y el estado de las etapas 04–06 está en `docx/03Evidence/29-10-26_AuditoriaBaselinesB0B3.md`. Cerrar B0–B3 no cierra la evaluación final en test ni los entregables del artículo.
+
 Cuadernos: `02_baselines_B0_B1`, `03_baseline_B2`, `04_baseline_B3` y `05_baseline_B4`. Cada uno presenta un baseline; B2 y B3 no relanzan búsquedas cerradas. B4 conserva las celdas de búsqueda y ajuste final, desactivadas por defecto, y presenta los resultados versionados del entrenamiento cerrado.
 Escalera definida en el artículo (Tabla "Escalera de modelos de referencia"). Cada peldaño responde
 una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado del arte en datos tabulares).
 
-- [ ] Registro de cada ejecución en `results/` (escenario, modelo, configuración, semilla, métricas, tiempo, commit)
-- [ ] Funciones de evaluación comunes: AUC, log loss y Brier, globales y por etapa, con el número de partidas de cada etapa
-- [x] B0 - probabilidad a priori (prevalencia de train). Piso de referencia; métricas globales y por etapa para A/B/C en `results/baseline0_1/`
-- [x] B1 - heurística fija de recursos adoptada para esta rama y transformada a probabilidad usando train. Resultados y parámetros en `results/baseline0_1/`; el ajuste original no registró convergencia. La decisión posterior queda documentada en `results/resumen_baselines/`.
-- [x] B2 - regresión logística regularizada (`C=0.1`), ajustada con el `train` de A/B/C y artefactos recuperados en `results/baseline2/evaluacion/`. Se conserva la limitación de convergencia tras 600 épocas.
-- [x] Demostración de fuga: B2 por fila contra partida en muestras de 200 juegos por escenario; resultados y solapamiento en `results/baseline2/demo_fuga/`. La división por fila compartió partidas en A/B/C; su AUC no fue mayor en B.
-- [x] B3 - una configuración común de bosque seleccionada por macro-AUC de `val` entre configuraciones idénticas; ajustes con todo el `train` de cada escenario, métricas separadas y artefactos recuperados en `results/baseline3/evaluacion/`. El modelo único para la aplicación se decidirá al integrar el sistema.
-- [x] B4 - modelo principal: `HistGradientBoostingClassifier` con búsqueda bayesiana de hiperparámetros (Optuna, TPE, 20 trials) y validación cruzada agrupada por `game_id` sobre las partidas train de A, B y C; parada temprana; reentrenado en cada escenario y medido en `val` (AUC A 0.835, B 0.786, C 0.836). Resultados y modelos en `results/baseline4/`
+- [x] Registro de corridas en `results/` (escenario, modelo, configuración, semilla, métricas, duración estimada y trazabilidad de commits). B0/B1 tiene registro de corrida; B2/B3 se reanudaron durante varios commits: duración calendario aproximada de 4 y 3 días, respectivamente, según recuerdo del equipo. No hubo un único commit de entrenamiento ni se conservó tiempo exacto de cómputo; el registro histórico distingue ambos datos.
+- [ ] Funciones de evaluación comunes: AUC, log loss y Brier, globales y por etapa, con el número de partidas de cada etapa. B0–B3 comparten `ptcg_wp.evaluation` con rutas equivalentes en memoria y por lotes; la integración de B4 queda pendiente.
+- [x] B0 - probabilidad a priori (prevalencia de train). Piso de referencia; métricas globales y por etapa para A/B/C en `results/b0_b1/`
+- [x] B1 - heurística fija de recursos adoptada para esta rama y transformada a probabilidad usando train. Resultados y parámetros en `results/b0_b1/`; el ajuste original no registró convergencia. La decisión posterior queda documentada en `results/resumen/`.
+- [x] B2 - regresión logística regularizada (`C=0.1`), ajustada con el `train` de A/B/C y artefactos recuperados en `results/b2/final/`. Se conserva la limitación de convergencia tras 600 épocas.
+- [x] Demostración de fuga: B2 por fila contra partida en muestras de 200 juegos por escenario; resultados y solapamiento en `results/b2/demo_fuga/`. La división por fila compartió partidas en A/B/C; su AUC no fue mayor en B.
+- [x] B3 - una configuración común de bosque seleccionada por macro-AUC de `val` entre configuraciones idénticas; ajustes con todo el `train` de cada escenario, métricas separadas y artefactos recuperados en `results/b3/final/`. El modelo único para la aplicación se decidirá al integrar el sistema.
+- [x] B4 - modelo principal: `HistGradientBoostingClassifier` con búsqueda bayesiana de hiperparámetros (Optuna, TPE, 20 trials) y validación cruzada agrupada por `game_id` sobre las partidas train de A, B y C; parada temprana; reentrenado en cada escenario y medido en `val` (AUC A 0.835, B 0.786, C 0.836). Resultados y modelos en `results/b4/`
 - [ ] Verificación de implementación: LightGBM con presupuesto de 20 trials y 3 pliegues, una configuración seleccionada en CV y comparación por escenario frente a B4. Regla fijada en `docx/03Evidence/28-10-26_ProtocoloLightGBM.md`; si no cumple el criterio completo, se mantiene B4. Código preparado; ejecución pendiente.
 - [ ] Ablaciones por familia de características (progreso, recursos y tablero, diferenciales) sobre B4
 - [ ] Prueba de H2: comparar B4 con las 62 características públicas del estado contra B4 restringido a `game_turn`, `first_player_is_me`, `own_active_card` y `opp_active_card`. Los IDs del Pokémon activo son una aproximación a la identidad del mazo, no el mazo completo. La variante de 64 características (estado completo más IDs) es una ablación distinta.
 - [ ] Evaluación de B0 a B4 en cada escenario (A, B y C), conservando sus particiones y reportando cada escenario por separado; cuando aplique, los hiperparámetros comunes no implican mezclar los datos de `train`.
-- [ ] Modelo final exportado, con una función que convierte una observación del juego en probabilidad (para la Etapa 3). Modelos de B4 ya versionados en `results/baseline4/final_4000/`; falta la función de observación a probabilidad
+- [ ] Modelo final exportado, con una función que convierte una observación del juego en probabilidad (para la Etapa 3). Modelos de B4 ya versionados en `results/b4/final/`; falta la función de observación a probabilidad
 
 ### `05FinalModelChecks`
 

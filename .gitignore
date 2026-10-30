@@ -219,5 +219,6 @@ __marimo__/
 
 secrets.txt
 data/
+*.joblib
 *.parquet
 *.pkl

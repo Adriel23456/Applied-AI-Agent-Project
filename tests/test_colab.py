@@ -10,6 +10,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from ptcg_wp import colab
 
 
+@pytest.fixture(autouse=True)
+def sin_credenciales_previas(monkeypatch):
+    """Cada prueba empieza sin credenciales de Kaggle en el entorno."""
+    for nombre in ("KAGGLE_API_TOKEN", "KAGGLE_USERNAME", "KAGGLE_KEY"):
+        monkeypatch.delenv(nombre, raising=False)
+
+
+def test_setup_kaggle_no_pide_nada_si_ya_esta_configurado(monkeypatch):
+    monkeypatch.setenv("KAGGLE_API_TOKEN", "ya-estaba")
+    monkeypatch.setattr(colab, "read_secret", lambda _name: pytest.fail("no debe leer secretos"))
+    colab.setup_kaggle()
+    assert colab.os.environ["KAGGLE_API_TOKEN"] == "ya-estaba"
+
+
+def test_recursos_reporta_nucleos(capsys):
+    info = colab.recursos()
+    assert info["nucleos"] >= 1 and "Nucleos de CPU" in capsys.readouterr().out
+
+
 def test_setup_kaggle_accepts_plain_api_token(monkeypatch):
     monkeypatch.setattr(colab, "read_secret", lambda _name: " token-value ")
     monkeypatch.delenv("KAGGLE_API_TOKEN", raising=False)
