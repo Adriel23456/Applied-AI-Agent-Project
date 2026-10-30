@@ -146,3 +146,11 @@ def test_rutas_no_validas():
     with pytest.raises(ValueError):
         store.nombre_kaggle("b4/a__b.csv")
     assert store.nombre_kaggle("b4/final/x.joblib") == "results__b4__final__x.joblib"
+
+def test_sin_indice_no_se_asume_vacio(entorno, monkeypatch):
+    tmp, datos = entorno
+    (tmp / "dataset").mkdir()  # dataset existe pero sin indice (version procesandose)
+    monkeypatch.setattr(store.time, "sleep", lambda s: None)
+    with pytest.raises(RuntimeError, match="no se pudo bajar"):
+        store.listo(["b2/uno.csv"], raiz=tmp / "r", dataset_id="u/d")
+    assert store.leer_indice("u/d", requerido=False) == {}

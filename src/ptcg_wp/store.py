@@ -30,6 +30,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -197,15 +198,36 @@ def _escribir_csv_indice(filas, path):
             w.writerow({c: filas[ruta].get(c, "") for c in CAMPOS})
 
 
-def leer_indice(dataset_id=None):
+def leer_indice(dataset_id=None, requerido=True, intentos=10, espera_s=60):
     """Indice del dataset: {ruta: fila}. Combina el de Kaggle con el ultimo publicado desde este
-    servidor (Kaggle tarda unos minutos en mostrar una version nueva)."""
+    servidor (Kaggle tarda unos minutos en mostrar una version nueva).
+
+    Si el indice no se puede bajar, NO se asume que el dataset esta vacio: justo despues de una
+    publicacion Kaggle responde "no encontrado" mientras procesa la version nueva, y asumir vacio
+    haria que una celda reentrene horas por nada. Se reintenta 'intentos' veces cada 'espera_s'
+    segundos y, si sigue sin aparecer, se lanza un error. requerido=False (solo publicar) acepta
+    un dataset sin indice, que es el caso de la primera subida de resultados.
+    """
     dataset_id = dataset_id or load_dataset_id()
-    with tempfile.TemporaryDirectory(prefix="kaggle-indice-", dir=TRABAJO_DIR) as tmp:
-        ok, texto = _bajar_archivo(dataset_id, INDICE, Path(tmp) / INDICE)
-        remoto = _leer_csv_indice(Path(tmp) / INDICE) if ok else {}
-    if not ok:
+    remoto, texto = None, ""
+    for intento in range(1, intentos + 1):
+        with tempfile.TemporaryDirectory(prefix="kaggle-indice-", dir=TRABAJO_DIR) as tmp:
+            ok, texto = _bajar_archivo(dataset_id, INDICE, Path(tmp) / INDICE)
+            if ok:
+                remoto = _leer_csv_indice(Path(tmp) / INDICE)
+        if remoto is not None or not requerido:
+            break
+        if intento < intentos:
+            print(f"{INDICE} todavia no responde (Kaggle puede estar procesando una version "
+                  f"nueva); reintento {intento}/{intentos - 1} en {espera_s} s")
+            time.sleep(espera_s)
+    if remoto is None:
+        if requerido:
+            raise RuntimeError(f"no se pudo bajar {INDICE} de {dataset_id} tras {intentos} intentos. "
+                               "Si alguien acaba de publicar, espera unos minutos y vuelve a ejecutar "
+                               f"la celda. Mensaje de kaggle:\n{texto.strip()}")
         print(f"aviso: {INDICE} no esta en Kaggle (dataset sin resultados publicados todavia)")
+        remoto = {}
     if INDICE_LOCAL.exists():
         local = _leer_csv_indice(INDICE_LOCAL)
         if local.get("__dataset__", {}).get("archivo_kaggle") == dataset_id:
@@ -275,7 +297,7 @@ def publicar(rutas, mensaje, raiz=None, actualizar_tablas=False,
     dataset_id = dataset_id or load_dataset_id()
     raiz, datos_dir = Path(raiz or RESULTADOS_DIR), Path(datos_dir or DATOS_DIR)
     existe = dataset_existe(dataset_id)
-    indice = leer_indice(dataset_id) if existe else {}
+    indice = leer_indice(dataset_id, requerido=False) if existe else {}
     fecha = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     commit = _commit()
     nuevo = {}
