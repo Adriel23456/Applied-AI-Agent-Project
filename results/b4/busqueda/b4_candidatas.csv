@@ -1,2 +1,0 @@
-seleccionada_por,trial,learning_rate,max_leaf_nodes,min_samples_leaf,l2_regularization,auc,log_loss,brier
-auc,20,0.06942837051487823,31,50,4.250289335685325,0.8377732812464652,0.4880241383739187,0.16318621906050276
