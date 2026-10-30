@@ -22,7 +22,8 @@ from ptcg_wp.checkpoints import (atomic_csv, atomic_joblib, atomic_json, backup_
                                  persistent_study, recover_interrupted_trials,
                                  stable_digest)
 
-from ptcg_wp.b2_streaming import evaluate_stream, game_counts
+from ptcg_wp.b2_streaming import game_counts
+from ptcg_wp.evaluation import evaluate_stream
 
 
 MODELS = ("B3_arbol", "B3_bosque")

@@ -20,7 +20,9 @@ de etapa ahora usa frecuencias de turnos, sin concatenar los turnos de train.
 1. Contar estados útiles por partida, incluyendo partidas que crucen lotes o
    archivos. Asignar los pliegues usando solamente partidas con estados útiles.
 2. Ajustar `StandardScaler.partial_fit` con las partidas de fit y pesos `1/n`.
-   Fijar el escalador antes de entrenar el clasificador.
+   Fijar el escalador antes de entrenar el clasificador. Al finalizar el ajuste,
+   se guardan el escalador y el clasificador en un `Pipeline` para predicción;
+   el `partial_fit` del escalador se ejecuta fuera de `Pipeline.fit` por lotes.
 3. Escribir lotes escalados en archivos temporales locales. Se reutilizan para
    todas las épocas y valores de C de ese pliegue; se eliminan al salir de él.
 4. Entrenar `SGDClassifier(loss="log_loss", penalty="l2")` con pasadas completas

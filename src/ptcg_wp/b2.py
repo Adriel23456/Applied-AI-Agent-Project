@@ -14,20 +14,18 @@ import numpy as np
 import pandas as pd
 from sklearn import __version__ as sklearn_version
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import brier_score_loss, log_loss, roc_auc_score
 from sklearn.model_selection import GroupKFold
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from ptcg_wp.baselines import weights_by_game
-from ptcg_wp.b2_streaming import (evaluate_stream, fit_incremental, game_counts,
-                                 prepare_training)
+from ptcg_wp.b2_streaming import fit_incremental, game_counts, prepare_training
+from ptcg_wp.evaluation import evaluate_stream, metric_rows as _metric_rows
 
 
 # Valores de regularización comparados por búsqueda; C pequeño penaliza más los coeficientes.
 C_VALUES = (1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1e3, 1e4)
-STAGES = ("inicio", "medio", "final")
 B2_CHECKPOINT_VERSION = 2
 
 
@@ -75,30 +73,6 @@ def _pipeline(c_value, max_iter):
             C=float(c_value), penalty="l2", solver="lbfgs", max_iter=max_iter
         )),
     ])
-
-
-def _metric_rows(y, probability, game_ids, stages, common):
-    """Calcula métricas globales y por etapa, dando igual peso a cada partida."""
-    groups = [("global", np.ones(len(y), dtype=bool))]
-    groups.extend((stage, stages == stage) for stage in STAGES)
-    rows = []
-    for stage_name, mask in groups:
-        if not mask.any():
-            continue
-        part_y = y[mask].astype(int, copy=False)
-        part_p = np.clip(probability[mask], 1e-15, 1 - 1e-15)
-        part_games = game_ids[mask]
-        weights = weights_by_game(part_games)
-        rows.append({
-            **common,
-            "etapa": stage_name,
-            "auc": roc_auc_score(part_y, part_p, sample_weight=weights),
-            "log_loss": log_loss(part_y, part_p, sample_weight=weights, labels=[0, 1]),
-            "brier": brier_score_loss(part_y, part_p, sample_weight=weights),
-            "n_estados": len(part_y),
-            "n_partidas": pd.Series(part_games).nunique(),
-        })
-    return rows
 
 
 def _training_games(stream, selected):
