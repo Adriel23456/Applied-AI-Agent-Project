@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import brier_score_loss, log_loss, roc_auc_score
 
-from ptcg_wp.baselines import weights_by_game
+from ptcg_wp.data import weights_by_game
 from ptcg_wp.b2_streaming import evaluate_stream
 
 

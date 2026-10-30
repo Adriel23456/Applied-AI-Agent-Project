@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from ptcg_wp.baselines import weights_by_game
+from ptcg_wp.data import weights_by_game
 from ptcg_wp.b2_streaming import fit_incremental, game_counts, prepare_training
 from ptcg_wp.evaluation import evaluate_stream, metric_rows as _metric_rows
 

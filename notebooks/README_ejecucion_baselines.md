@@ -33,10 +33,10 @@ minutos en mostrar la versión nueva a otros servidores.
 | `03_baseline_B2` | 1 → 3 → 5 → 7 | segundos | demo de fuga ~1 min por escenario; B2 final varias horas por escenario |
 | `04_baseline_B3` | 1 → 3 → 5 | segundos | bosque final por escenario |
 | `05_baseline_B4` | 1 → 3 → 5 | segundos | búsqueda ~2 h 20 min; final ~50 min por escenario (8 núcleos) |
-| `05_baseline_B4` (pendientes) | 7 → 8 (LightGBM), 10 (ablaciones), 14 (H2), 16 (resumen); 12 limpia solo H2 viejo y es segura de ejecutar siempre | segundos | horas |
+| `05_baseline_B4` (experimentos) | 7 → 8 (LightGBM), 10 (ablaciones), 12 (H2), 14 (resumen) | segundos | horas |
 
-En `05`, la celda 5 usa la finalista de la celda 3. LightGBM, ablaciones y H2 todavía no existen
-en Kaggle: al ejecutarlas entrenan y publican.
+En `05`, la celda 5 usa la finalista de la celda 3. LightGBM, ablaciones y H2 ya están en Kaggle:
+al ejecutarlas solo se bajan. Su código está en `src/ptcg_wp/experiments/`.
 
 ## Si algo falla
 
