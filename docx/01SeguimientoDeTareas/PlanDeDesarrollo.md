@@ -90,7 +90,7 @@ una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado
 
 ### `05FinalModelChecks`
 
-Cuaderno: `04_evaluacion_xai_calibracion`.
+Cuaderno: `06_evaluacion_final`.
 
 - [ ] Evaluación única sobre `test` en los escenarios A, B y C, reportados por separado
 - [ ] Métricas globales y por etapa, con intervalos de confianza por remuestreo de partidas
