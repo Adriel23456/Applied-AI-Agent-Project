@@ -3,4 +3,5 @@
 | Herramienta | Enlace |
 |---|---|
 | Google Colab | https://colab.research.google.com/ |
-| DataSet#1 | https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-06-18 |
+| DataSetEjemplo | https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-06-18 |
+| PTCG WP tablas procesadas | https://www.kaggle.com/datasets/adrielchavessalazar/ptcg-wp-tablas |

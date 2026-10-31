@@ -1,5 +1,6 @@
 """Utilidades para trabajar en Colab: lectura de secretos y configuracion de Kaggle."""
 
+import json
 import os
 from getpass import getpass
 
@@ -34,6 +35,98 @@ def read_secret(name, path=SECRETS_PATH):
     return getpass(f"{name}: ")
 
 
-def setup_kaggle():
-    """Deja el token de Kaggle en la variable de entorno que usa la herramienta kaggle."""
-    os.environ["KAGGLE_API_TOKEN"] = read_secret("KAGGLE_API_TOKEN")
+def _configure_kaggle(credential):
+    """Valida una credencial y configura el entorno sin imprimir su contenido."""
+    if isinstance(credential, str):
+        value = credential.strip()
+        if value.startswith("{"):
+            try:
+                credential = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise TypeError("El JSON de credenciales Kaggle no es válido.") from exc
+        else:
+            credential = value
+
+    if isinstance(credential, dict):
+        normalized = {str(key).lower(): value for key, value in credential.items()}
+        token = next((normalized[key] for key in
+                      ("kaggle_api_token", "api_token", "access_token", "token")
+                      if normalized.get(key)), None)
+        if isinstance(token, str) and token.strip():
+            os.environ.pop("KAGGLE_USERNAME", None)
+            os.environ.pop("KAGGLE_KEY", None)
+            os.environ["KAGGLE_API_TOKEN"] = token.strip()
+            return
+
+        username = normalized.get("username")
+        key = normalized.get("key")
+        if isinstance(username, str) and username.strip() and isinstance(key, str) and key.strip():
+            os.environ.pop("KAGGLE_API_TOKEN", None)
+            os.environ["KAGGLE_USERNAME"] = username.strip()
+            os.environ["KAGGLE_KEY"] = key.strip()
+            return
+
+        raise TypeError(
+            "El secreto KAGGLE_API_TOKEN es un objeto, pero no contiene un token "
+            "reconocible ni los campos legacy 'username' y 'key'."
+        )
+
+    if isinstance(credential, str) and credential:
+        os.environ.pop("KAGGLE_USERNAME", None)
+        os.environ.pop("KAGGLE_KEY", None)
+        os.environ["KAGGLE_API_TOKEN"] = credential
+        return
+
+    raise TypeError("KAGGLE_API_TOKEN debe ser un token de texto o credenciales Kaggle válidas.")
+
+
+def setup_kaggle(prompt_on_invalid=True):
+    """Configura Kaggle; si el secreto no es válido, ofrece entrada oculta una vez.
+
+    Acepta un token de texto o un JSON de credenciales legacy. Para uso sin
+    interacción, ``prompt_on_invalid=False`` conserva el error original.
+    Nunca imprime el secreto ni los valores ingresados.
+    """
+    # Si este kernel ya tiene credenciales (celda ejecutada antes), no se vuelve a pedir nada
+    if os.environ.get("KAGGLE_API_TOKEN") or (os.environ.get("KAGGLE_USERNAME")
+                                              and os.environ.get("KAGGLE_KEY")):
+        print("Kaggle ya estaba configurado en este kernel")
+        return
+    credential = read_secret("KAGGLE_API_TOKEN")
+    try:
+        _configure_kaggle(credential)
+    except TypeError:
+        if not prompt_on_invalid:
+            raise
+        print("El secreto KAGGLE_API_TOKEN de Colab no tiene un formato reconocido. "
+              "Ingresa un token Kaggle válido o el JSON legacy en el campo oculto.")
+        replacement = getpass("Token Kaggle o JSON legacy (entrada oculta): ")
+        try:
+            _configure_kaggle(replacement)
+        except TypeError as exc:
+            raise TypeError("La credencial ingresada no tiene un formato válido para Kaggle.") from exc
+
+
+def recursos():
+    """Imprime y devuelve los nucleos de CPU y la RAM del servidor (total y disponible).
+    Sirve para confirmar que Colab entrego el tipo de servidor esperado (CPU + RAM alta:
+    8 nucleos y unos 51 GiB) antes de entrenar."""
+    nucleos = os.cpu_count()
+    try:
+        nucleos_usables = len(os.sched_getaffinity(0))
+    except AttributeError:
+        nucleos_usables = nucleos
+    memoria = {}
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as f:
+            for linea in f:
+                nombre, valor = linea.split(":", 1)
+                memoria[nombre] = int(valor.split()[0]) / 1024 ** 2  # kB -> GiB
+    except OSError:
+        pass
+    total, libre = memoria.get("MemTotal"), memoria.get("MemAvailable")
+    texto_ram = (f"RAM total {total:.1f} GiB | disponible {libre:.1f} GiB"
+                 if total is not None else "RAM: no disponible en este sistema")
+    print(f"Nucleos de CPU: {nucleos} (usables por este proceso: {nucleos_usables}) | {texto_ram}")
+    return {"nucleos": nucleos, "nucleos_usables": nucleos_usables,
+            "ram_total_gib": total, "ram_disponible_gib": libre}
