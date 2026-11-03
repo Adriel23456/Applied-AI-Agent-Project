@@ -90,7 +90,9 @@ una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado
 
 ### `05FinalModelChecks`
 
-Cuaderno: `06_evaluacion_final`.
+Cuaderno: `06_evaluacion_final`. Protocolo: `docx/03Evidence/02-11-26_ProtocoloEvaluacionFinal.md`. Diagnóstico: `docx/03Evidence/02-11-26_DiagnosticoFinalModelChecks.md`.
+
+Estado al 2 de noviembre de 2026: las celdas y `src/ptcg_wp/evaluacion_final.py` están escritas y probadas con datos sintéticos, pero **el cuaderno no se ha ejecutado con los datos del proyecto**. Cada pendiente se marca al ejecutarlo, con su resultado y dónde quedó. Una sola persona lo ejecuta en Colab Pro.
 
 - [ ] Evaluación única sobre `test` en los escenarios A, B y C, reportados por separado
 - [ ] Métricas globales y por etapa, con intervalos de confianza por remuestreo de partidas

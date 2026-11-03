@@ -90,10 +90,13 @@ class B4Data:
         gc.collect()
 
 
-def materialize_split(stream, features, split_name, directory):
-    """Escribe un split completo una vez y devuelve índices compactos por partida."""
+def materialize_split(stream, features, split_name, directory, games=None):
+    """Escribe un split una vez y devuelve índices compactos por partida.
+
+    ``games`` limita el split a esas partidas completas (curvas de aprendizaje).
+    """
     directory = Path(directory)
-    counts = game_counts(stream, split_name)["global"]
+    counts = game_counts(stream, split_name, games)["global"]
     games = pd.Index(counts.index)
     n_rows = int(counts.sum())
     if not n_rows:
@@ -108,7 +111,7 @@ def materialize_split(stream, features, split_name, directory):
     stage = np.memmap(directory / f"{split_name}_stage.dat", mode="w+", dtype=np.int8, shape=n_rows)
     game_codes = pd.Series(np.arange(len(games), dtype=np.int32), index=games)
     offset = 0
-    for part in stream.iter_batches(split_name, columns=features):
+    for part in stream.iter_batches(split_name, games, columns=features):
         rows = len(part)
         values = part.loc[:, features].to_numpy(dtype=np.float32, copy=True)
         _check_features(values)
