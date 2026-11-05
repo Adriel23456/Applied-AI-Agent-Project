@@ -90,21 +90,20 @@ una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado
 
 ### `05FinalModelChecks`
 
-Cuaderno: `06_evaluacion_final`. Protocolo: `docx/03Evidence/02-11-26_ProtocoloEvaluacionFinal.md`. Diagnóstico: `docx/03Evidence/02-11-26_DiagnosticoFinalModelChecks.md`.
+Cuaderno: `06_evaluacion_final`. Protocolo: `docx/03Evidence/02-11-26_ProtocoloEvaluacionFinal.md`. Diagnóstico: `docx/03Evidence/02-11-26_DiagnosticoFinalModelChecks.md`. Resultados e interpretación: `docx/03Evidence/04-11-26_ResultadosEvaluacionFinal.md`.
 
-Estado al 2 de noviembre de 2026: las celdas y `src/ptcg_wp/evaluacion_final.py` están escritas y probadas con datos sintéticos, pero **el cuaderno no se ha ejecutado con los datos del proyecto**. Cada pendiente se marca al ejecutarlo, con su resultado y dónde quedó. Una sola persona lo ejecuta en Colab Pro.
+Ejecutado en Colab (CPU + RAM alta) el 2 y 3 de noviembre de 2026, con el protocolo congelado antes de abrir `test`. Antes de `test` pasaron las barreras del cuaderno: 109 pruebas, reproducción exacta de las métricas de `val` publicadas (log loss y Brier ≤ 4.4e-16, AUC ≤ 4.8e-7) y revisión de fuga aprobada. Los 51 archivos de resultados están en el dataset de Kaggle bajo `evaluacion_final/`, verificados con SHA-256. Intervalos: percentil 95 % con 1000 remuestreos de partidas, individuales por escenario.
 
-- [ ] Evaluación única sobre `test` en los escenarios A, B y C, reportados por separado
-- [ ] Métricas globales y por etapa, con intervalos de confianza por remuestreo de partidas
-- [ ] Comparación contra los tres puntos de referencia: B0 (trivial), B2 (razonable) y literatura (AUC 0.78-0.80)
-- [ ] Curvas de aprendizaje (25 %, 50 %, 75 % y 100 % de las partidas de train) y diagnóstico de sobreajuste
-- [ ] Análisis de errores: predicciones muy seguras y equivocadas, falsos positivos y negativos, por etapa
-- [ ] SHAP sobre el modelo final, con hallazgos accionables y revisión de fuga (ninguna variable inesperada debe dominar)
-- [ ] Calibración (módulo de grupo de 3): diagramas de fiabilidad y Brier antes y después; recalibración isotónica o de Platt ajustada solo con `calib`; en A y en B
-- [ ] Prueba de H3: en el escenario B, comparar cuánto se degradan la calibración (log loss, Brier) y el ordenamiento (AUC)
-- [ ] Veredicto sobre H1, H2 y H3
-- [ ] README de reproducción, cuaderno final con salidas y declaración de uso de IA
-- [ ] Entrega en TecDigital
+- [x] Evaluación única sobre `test` en los escenarios A, B y C, reportados por separado. AUC de B4: A 0.833 [0.827, 0.838], B 0.789 [0.784, 0.795], C 0.787 [0.782, 0.793]; log loss 0.494, 0.551 y 0.550; Brier 0.166, 0.188 y 0.188. En C el AUC baja de 0.836 en `val` a 0.787 en `test`, como se esperaba: `val` de C son arquetipos conocidos y `test` son arquetipos reservados. Resultados en `evaluacion_final/test/`.
+- [x] Métricas globales y por etapa, con intervalos de confianza por remuestreo de partidas. AUC de B4 inicio / medio / final: A 0.684 / 0.828 / 0.937, B 0.630 / 0.774 / 0.915, C 0.623 / 0.787 / 0.919. Archivos `evaluacion_final/test/metricas_X.csv`.
+- [x] Comparación contra los tres puntos de referencia: B0 (trivial), B2 (razonable) y literatura (AUC 0.78-0.80). La escalera B0 < B1 < B2 < B3 < B4 se mantiene en `test` en los tres escenarios y todas las diferencias de B4 frente a B0–B3 tienen intervalos que excluyen 0 (frente a B2: +0.071, +0.043 y +0.036 de AUC). Se cumple el criterio del artículo (III-D): el límite inferior de B4 supera al superior de B1 en A, B y C. Literatura, solo como orden de magnitud: la etapa final de A llega a 0.937 [0.932, 0.941] y la banda 0.78 se alcanza desde el turno 7. Archivos `comparaciones_X.csv` y `referencias.json`.
+- [x] Curvas de aprendizaje (25 %, 50 %, 75 % y 100 % de las partidas de train) y diagnóstico de sobreajuste. El último 25 % suma ≤ 0.004 de AUC en `val`; la brecha `train − val` es estable (≈ 0.034 en A y C; ≈ 0.09 en B, por el cambio temporal): no hay sobreajuste creciente y más partidas aportarían poco. El 100 % reproduce el AUC de `val` de B4. Archivos en `evaluacion_final/curvas/`.
+- [x] Análisis de errores: predicciones muy seguras y equivocadas, falsos positivos y negativos, por etapa. Al inicio hay más falsos positivos (0.22–0.25) que negativos (0.15–0.17): el modelo sobreestima la victoria temprano. Las predicciones muy seguras y equivocadas son menos del 1 % de los estados y más frecuentes fuera de la población (B y C); la precisión de las predicciones seguras sube de 0.80–0.90 en inicio a 0.96–0.98 en final. Archivos en `evaluacion_final/errores/`.
+- [x] SHAP sobre el modelo final, con hallazgos accionables y revisión de fuga (ninguna variable inesperada debe dominar). Revisión de fuga aprobada antes de abrir `test`: ninguna columna prohibida, la característica principal concentra 0.113 y la mejor característica sola llega a AUC 0.690. Por familia: recursos y tablero 72.8 %, diferenciales 20.9 %, progreso 6.3 %; dominan la diferencia de premios, los descartes y el mazo. Hallazgos accionables en la sección 6 del documento de resultados. Archivos en `evaluacion_final/shap/`.
+- [x] Calibración (módulo de grupo de 3): diagramas de fiabilidad y Brier antes y después; recalibración isotónica o de Platt ajustada solo con `calib`; en A y en B. B4 ya está calibrado en A (ECE 0.002) y no se corrige. En B, B4 es sobreconfiado (ECE 0.037) y la isotónica ajustada en `calib` lo baja a 0.018 en `test` (log loss 0.551 → 0.547). Recalibrar B3 en B empeoró `test`: una corrección ajustada el 11 de julio no se transfirió a los días 15 y 22. El modelo final para la Etapa 3 queda sin calibrador. Archivos en `evaluacion_final/calibracion/`.
+- [x] Prueba de H3: en el escenario B, comparar cuánto se degradan la calibración (log loss, Brier) y el ordenamiento (AUC). Diseño emparejado sobre las 1 405 partidas que son `test` en A y en B, con la descomposición calibración/discriminación del protocolo. La calibración se degrada (ΔMCB del log loss 0.008), pero el ordenamiento se degrada entre 3.5 y 4.9 veces más (ΔDSC 0.030); el contraste queda bajo 0 en log loss y en Brier. La comparación ingenua de caídas relativas (23 % contra 9 %) habría dicho lo contrario por un efecto de escala. Archivos en `evaluacion_final/hipotesis/`.
+- [x] Veredicto sobre H1, H2 y H3. **H1 sostenida** en A, B y C: el AUC en inicio supera claramente 0.5 y, en la cohorte de partidas que llegan a las tres etapas, sube unos 0.32 hasta final. **H2 no sostenida en general:** refutada en A, donde en inicio B4 (0.684) y el modelo de solo turno e identidad de los activos (0.682) no se distinguen, y sostenida en B (+0.041) y C (+0.088); el estado completo aporta cuando cambia la población. **H3 refutada:** bajo cambio temporal el ordenamiento se degrada más que la calibración. Archivo `evaluacion_final/veredicto.json`.
+- [x] README de reproducción, cuaderno final con salidas y declaración de uso de IA. Sección de reproducción en `README.md`, `notebooks/06_evaluacion_final.ipynb` con salidas e interpretación, y `docx/03Evidence/01UsoDeIA/Etapa2UsoDeIA.md` completa.
 
 ### `06PendientesDelArticulo`
 
@@ -112,6 +111,7 @@ Las instrucciones exigen que al cerrar la Etapa 2 el artículo tenga escritas la
 
 - [ ] Escribir la sección de metodología definitiva con lo implementado (datos, extractor, particiones, protocolo)
 - [ ] Escribir la sección de experimentos y resultados con las salidas de `05FinalModelChecks`
+- [ ] Declarar en el artículo las desviaciones del protocolo de evaluación: una sola semilla (IV-F); sin coeficientes de B2 ni importancia por permutación agrupada (IV-E); variante de 64 características no ejecutada (IV-D1); escenario C por arquetipos y no por mazos
 - [ ] Actualizar la tabla del corpus: 55 196 partidas y 7 540 389 estados (no 52 085 y 7 038 378)
 - [ ] Premios restantes: se cuentan por el largo de la lista, no "contando las ranuras no vacías" (todas son nulas)
 - [ ] Número de turno: el diccionario lo pone a la vez en "Progreso" y en "Agrupación"; queda como característica (`game_turn`) y como meta (`turn`)
@@ -124,6 +124,7 @@ Las instrucciones exigen que al cerrar la Etapa 2 el artículo tenga escritas la
 - [ ] Poner la URL real del dataset en `ptcg_dataset_2026`
 - [ ] Revisar las entradas del Eje C marcadas como VERIFICAR
 - [ ] Corregir erratas menores de la Introducción
+- [ ] Entrega en TecDigital
 
 ---
 
