@@ -97,20 +97,30 @@ def _commit():
         return "desconocido"
 
 
+# Lineas de la salida de kaggle que solo nombran archivos (subidas, descargas y barras de
+# progreso). Se quitan antes de buscar errores: un archivo puede llamarse "errores_A.csv".
+_LINEAS_DE_ARCHIVO = re.compile(
+    r"^.*(Starting upload for file|Upload successful|Downloading |Skipping ).*$|^.*\d+%\|.*$",
+    re.MULTILINE)
+_ERROR = re.compile(r"(?i)\berror\b|\bnot found\b|\bforbidden\b|\bunauthorized\b")
+
+
+def _salida_con_error(texto):
+    """True si el mensaje de kaggle reporta un error (sin contar los nombres de archivo)."""
+    return bool(_ERROR.search(_LINEAS_DE_ARCHIVO.sub("", texto)))
+
+
 def _kaggle(args):
     """Ejecuta la herramienta kaggle. Devuelve (ok, texto). ok exige codigo 0 y ningun error
     en el texto, porque kaggle a veces falla devolviendo 0."""
     res = subprocess.run(["kaggle", *args], capture_output=True, text=True)
     texto = (res.stdout or "") + (res.stderr or "")
-    bajo = texto.lower()
-    malo = res.returncode != 0 or any(p in bajo for p in ("error", "not found", "forbidden",
-                                                            "unauthorized"))
-    return not malo, texto
+    return res.returncode == 0 and not _salida_con_error(texto), texto
 
 
 def _error_de_acceso(texto):
     """401 o 403: el problema es el token o el permiso, no que falte un archivo."""
-    if not re.search(r"(?i)error|forbidden|unauthorized", texto):
+    if not _salida_con_error(texto):
         return None
     if re.search(r"\b401\b", texto):
         return "401: el token de Kaggle es incorrecto (vuelve a ejecutar la celda de preparacion)"

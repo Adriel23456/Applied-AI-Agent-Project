@@ -47,6 +47,9 @@ FAKE = textwrap.dedent('''\
         for p in src.iterdir():
             if p.name != "dataset-metadata.json":
                 shutil.copy(p, ds / p.name)
+                # Como el CLI real: una linea por archivo con su nombre
+                print("Starting upload for file", p.name)
+                print("Upload successful:", p.name, "(1KB)")
         print("Dataset version is being created"); sys.exit(0)
     print("error: comando desconocido", a); sys.exit(2)
 ''').replace("PYTHON", sys.executable)
@@ -182,3 +185,22 @@ def test_indice_local_viejo_no_tapa_publicacion_nueva_de_otro(entorno):
     store.publicar(["b3/dos.csv"], "b", raiz=tmp / "b", datos_dir=datos, dataset_id="u/d")
     store.INDICE_LOCAL.write_text(viejo)  # este servidor solo conoce su publicacion anterior
     assert "b3/dos.csv" in store.leer_indice("u/d")
+
+def test_nombres_de_archivo_con_error_no_son_un_error(entorno):
+    tmp, datos = entorno
+    _resultados(tmp / "a", {"evaluacion_final/errores/errores_A.csv": "x"})
+    store.publicar(["evaluacion_final/errores/errores_A.csv"], "errores", raiz=tmp / "a",
+                   datos_dir=datos, dataset_id="u/d")
+    assert (tmp / "dataset" / "results__evaluacion_final__errores__errores_A.csv").exists()
+
+
+@pytest.mark.parametrize(("texto", "malo"), [
+    ("Starting upload for file results__errores__errores_A.csv\nUpload successful: results__errores__errores_A.csv (1KB)\n"
+     "Dataset version is being created. Please check progress at https://www.kaggle.com/x", False),
+    ("Downloading results__errores__perfil_B.csv to /content/x\n100%|##| 1.2k/1.2k", False),
+    ("404 Client Error: Not Found for url: https://www.kaggle.com/api/v1/x", True),
+    ("Error: dataset version could not be created", True),
+    ("403 Client Error: Forbidden", True),
+])
+def test_deteccion_de_errores_de_kaggle(texto, malo):
+    assert store._salida_con_error(texto) is malo

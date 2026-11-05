@@ -313,7 +313,7 @@ Sí, y sobran para lo que pide la etapa.
 
 ## 10. Contrato para modelar (obligatorio en los cuadernos 02 en adelante)
 
-1. **Cargar con `load_scenario` o con `ScenarioStream` para `train` y `val`**, aplicando el mismo filtro `usable`, las particiones por `game_id` y cortes de etapa calculados solo con `train`. `ScenarioStream` permite trabajar por lotes cuando no cabe el corpus completo en RAM; su equivalencia se comprueba sobre un corpus sintético en `tests/test_b2_streaming.py`. El iterador diario de B0/B1 requiere además que cada partida pertenezca a un solo archivo diario, condición auditada para el corpus original. Para `calib` y `test` no se usa el flujo de desarrollo `ScenarioStream`.
+1. **Cargar con `load_scenario` o con `ScenarioStream` para `train` y `val`**, aplicando el mismo filtro `usable`, las particiones por `game_id` y cortes de etapa calculados solo con `train`. `ScenarioStream` permite trabajar por lotes cuando no cabe el corpus completo en RAM; su equivalencia se comprueba sobre un corpus sintético en `tests/test_b2_streaming.py`. El iterador diario de B0/B1 requiere además que cada partida pertenezca a un solo archivo diario, condición auditada para el corpus original. `calib` y `test` quedan cerrados en `ScenarioStream` salvo con `evaluacion_final=True`, opción que solo usa `notebooks/06_evaluacion_final.ipynb` mediante `ptcg_wp.evaluacion_final.cargar_particion`, bajo el protocolo de `docx/03Evidence/02-11-26_ProtocoloEvaluacionFinal.md`.
 
    Ejemplo con `load_scenario`:
 
@@ -381,7 +381,7 @@ Después, en el mismo servidor, se abre el cuaderno de trabajo (`01_exploracion`
 | `03_baseline_B2` | Resultados B2 y demostración de fuga ya registrada |
 | `04_baseline_B3` | Resultados y configuración seleccionada de B3 |
 | `05_baseline_B4` | Resultados versionados de B4; no relanza el entrenamiento cerrado |
-| `04_evaluacion_xai_calibracion` | Prueba final, SHAP, curvas, errores y calibración |
+| `06_evaluacion_final` | Verificación en `val`, SHAP, calibración, curvas, `test`, hipótesis y errores |
 
 ---
 

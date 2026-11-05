@@ -35,6 +35,7 @@ minutos en mostrar la versión nueva a otros servidores.
 | `05_baseline_B4` | 1 → 3 → 5 | segundos | búsqueda ~2 h 20 min; final ~50 min por escenario (8 núcleos) |
 | `05_baseline_B4` (experimentos) | 7 → 8 (LightGBM), 10 (ablaciones), 12 (H2), 14 (resumen) | segundos | horas |
 | `05_baseline_B4` (modelo final) | 16 (exportar `modelo_final/`) → 17 (verificar con `val` de A) | segundos | 16: segundos (no reentrena); 17: ~1 min |
+| `06_evaluacion_final` | todas, de arriba abajo | segundos | ~5–7 h, casi todo curvas de aprendizaje (~75 min por escenario) y publicaciones en Kaggle |
 
 En `05`, la celda 5 usa la finalista de la celda 3. LightGBM, ablaciones y H2 ya están en Kaggle:
 al ejecutarlas solo se bajan. Su código está en `src/ptcg_wp/experiments/`.
@@ -49,5 +50,9 @@ al ejecutarlas solo se bajan. Su código está en `src/ptcg_wp/experiments/`.
   celda los publica sin reentrenar (detecta que ya están completos en el servidor).
 - **"el índice dice que X existe, pero no se pudo bajar":** la versión es muy reciente; espera unos
   minutos y vuelve a ejecutar.
+
+## Cuaderno 06: una sola persona lo ejecuta
+
+`06_evaluacion_final` abre `test`, que se usa una sola vez. Antes de ejecutarlo: el commit del protocolo debe estar en GitHub, el servidor no debe tener cambios locales y nadie más debe estar publicando en Kaggle. La celda de `test` se niega a correr si la revisión de fuga no aprobó o si falta la calibración o las curvas. Si una sesión se corta, vuelve a ejecutar desde arriba: lo publicado se baja y no se recalcula.
 
 El [cuaderno original exacto de B4](../docx/03Evidence/05_entrenamiento_B4_independiente_original.ipynb) está preservado como evidencia.

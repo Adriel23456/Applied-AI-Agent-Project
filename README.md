@@ -93,9 +93,29 @@ latexmk -pdf BitacoraDeTrabajo.tex
 
 ## Reproducción de los experimentos
 
-> En desarrollo durante la Etapa 2.
+Todo se ejecuta en celdas de cuadernos, en un servidor de Google Colab con CPU y RAM alta (8 núcleos y unos 51 GiB, disponible con Colab Pro). Los cuadernos están hechos para Linux y `/content`: no corren en Windows sin adaptarlos.
 
-[POR COMPLETAR: preparación del entorno en Colab, instalación de dependencias, credencial de Kaggle, descarga del conjunto de datos, construcción de la tabla y la orden exacta que reproduce cada cifra reportada.]
+**1. Acceso.** Crea un token en kaggle.com → Settings → API. Los datos y resultados están en el dataset privado `adrielchavessalazar/ptcg-wp-tablas`: pide acceso a Adriel. Sin ese acceso, reconstruye las tablas con `notebooks/00_arranque.ipynb` desde el corpus público del PTCG AI Battle Challenge (lista de días en `configs/dias.yaml`) y publícalas en un dataset propio indicado en `configs/datos.yaml`.
+
+**2. Entorno.** Abre el cuaderno en Colab o en VS Code con la extensión de Colab, y elige *CPU* y *High-RAM*. La primera celda de cada cuaderno clona el repo, instala `requirements.txt` (scikit-learn fijado en 1.7.2), pide el token sin mostrarlo y baja lo necesario. Si avisa que la versión de scikit-learn no coincide, reinicia el runtime y vuelve a ejecutarla.
+
+**3. Ejecución.** Cada cuaderno se ejecuta de arriba abajo. Cada celda que calcula algo revisa primero Kaggle: si sus archivos existen los baja, verificados con SHA-256, y no recalcula; si faltan, calcula y publica.
+
+| Cuaderno | Reproduce | Tiempo si falta todo |
+|---|---|---|
+| `00_arranque` | Tablas y particiones | horas |
+| `01_exploracion` | Auditoría de la tabla, etapas y cobertura | minutos |
+| `02_baselines_B0_B1` | B0 y B1 | ~2 min |
+| `03_baseline_B2` | B2 y demostración de fuga | horas |
+| `04_baseline_B3` | B3 | horas |
+| `05_baseline_B4` | B4, LightGBM, ablaciones, H2 y modelo final | horas |
+| `06_evaluacion_final` | Verificación, SHAP, calibración, curvas, `test`, H1 a H3 y errores | ~5–7 h |
+
+El cuaderno 06 sigue las reglas de `docx/03Evidence/02-11-26_ProtocoloEvaluacionFinal.md`. Sus cifras quedan bajo `evaluacion_final/` en el dataset de Kaggle; `veredicto.json` resume las hipótesis. El detalle de cada cuaderno está en `notebooks/README_ejecucion_baselines.md`.
+
+**4. Pruebas.** `python -m pytest -q tests` comprueba los invariantes de fuga y la evaluación con datos sintéticos. Corre en la segunda celda del cuaderno 06. En Windows pueden fallar pruebas por bloqueo de archivos; la referencia es Linux.
+
+Para que un resultado publicado no se recalcule, las semillas (`SEED = 2026`) y las configuraciones están versionadas, y el índice del dataset registra el SHA-256 y el commit de cada archivo.
 
 **Contrato de reproducibilidad.** Todo resultado reportado debe poder reproducirlo un tercero siguiendo solo esta sección, sin contactar al equipo. Las semillas están fijadas y versionadas. Las configuraciones se guardan en archivos, no se pasan como argumentos sueltos. Los datos crudos, las tablas intermedias y las credenciales nunca se versionan; solo las instrucciones para obtenerlos.
 

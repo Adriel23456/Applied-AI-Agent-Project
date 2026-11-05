@@ -68,6 +68,9 @@ class ScenarioStream:
     scenario: str
     columns: tuple[str, ...]
     batch_size: int = 32768
+    # calib y test quedan cerrados salvo en la evaluacion final (cuaderno 06), que lo pide
+    # de forma explicita. Asi ningun flujo de desarrollo puede leerlos por accidente.
+    evaluacion_final: bool = False
 
     def __post_init__(self):
         self.data_dir = Path(self.data_dir)
@@ -129,7 +132,8 @@ class ScenarioStream:
         Los pesos deben usar conteos de la partición completa, nunca del lote.
         B0/B1 conservan su iterador diario por compatibilidad.
         """
-        if split_name not in ("train", "val"):
+        permitidas = ("train", "val", "calib", "test") if self.evaluacion_final else ("train", "val")
+        if split_name not in permitidas:
             raise ValueError("este flujo de desarrollo solo admite train y val")
         cols = list(dict.fromkeys((*self._columns, *REQUIRED_COLUMNS))) if columns is None else list(
             dict.fromkeys((*columns, *REQUIRED_COLUMNS))
