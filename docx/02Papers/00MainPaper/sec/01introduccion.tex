@@ -38,9 +38,11 @@ Cuatro elementos bastan para situar el problema que este trabajo aborda.
 
 La Figura~\ref{fig:estado} representa esa asimetría entre lo visible y lo
 oculto, junto con la relación entre los estados sucesivos de una partida y
-su desenlace único. Y la Figura~\ref{fig:gameplay}  muestra un screanshot del juego
-para móvil: Pokémon TCG Pocket, un juego que busca traer la experiencia de jugar
-en un tablero de la vida real con las cartas de Pokémon.
+su desenlace único. La Figura~\ref{fig:gameplay} muestra, a modo de
+ilustración, una partida de Pokémon TCG Pocket, la versión del juego para
+móviles. Sus reglas son simplificadas, con tres puntos para vencer y una banca
+de tres Pok\'emon; el corpus de este trabajo sigue las reglas estándar
+descritas arriba.
 
 \begin{figure}[!t]
 \centering
@@ -94,8 +96,9 @@ observables.}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.3\textwidth]{img//PokemonTCG_PocketBattle.png}
-    \caption{Gameplay de Pokémon TCG Pocket \cite{SweetGameBuddy2025}}
+    \includegraphics[width=0.3\textwidth]{img/PokemonTCG_PocketBattle.png}
+    \caption{Partida de Pokémon TCG Pocket, con reglas simplificadas respecto
+del juego estándar \cite{SweetGameBuddy2025}.}
     \label{fig:gameplay}
 \end{figure}
 
@@ -238,8 +241,9 @@ partidas nuevas; si su capacidad predictiva no mejorara al avanzar la
 partida; o si esa capacidad se redujera al nivel del azar bajo cualquiera de
 los dos escenarios de generalización.
 
-Puede además responderse: el corpus está disponible y
-auditado, y definir el protocolo no requiere entrenar ningún modelo.
+Puede además responderse: el corpus está disponible y auditado, y su
+tamaño permite entrenar y evaluar modelos clásicos con recursos de cómputo
+modestos.
 
 \subsection{Hipótesis de trabajo}
 \label{subsec:hipotesis}
@@ -305,8 +309,8 @@ interpretable la respuesta.
         la partida, acompañando cada medición del número de partidas que la
         sustenta.
   \item \textbf{Evaluar la generalización estructural.} Medir el desempeño
-        sobre partidas no vistas y, de forma separada, sobre mazos completos
-        reservados para la evaluación.
+        sobre partidas no vistas y, de forma separada, sobre arquetipos de
+        mazo reservados para la evaluación.
   \item \textbf{Evaluar la estabilidad temporal.} Medir el desempeño cuando
         el entrenamiento procede de periodos anteriores al de la prueba, y
         contrastar si la calidad probabilística se degrada antes que la
@@ -324,7 +328,7 @@ interpretable la respuesta.
         información.
 \end{enumerate}
 
-Los objetivos se descompone en tres dimensiones:
+Los objetivos se descomponen en tres dimensiones:
 
 \begin{enumerate}
   \item \textbf{Evolución.} Cómo cambia la calidad de la estimación conforme
@@ -380,4 +384,7 @@ su comparabilidad. La Sección~\ref{sec:metodologia} presenta la
 formalización, el protocolo experimental y el plan de modelos de referencia.
 La Sección~\ref{sec:analisistecnico} desarrolla el análisis técnico del
 \textit{track}, con énfasis en la prevención de fuga de información. La
-Sección~\ref{sec:etica} documenta las consideraciones éticas preliminares.
+Sección~\ref{sec:resultados} reporta los experimentos y sus resultados, y la
+Sección~\ref{sec:discusion} los discute junto con los hallazgos de
+explicabilidad. La Sección~\ref{sec:etica} documenta las consideraciones
+éticas, y la Sección~\ref{sec:conclusiones} cierra con las conclusiones.

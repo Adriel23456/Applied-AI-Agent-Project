@@ -5,13 +5,15 @@
 % protocolo experimental con particiones, validación y métricas
 % justificadas, plan de baselines, y riesgos con mitigación.
 % ============================================================
-\section{Metodología Propuesta}
+\section{Metodología}
 \label{sec:metodologia}
 
-Esta sección describe lo que se propone hacer. Ninguna cifra de desempeño
-aparece aquí: no se ha entrenado ningún modelo, y las únicas magnitudes
-medidas que se citan son propiedades del corpus, establecidas por la
-auditoría que documenta la Sección~\ref{sec:analisistecnico}.
+Esta sección describe el diseño experimental, fijado antes de entrenar
+cualquier modelo. Las magnitudes que se citan aquí son propiedades del
+corpus, establecidas en la Sección~\ref{sec:analisistecnico}; las cifras de
+desempeño se reportan en la Sección~\ref{sec:resultados}, y las desviaciones
+respecto de este diseño se declaran en la
+Sección~\ref{subsec:desviaciones}.
 
 \subsection{Formalización del problema}
 \label{subsec:formalizacion}
@@ -27,8 +29,11 @@ donde $x_i \in \mathcal{X} \subseteq \mathbb{R}^p$ es el vector de
 características construido con la información disponible para ese jugador en
 ese instante, $y_i \in \{0,1\}$ indica si venció, $g_i$ identifica la partida
 de la que procede la observación, $\tau_i$ es el número de turno y $d_i$ la
-fecha. Los tres últimos se conservan para agrupar, estratificar y reportar,
-pero nunca forman parte de $x_i$.
+fecha. Los tres últimos se conservan para agrupar, estratificar y reportar.
+La partida y la fecha nunca forman parte de $x_i$; el número de turno, en
+cambio, es información pública y entra también en $x_i$ como característica
+de progreso, mientras que $\tau_i$ se conserva aparte para asignar la etapa
+de la partida.
 
 La tarea es aprender una función $f : \mathcal{X} \rightarrow [0,1]$ tal que
 \begin{equation}
@@ -152,11 +157,18 @@ Dos grupos se excluyen, con la regla declarada antes de examinar los datos
 de prueba.
 
 Los empates se excluyen del objetivo binario; su volumen es demasiado
-reducido para sostener una tercera clase. Las partidas terminadas de forma
-anómala, por agotamiento de tiempo, error o estado inválido, tienen
-ganador identificable, pero su final no procede de la dinámica del juego, de
-modo que se apartan del entrenamiento principal y se reservan para un
-análisis de sensibilidad.
+reducido para sostener una tercera clase: 119 partidas, el 0.22\,\% del
+corpus. Las partidas terminadas de forma anómala, por agotamiento de tiempo,
+error o estado inválido, tienen ganador identificable, pero su final no
+procede de la dinámica del juego, de modo que se apartan del entrenamiento
+principal; en el corpus final no se encontró ninguna.
+
+Dentro de cada partida se excluyen además dos tipos de estado. Los de
+preparación, anteriores al reparto de los premios, no describen todavía una
+posición de juego. Los ya resueltos, en que el tablero muestra a un jugador
+sin premios por tomar o sin Pok\'emon en juego, tienen desenlace conocido y
+suman el 0.2\,\% de los estados. Casi ninguna partida termina por premios: en
+la muestra inspeccionada, una de cada 300.
 
 \subsection{Tubería propuesta}
 \label{subsec:pipeline}
@@ -355,15 +367,16 @@ agrupaciones que no vienen dadas \cite{figueiredo_leakage_2024}.
 
 \subsubsection{Cobertura de cartas en el conjunto de entrenamiento}
 
-Las tres particiones anteriores separan partidas, y el escenario C separa
-además mazos. Ninguna de las dos separaciones debe producir cartas ausentes
-del entrenamiento, y esa condición se declara aquí de forma explícita.
+Las particiones separan partidas, y el escenario C separa además arquetipos
+de mazo. Ninguna de las dos separaciones debe producir cartas ausentes del
+entrenamiento, y esa condición se declara aquí de forma explícita.
 
 \begin{quote}
-Toda carta presente en el corpus debe aparecer al menos una vez en el
-conjunto de entrenamiento. Los conjuntos de validación, calibración y prueba
-pueden contener partidas y mazos no vistos, pero sus cartas deben haber
-aparecido previamente en entrenamiento.
+Toda carta que aparezca como Pok\'emon activo en el corpus debe aparecer al
+menos una vez en el conjunto de entrenamiento de los escenarios A y C. Los
+conjuntos de validación, calibración y prueba pueden contener partidas y
+mazos no vistos, pero sus cartas deben haber aparecido previamente en
+entrenamiento.
 \end{quote}
 
 La razón es que evaluar sobre mazos no vistos y evaluar sobre cartas no
@@ -382,14 +395,24 @@ y antes de entrenar, y consta de tres pasos verificables:
   \item Construir el inventario de identificadores de carta presentes en el
         corpus completo, y el inventario correspondiente al conjunto de
         entrenamiento resultante de la partición.
-  \item Calcular la diferencia entre ambos. Si no es vacía, la partición se
-        rechaza y se regenera con una semilla distinta, o se reasigna al
+  \item Calcular la diferencia entre ambos. Si no es vacía, se reasigna al
         entrenamiento la partida de menor duración que contenga cada carta
         faltante.
   \item Registrar el inventario final, el número de cartas que aparecen una
         sola vez y cualquier carta excluida por filtros previos, de modo que
         el reporte declare la cobertura efectiva y no la supuesta.
 \end{enumerate}
+
+En el corpus final, 362 cartas distintas aparecen como Pok\'emon activo. En
+A, mover 20 partidas cortas al entrenamiento deja la cobertura completa. En
+C se mueven 18 partidas no reservadas, y 11 cartas existen solo en mazos
+reservados; afectan al 0.061\,\% de las filas de prueba. En B la regla no se
+aplica, porque mover al entrenamiento partidas de días posteriores sería
+fuga temporal: 157 cartas aparecen solo después de los días de
+entrenamiento y afectan entre el 0.86\,\% y el 1.20\,\% de las filas de
+validación, calibración y prueba, como parte del cambio que ese escenario
+mide. Dado que el modelo principal no emplea identificadores de carta, la
+cobertura solo condiciona la comparación restringida de H2.
 
 La evaluación sobre cartas no vistas, si llega a realizarse, se declara como
 experimento independiente y con su propia partición, separado del protocolo
@@ -424,18 +447,20 @@ A & Partidas disjuntas, asignación aleatoria &
 ¿Generaliza a partidas que no vio?\\
 B & Partidas disjuntas, corte cronológico &
 ¿Se mantiene el desempeño sobre periodos posteriores?\\
-C & Partidas disjuntas, mazos disjuntos &
+C & Partidas disjuntas, arquetipos de mazo disjuntos &
 ¿Aprendió a leer el estado o memorizó qué mazos vencen?\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\noindent\textbf{Escenario B.} La partición cronológica asigna los días más
-tempranos de la muestra al entrenamiento, los intermedios a validación y
-calibración, y los más tardíos a prueba. El primer día se mantiene fuera por
-corresponder a un arranque parcial de la competencia, y un día de
-concentración anómala de mazos y agentes se reserva y se decide tras el
-análisis exploratorio.
+\noindent\textbf{Escenario B.} La partición cronológica asigna días
+completos: del 18 al 25 de junio al entrenamiento, el 7 de julio a
+validación, el 11 de julio a calibración, y el 15 y el 22 de julio a prueba.
+El 17 de junio se mantiene fuera por corresponder a un arranque parcial de
+la competencia. Ningún día mostró una concentración de mazos que justificara
+reservarlo: con los mazos definidos como el conjunto de Pok\'emon que cada
+jugador pone en juego, el mínimo diario fue de 274 mazos distintos frente a
+una mediana cercana a 450.
 
 Este escenario implementa la separación entre aprender y predecir que Kaufman
 \textit{et al.} describen \cite{kaufman_leakage_2011}, y responde a la
@@ -444,13 +469,17 @@ evidencia de que la población de estrategias evoluciona de forma continua
 partición equivalente para no emplear datos posteriores en la predicción de
 eventos anteriores \cite{hodge_winprediction_2021}.
 
-\noindent\textbf{Escenario C.} Reserva mazos completos, o pares de mazos
-enfrentados, para el conjunto de prueba, respetando la condición de cobertura
-de cartas del apartado anterior. Es el diseño que separa la memorización de
-contenido conocido de la interpretación del estado
-\cite{bertram_cardrepresentations_2024,angliss_vgcbench_2026}. El criterio
-exacto de separación depende del análisis de concentración de mazos que
-presenta la Sección~\ref{subsec:representatividad}.
+\noindent\textbf{Escenario C.} Reserva arquetipos de mazo para el conjunto
+de prueba, respetando la condición de cobertura de cartas del apartado
+anterior. El arquetipo se identifica por el Pok\'emon principal, el que más
+tiempo permanece activo en la partida: toda partida en que alguno de los dos
+jugadores emplee uno de los 33 principales reservados va a prueba, y el
+resto se reparte al azar. Esas partidas son el 15.1\,\% del corpus. Es el
+diseño que separa la memorización de contenido conocido de la
+interpretación del estado
+\cite{bertram_cardrepresentations_2024,angliss_vgcbench_2026}. Mide
+arquetipos nuevos y no cartas nuevas: casi todas las cartas de un mazo
+reservado aparecen también en otros mazos del entrenamiento.
 
 \subsubsection{Estrategia de validación}
 
@@ -560,11 +589,10 @@ Cada punto de esas curvas se acompaña del número de partidas y de
 observaciones que lo sustenta, de modo que un desempeño reducido en la etapa
 temprana pueda distinguirse de una simple escasez de datos en esa región.
 
-Si la distribución de clases sobre la tabla final resultara marcadamente
-desbalanceada, magnitud que depende de cuántas observaciones aporta cada
-bando y que aún no se ha medido, se añadirá el área bajo la curva de
-precisión y exhaustividad, declarando explícitamente cuál es la clase
-minoritaria.
+La distribución de clases sobre la tabla final resultó cercana al
+equilibrio, con 0.517 de victorias en las filas utilizables
+(Sección~\ref{subsec:desbalance}), de modo que no se añade el área bajo la
+curva de precisión y exhaustividad.
 
 \noindent\textbf{Curvas de fiabilidad.} Los estimadores del error de
 calibración basados en discretización dependen del número y la construcción
@@ -661,9 +689,10 @@ mazo, y reejecutan el mismo protocolo, de modo que el aporte marginal de
 cada bloque se mida en lugar de afirmarse.
 
 Para H2, el modelo de estado completo usa las 62 características públicas y
-excluye los IDs de carta. La versión restringida usa solo `game_turn`,
-`first_player_is_me`, `own_active_card` y `opp_active_card`. Estos dos últimos
-identifican los Pokémon activos visibles y funcionan como aproximación a la
+excluye los identificadores de carta. La versión restringida usa solo
+\texttt{game\_turn}, \texttt{first\_player\_is\_me},
+\texttt{own\_active\_card} y \texttt{opp\_active\_card}. Los dos últimos
+identifican los Pok\'emon activos visibles y funcionan como aproximación a la
 identidad del mazo, no como representación completa de su composición. El
 modelo de 64 características que añade esos IDs al estado completo es una
 ablación distinta de la comparación restringida.
@@ -741,10 +770,12 @@ sus registros de procesamiento junto a los datos
 literatura sobre cambio temporal, donde el código estaba disponible en solo
 dos de quince estudios revisados \cite{guo_temporalshift_2021}.
 
-Cada experimento se repite sobre múltiples semillas y se reporta la
-dispersión resultante, práctica que los tres trabajos metodológicos de
-referencia adoptan por razones equivalentes
-\cite{grinsztajn_trees_2022,figueiredo_leakage_2024,brill_winprob_2026}.
+El diseño preveía repetir cada experimento sobre múltiples semillas y
+reportar la dispersión resultante, práctica que los tres trabajos
+metodológicos de referencia adoptan por razones equivalentes
+\cite{grinsztajn_trees_2022,figueiredo_leakage_2024,brill_winprob_2026}. Por
+costo de cómputo se ejecutó con una sola semilla, desviación que se declara
+en la Sección~\ref{subsec:desviaciones}.
 
 \subsection{Riesgos y mitigación}
 \label{subsec:riesgos}

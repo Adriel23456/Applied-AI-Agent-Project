@@ -41,7 +41,7 @@ Inteligencia Artificial (IC-6200) - Instituto Tecnológico de Costa Rica
 
 ### Pendientes heredados del artículo
 
-- [ ] Poner la URL real del dataset en `ptcg_dataset_2026`
+- [x] Poner la URL real del dataset en `ptcg_dataset_2026`
 
 ---
 
@@ -109,21 +109,21 @@ Ejecutado en Colab (CPU + RAM alta) el 2 y 3 de noviembre de 2026, con el protoc
 
 Las instrucciones exigen que al cerrar la Etapa 2 el artículo tenga escritas la metodología definitiva y los experimentos y resultados.
 
-- [ ] Escribir la sección de metodología definitiva con lo implementado (datos, extractor, particiones, protocolo)
-- [ ] Escribir la sección de experimentos y resultados con las salidas de `05FinalModelChecks`
-- [ ] Declarar en el artículo las desviaciones del protocolo de evaluación: una sola semilla (IV-F); sin coeficientes de B2 ni importancia por permutación agrupada (IV-E); variante de 64 características no ejecutada (IV-D1); escenario C por arquetipos y no por mazos
-- [ ] Actualizar la tabla del corpus: 55 196 partidas y 7 540 389 estados (no 52 085 y 7 038 378)
-- [ ] Premios restantes: se cuentan por el largo de la lista, no "contando las ranuras no vacías" (todas son nulas)
-- [ ] Número de turno: el diccionario lo pone a la vez en "Progreso" y en "Agrupación"; queda como característica (`game_turn`) y como meta (`turn`)
-- [ ] Escenario B: el 17 jun queda fuera y la asignación es por días completos (train 18-25 jun, val 7 jul, calib 11 jul, test 15 y 22 jul)
-- [ ] Escenario C: arquetipos reservados por Pokémon principal (33 principales, 15.1 % de partidas); mide arquetipos nuevos, no cartas nuevas
-- [ ] Cobertura efectiva de cartas: A completa; B con cartas nuevas en 0.86-1.20 % de las filas; C en 0.061 % de las filas de test
-- [ ] Ids de carta fuera del modelo principal; solo en la ablación de contexto de mazo (H2)
-- [ ] "Gana el índice 0" sube porque quien empieza ocupa la posición 0 (0.764 → 1.000), no por la posición
-- [ ] Casi ninguna partida termina por premios; se excluyen los estados ya resueltos (0.2 %) y la preparación
-- [ ] Poner la URL real del dataset en `ptcg_dataset_2026`
-- [ ] Revisar las entradas del Eje C marcadas como VERIFICAR
-- [ ] Corregir erratas menores de la Introducción
+- [x] Escribir la sección de metodología definitiva con lo implementado (datos, extractor, particiones, protocolo)
+- [x] Escribir la sección de experimentos y resultados con las salidas de `05FinalModelChecks`
+- [x] Declarar en el artículo las desviaciones del protocolo de evaluación: una sola semilla (IV-F); sin coeficientes de B2 ni importancia por permutación agrupada (IV-E); variante de 64 características no ejecutada (IV-D1); escenario C por arquetipos y no por mazos
+- [x] Actualizar la tabla del corpus: 55 196 partidas y 7 540 389 estados (no 52 085 y 7 038 378)
+- [x] Premios restantes: se cuentan por el largo de la lista, no "contando las ranuras no vacías" (todas son nulas)
+- [x] Número de turno: el diccionario lo pone a la vez en "Progreso" y en "Agrupación"; queda como característica (`game_turn`) y como meta (`turn`)
+- [x] Escenario B: el 17 jun queda fuera y la asignación es por días completos (train 18-25 jun, val 7 jul, calib 11 jul, test 15 y 22 jul)
+- [x] Escenario C: arquetipos reservados por Pokémon principal (33 principales, 15.1 % de partidas); mide arquetipos nuevos, no cartas nuevas
+- [x] Cobertura efectiva de cartas: A completa; B con cartas nuevas en 0.86-1.20 % de las filas; C en 0.061 % de las filas de test
+- [x] Ids de carta fuera del modelo principal; solo en la ablación de contexto de mazo (H2)
+- [x] "Gana el índice 0" sube porque quien empieza ocupa la posición 0 (0.764 → 1.000), no por la posición
+- [x] Casi ninguna partida termina por premios; se excluyen los estados ya resueltos (0.2 %) y la preparación
+- [x] Poner la URL real del dataset en `ptcg_dataset_2026`
+- [x] Revisar las entradas del Eje C marcadas como VERIFICAR
+- [x] Corregir erratas menores de la Introducción
 - [ ] Entrega en TecDigital
 
 ---
