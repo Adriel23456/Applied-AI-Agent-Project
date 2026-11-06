@@ -303,8 +303,9 @@ Sí, y sobran para lo que pide la etapa.
   calib y test tienen entre 5 500 y 8 300 partidas cada uno. Cada etapa de la partida queda con
   miles de partidas en todos los subconjuntos.
 - **El antecedente de literatura** (Hearthstone, AAIA'17) trabajó con un volumen comparable o menor.
-- **La curva de aprendizaje es la prueba formal:** si el AUC deja de subir al pasar de 25 % a 100 %
-  de las partidas de train, más días no ayudarían.
+- **La curva de aprendizaje lo confirmó:** al pasar de 75 % a 100 % de las partidas de train, el AUC
+  de `val` de B4 sube como mucho 0.004 en los tres escenarios. Más días aportarían poco
+  (`evaluacion_final/curvas/` en Kaggle).
 - **Agregar días tiene costo:** unas 12 horas de procesamiento más por cada 10 días y más deriva de
   población (los mazos de días lejanos son casi disjuntos). Si hiciera falta, basta agregarlos a
   `configs/dias.yaml` y reconstruir.
@@ -313,7 +314,7 @@ Sí, y sobran para lo que pide la etapa.
 
 ## 10. Contrato para modelar (obligatorio en los cuadernos 02 en adelante)
 
-1. **Cargar con `load_scenario` o con `ScenarioStream` para `train` y `val`**, aplicando el mismo filtro `usable`, las particiones por `game_id` y cortes de etapa calculados solo con `train`. `ScenarioStream` permite trabajar por lotes cuando no cabe el corpus completo en RAM; su equivalencia se comprueba sobre un corpus sintético en `tests/test_b2_streaming.py`. El iterador diario de B0/B1 requiere además que cada partida pertenezca a un solo archivo diario, condición auditada para el corpus original. `calib` y `test` quedan cerrados en `ScenarioStream` salvo con `evaluacion_final=True`, opción que solo usa `notebooks/06_evaluacion_final.ipynb` mediante `ptcg_wp.evaluacion_final.cargar_particion`, bajo el protocolo de `docx/03Evidence/02-11-26_ProtocoloEvaluacionFinal.md`.
+1. **Cargar con `load_scenario` o con `ScenarioStream` para `train` y `val`**, aplicando el mismo filtro `usable`, las particiones por `game_id` y cortes de etapa calculados solo con `train`. `ScenarioStream` permite trabajar por lotes cuando no cabe el corpus completo en RAM; su equivalencia se comprueba sobre un corpus sintético en `tests/test_b2_streaming.py`. El iterador diario de B0/B1 requiere además que cada partida pertenezca a un solo archivo diario, condición auditada para el corpus original. `calib` y `test` quedan cerrados en `ScenarioStream` salvo con `evaluacion_final=True`, opción que solo usa `notebooks/06_evaluacion_final.ipynb` mediante `ptcg_wp.evaluacion_final.cargar_particion`, bajo el protocolo de `docx/03Evidencia/02-11-26_ProtocoloEvaluacionFinal.md`.
 
    Ejemplo con `load_scenario`:
 
@@ -324,14 +325,15 @@ Sí, y sobran para lo que pide la etapa.
    X_tr, y_tr, g_tr = states.loc[tr, feats], states.loc[tr, "y"], states.loc[tr, "game_id"]
 ```
 
-2. **Ajustar el preprocesamiento solo con train y conservarlo junto al modelo en un `Pipeline` de scikit-learn.** En B2, por memoria, `StandardScaler` se ajusta incrementalmente por lotes de fit antes del clasificador; después ambos componentes ajustados se ensamblan en un `Pipeline` para predecir. Cada pliegue usa su propio escalador ajustado únicamente con su subconjunto de fit. El procedimiento y sus límites están en `docx/03Evidence/18-10-26_B2MemoriaAcotada.md`.
+2. **Ajustar el preprocesamiento solo con train y conservarlo junto al modelo en un `Pipeline` de scikit-learn.** En B2, por memoria, `StandardScaler` se ajusta incrementalmente por lotes de fit antes del clasificador; después ambos componentes ajustados se ensamblan en un `Pipeline` para predecir. Cada pliegue usa su propio escalador ajustado únicamente con su subconjunto de fit. El procedimiento y sus límites están en `docx/03Evidencia/18-10-26_B2MemoriaAcotada.md`.
 3. **Validación cruzada siempre agrupada por partida** (`GroupKFold` con `groups=g_tr`). Nunca `KFold`
    ni `StratifiedKFold` a secas.
 4. **`val`** elige hiperparámetros, **`calib`** ajusta la recalibración, **`test` se usa una sola vez**
    al final de cada escenario.
-5. **Los IDs de carta no entran al modelo de estado completo.** Para H2 se comparará ese modelo
+5. **Los IDs de carta no entran al modelo de estado completo.** Para H2 se comparó ese modelo
    de 62 características con una versión restringida a `game_turn`, `first_player_is_me`,
-   `own_active_card` y `opp_active_card`. Los dos IDs corresponden al Pokémon activo y son una
+   `own_active_card` y `opp_active_card` (resultado en la sección 7 de
+   `docx/03Evidencia/04-11-26_ResultadosEvaluacionFinal.md`). Los dos IDs corresponden al Pokémon activo y son una
    aproximación, no una identificación completa del mazo. La variante de 64 características
    (`include_cards=True`) es otra ablación y no sustituye la comparación restringida.
 6. **Métricas:** AUC (principal), log loss y Brier, globales y por etapa (`stage`), cada una con su
@@ -349,27 +351,25 @@ Sí, y sobran para lo que pide la etapa.
 
 ## 11. Cómo trabajar: cuadernos y celdas
 
-### Todo el equipo, en cada sesión (unos 2 minutos)
+Cada cuaderno se prepara solo en su primera celda (repo, dependencias, token de Kaggle y tablas) y
+baja de Kaggle lo que ya existe, sin interruptores. El orden, las celdas y los tiempos de cada
+cuaderno están en `notebooks/EjecucionDeLosCuadernos.md`; el ambiente, en `GuiaDeAmbiente.md`.
 
-En `notebooks/00_arranque.ipynb`, en un servidor de Colab (CPU, RAM alta):
+### Cuaderno `00_arranque` (tablas y particiones)
 
 | Celda | Qué hace | Resultado esperado |
 |---|---|---|
-| 2 | Clona o actualiza el repo (poner en `BRANCH` la rama de trabajo) | Sin errores |
-| 3 | Pruebas automáticas | `24 passed` |
-| 4 | Token de Kaggle (cada uno usa el suyo) | Lista de datasets |
-| 6 | Baja las 21 tablas del dataset del equipo (`CONSTRUIR = False`) | `OK: estan los 10 dias` |
-| 7 | Verificación | 55 196 partidas, 7 540 389 estados |
+| Clonar | Clona o actualiza el repo y agrega `src/` al path | Sin errores |
+| Pruebas | Ejecuta `pytest` con datos sintéticos | Todas pasan |
+| Token | Configura Kaggle con el token de cada integrante | Lista de datasets |
+| Tablas | Baja las 21 tablas del dataset del equipo; si un día falta, lo procesa desde los JSON crudos | `OK: estan los 10 dias` |
+| Verificación | Cuenta partidas y estados | 55 196 partidas, 7 540 389 estados |
+| Particiones | Baja `particiones.parquet` o, si falta, la genera e imprime la cobertura | 55 077 partidas con ganador |
+| Publicación | Sube las tablas solo si cambiaron (comparación por SHA-256) | `Las tablas ya estan publicadas` |
 
-Después, en el mismo servidor, se abre el cuaderno de trabajo (`01_exploracion`, `02_baselines_B0_B1`, `03_baseline_B2`, `04_baseline_B3` o `05_baseline_B4`).
-
-### Solo quien publica (al cambiar `features.py`, `ingest.py`, `splits.py` o los días)
-
-| Celda | Qué hace |
-|---|---|
-| 6 con `CONSTRUIR = True` | Reconstruye desde los JSON de Kaggle (borrar antes los Parquet si cambió el extractor) |
-| 8 | Regenera `particiones.parquet` e imprime el reporte de cobertura |
-| 9 con `CREAR = False` | Publica una nueva versión del dataset con el commit en el mensaje |
+Para reconstruir las tablas a propósito (cambio en `features.py` o `ingest.py`), se borran los
+Parquet de `/content/datos` y se vuelve a ejecutar la celda de tablas; la de publicación detecta el
+cambio.
 
 ### Cuadernos
 
@@ -378,17 +378,25 @@ Después, en el mismo servidor, se abre el cuaderno de trabajo (`01_exploracion`
 | `00_arranque` | Ambiente, datos, verificación, particiones y publicación |
 | `01_exploracion` | Inspección del JSON crudo (parte A), auditoría de la tabla (parte B), particiones, etapas y cobertura (parte C) |
 | `02_baselines_B0_B1` | B0 (a priori) y B1 (heurística) |
-| `03_baseline_B2` | Resultados B2 y demostración de fuga ya registrada |
-| `04_baseline_B3` | Resultados y configuración seleccionada de B3 |
-| `05_baseline_B4` | Resultados versionados de B4; no relanza el entrenamiento cerrado |
+| `03_baseline_B2` | B2 y demostración de fuga |
+| `04_baseline_B3` | B3 (bosque aleatorio) |
+| `05_baseline_B4` | B4, LightGBM, ablaciones, H2 y modelo final |
 | `06_evaluacion_final` | Verificación en `val`, SHAP, calibración, curvas, `test`, hipótesis y errores |
 
 ---
 
-## 12. Pruebas automáticas (24)
+## 12. Pruebas automáticas
+
+`PYTHONPATH=src python -m pytest -q tests` ejecuta 109 pruebas con datos sintéticos. Las que protegen
+estos datos son:
 
 | Archivo | Qué garantiza |
 |---|---|
-| `tests/test_fuga.py` (13) | La información oculta, `result`, `rewards` y los pasos futuros no cambian X; empates excluidos; `setup` y `decided` correctos; ids de carta fuera del modelo principal; columnas prohibidas bloqueadas |
-| `tests/test_particiones.py` (10) | Una partición por partida; reproducible con la semilla; A con proporciones correctas; B por días completos, en orden y sin el primer día; C sin principales reservados fuera de test; cobertura de cartas en train; etapas |
-| `tests/test_datos.py` (1) | `load_scenario` filtra filas útiles y asigna partición, etapa y características correctas |
+| `tests/test_fuga.py` | La información oculta, `result`, `rewards` y los pasos futuros no cambian X; empates excluidos; `setup` y `decided` correctos; ids de carta fuera del modelo principal; columnas prohibidas bloqueadas |
+| `tests/test_particiones.py` | Una partición por partida; reproducible con la semilla; A con proporciones correctas; B por días completos, en orden y sin el primer día; C sin principales reservados fuera de test; cobertura de cartas en train; etapas |
+| `tests/test_datos.py` | `load_scenario` filtra filas útiles y asigna partición, etapa y características correctas |
+| `tests/test_predictor.py` | El modelo exportado recibe una observación del juego y produce las mismas características que la tabla de entrenamiento |
+
+El resto cubre el almacén de Kaggle (`test_store.py`, `test_colab.py`), el entrenamiento de B2 a B4
+y LightGBM, H2, la evaluación común (`test_evaluation.py`) y las comprobaciones del cuaderno 06
+(`test_evaluacion_final.py`).

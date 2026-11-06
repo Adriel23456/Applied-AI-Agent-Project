@@ -91,7 +91,7 @@ usan en las comparaciones declaradas para H2.
 - `docx/05AmbienteDeDesarrollo/DiccionarioDeDatos.md`, sección 10: separa
   reporte por escenario de la selección global de B3 y define las entradas de
   H2.
-- `docx/03Evidence/12-10-26_AcuerdosTecnicosModelado.md`: registra la regla
+- `docx/03Evidencia/12-10-26_AcuerdosTecnicosModelado.md`: registra la regla
   como actualización metodológica posterior.
 - `docx/01SeguimientoDeTareas/PlanDeDesarrollo.md`: explicita las cuatro
   características de la versión restringida.

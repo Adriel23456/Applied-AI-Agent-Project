@@ -91,7 +91,7 @@ Se mantienen los límites de la Etapa 1. En esta etapa se suman:
 * **Ningún resultado se genera con IA.** Cada cifra proviene de una celda ejecutada por el equipo y queda trazada en el dataset del equipo, con SHA-256 y commit por archivo.
 * **La IA no accede a los datos ni a las credenciales.** El token de Kaggle no se escribe en cuadernos, archivos versionados ni conversaciones.
 * **El protocolo se fija antes de abrir `test`.** Las reglas de decisión no cambian al ver los resultados, y `test` se usa una sola vez: ninguna selección de modelo o calibrador depende de sus números.
-* **Las decisiones técnicas delegadas se documentan.** Cuando el equipo delegó una decisión al asistente (fórmula de B1, protocolo de LightGBM), quedó registrada en `docx/03Evidence/` antes de ejecutar.
+* **Las decisiones técnicas delegadas se documentan.** Cuando el equipo delegó una decisión al asistente (fórmula de B1, protocolo de LightGBM), quedó registrada en `docx/03Evidencia/` antes de ejecutar.
 * **Los resultados con datos sintéticos no son resultados del proyecto.** Solo prueban que el código corre.
 
 ---

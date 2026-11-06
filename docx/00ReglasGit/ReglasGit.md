@@ -24,7 +24,7 @@ Tres niveles. Sin `develop/**`, sin `release/**` y sin ramas personales.
 - **Recibe PR de:** `Stage1`, `Stage2` y `Stage3` únicamente.
 - **Aprobación:** **se requiere 1 aprobación.** Es el único lugar donde se exige.
 - **Tipo de merge:** merge commit, para conservar la historia de la etapa.
-- **Etiquetas:** cada merge se etiqueta (`v1.0.0-stage1`, `v2.0.0-stage2`, `v3.0.0-stage3`).
+- **Etiquetas:** cada entrega se etiqueta (ver [Etiquetas](#etiquetas)).
 
 ### `Stage1` / `Stage2` / `Stage3`
 - **Propósito:** una rama por etapa del proyecto.
@@ -38,14 +38,32 @@ Tres niveles. Sin `develop/**`, sin `release/**` y sin ramas personales.
 - **Nombre:** exactamente el de la rama en el plan de desarrollo, con prefijo de dos dígitos y PascalCase, sin separadores.
 - **Push directo:** permitido. Es la rama donde se trabaja.
 - **Destino del PR:** la rama de la etapa a la que pertenece.
-- **Se borra después del merge.**
+- **Se conserva después del merge.** Los cuadernos clonan el repositorio por nombre de rama (variable `BRANCH` de su primera celda); borrar la rama rompería la reproducción de esos cuadernos.
+
+---
+
+## Ramas usadas en el proyecto
+
+| Rama | Etapa | Responsable principal | Qué cerró | PR |
+|---|---|---|---|---|
+| `TrackConfirmation` | 1 | Equipo | Primera versión del repositorio (nombre anterior a la convención) | #1 |
+| `00TrackConfirmation` | 1 | Equipo | Confirmación del track y del tema | #2 |
+| `01LiteratureReview` | 1 | Cada integrante en su eje | Revisión de literatura por ejes A, B y C | #3 |
+| `02PaperAndDelivery` | 1 | Equipo | Artículo preliminar y entrega de la Etapa 1 (con correcciones posteriores) | #4, #6, #7 |
+| `Stage1` → `master` | 1 | Equipo | Integración de la Etapa 1 | #5 |
+| `03DataCollectionAndEnvironmentSetup` | 2 | Adriel | Ingesta, tabla de estados, particiones, pruebas de fuga y entorno de Colab con Kaggle | #8 |
+| `04MainAIModelTrainingAndDevelopment` | 2 | Daniel (entrenamiento) y Adriel (ejecución e infraestructura) | B0 a B4, búsqueda de hiperparámetros, LightGBM, ablaciones, H2 y modelo final | #9 |
+| `05FinalModelChecks` | 2 | Sebastián (protocolo y cuaderno 06) y Adriel (ejecución) | Evaluación única en `test`, calibración, curvas, SHAP, errores y veredicto de H1 a H3 | #10 |
+| `06PendientesDelArticulo` | 2 | Adriel | Correcciones del artículo, secciones de resultados, discusión y conclusiones, y documentación final de la etapa | Pendiente |
+
+Las ramas de la Etapa 3 seguirán la numeración desde `07`.
 
 ---
 
 ## Resumen del flujo
 
 ```
-04MainAIModelTrainingAndDevelopment
+05FinalModelChecks
     │
     │  PR → sin aprobación
     ▼
@@ -53,7 +71,7 @@ Stage2
     │
     │  PR → 1 aprobación
     ▼
-master  ← etiqueta v2.0.0-stage2
+master  ← etiqueta v2.0.0
 ```
 
 ---
@@ -80,29 +98,26 @@ Stage3
 
 ### Ramas de trabajo
 
-`<número de dos dígitos><NombreEnPascalCase>`, idéntico al nombre que aparece en el plan de desarrollo. La numeración continúa entre etapas.
-
-Etapa 1:
-
-```
-00TrackConfirmation
-01LiteratureReview
-02PaperAndDelivery
-```
-
-Etapa 2:
-
-```
-03DataCollectionAndEnvironmentSetup
-04MainAIModelTrainingAndDevelopment
-05FinalModelChecks
-```
+`<número de dos dígitos><NombreEnPascalCase>`, idéntico al nombre que aparece en el plan de desarrollo. La numeración continúa entre etapas (ver la tabla de [ramas usadas](#ramas-usadas-en-el-proyecto)).
 
 **Reglas:**
 - Número de dos dígitos con cero a la izquierda, siempre.
 - Sin espacios, guiones, guiones bajos ni barras dentro del nombre.
 - Pocas ramas por etapa. Un trabajo que se cierra en menos de medio día no es una rama: va dentro de la rama a la que pertenece.
 - La preparación del repositorio, de las herramientas o del entorno no es una rama aparte: va en la primera rama de la etapa.
+
+---
+
+## Etiquetas
+
+| Etiqueta | Commit | Significado |
+|---|---|---|
+| `v1.0.0` | Merge de `02PaperAndDelivery` (#4) | Entrega de la Etapa 1 |
+| `v1.0.1` | Merge de `02PaperAndDelivery` (#6) | Corrección posterior de la Etapa 1 |
+| `v2.0.0` | Merge de `Stage2` a `master` | Entrega de la Etapa 2 |
+| `v3.0.0` | Merge de `Stage3` a `master` | Entrega de la Etapa 3 |
+
+Una corrección después de entregar sube el último número (`v2.0.1`).
 
 ---
 
@@ -113,6 +128,7 @@ Etapa 2:
 - **Commits:** tipo, alcance, qué cambió y por qué. Sin números de tarea.
 - **Pull Requests:** el título nombra la rama de trabajo y la descripción lista los pendientes del plan de desarrollo que quedan cerrados.
 - Al integrar una rama, sus pendientes se marcan como `[x]` en `PlanDeDesarrollo.md` dentro del mismo PR.
+- **Resultados:** cada archivo de resultados publicado en Kaggle registra en el índice del dataset su SHA-256 y el commit del código que lo produjo. Así un resultado se rastrea hasta su commit aunque no esté versionado en Git.
 
 ---
 
@@ -147,7 +163,7 @@ Conventional Commits. El tipo y el alcance van en inglés, como dicta el estánd
 
 - **Artículo y documentación:** `paper`, `intro`, `related`, `method`, `ethics`, `bib`, `table`, `gaps`, `baseline`, `repo`, `ai-decl`, `evidence`, `journal`
 - **Ejes de revisión:** `axis-a`, `axis-b`, `axis-c`
-- **Datos y protocolo:** `colab`, `ingest`, `features`, `eda`, `splits`, `leakage`, `protocol`
+- **Datos y protocolo:** `colab`, `ingest`, `features`, `eda`, `splits`, `leakage`, `protocol`, `store`
 - **Modelado y evaluación:** `baselines`, `model`, `hpo`, `ablation`, `eval`, `xai`, `calib`, `export`
 - **Etapa 3:** `agent`
 
@@ -156,7 +172,7 @@ Conventional Commits. El tipo y el alcance van en inglés, como dicta el estánd
 - Modo imperativo, minúsculas, sin punto final, 72 caracteres como máximo.
 - Un cambio lógico por commit.
 - Sin números de tarea en los commits.
-- **Nunca se versiona:** conjuntos de datos crudos, archivos Parquet, modelos entrenados, `.venv`, `node_modules`, artefactos de compilación LaTeX, credenciales (`kaggle.json`, `.env`, llaves de API).
+- **Nunca se versiona:** conjuntos de datos crudos, archivos Parquet, modelos entrenados (`*.joblib`), la carpeta `results/`, `.venv`, artefactos de compilación LaTeX, credenciales (`secrets.txt`, `kaggle.json`, `.env`, tokens).
 - Cada integrante sube su propio trabajo. La autoría se califica por el historial de commits.
 
 ### Ejemplos
@@ -173,7 +189,7 @@ test(leakage): verificar intersección vacía de partidas entre particiones
 ```
 
 ```
-exp(baselines): registrar B0 y B2 bajo el escenario A con semilla 42
+exp(eval): registrar la evaluación única en test de los escenarios A, B y C
 ```
 
 ```
@@ -181,7 +197,7 @@ data(eda): reportar prevalencia de la clase por fila
 ```
 
 ```
-build(colab): fijar versión de scikit-learn y montar Drive al iniciar
+build(colab): fijar versión de scikit-learn y leer el token de Kaggle sin mostrarlo
 ```
 
 ```
@@ -252,8 +268,7 @@ Un párrafo: qué cierra esta rama y por qué.
 ### Reglas de los PR
 
 - Una rama de trabajo, un PR. No mezclar trabajo no relacionado.
-- **Squash merge** de rama de trabajo a rama de etapa.
-- **Merge commit** de rama de etapa a `master`.
+- **Merge commit** de rama de trabajo a rama de etapa y de rama de etapa a `master`. No se usa *squash*: juntaría los commits de varios integrantes en uno solo y borraría la autoría que se califica.
 - El PR a `master` lista todos los pendientes cerrados durante la etapa.
 - La aprobación hacia `master` la da un integrante que **no** haya hecho la mayor parte de la etapa.
 
@@ -261,34 +276,24 @@ Un párrafo: qué cierra esta rama y por qué.
 
 ## Reglas de exclusión
 
-Como mínimo:
+El `.gitignore` del repositorio parte de la plantilla de Python y agrega, como mínimo:
 
 ```gitignore
 __pycache__/
-*.py[cod]
 .venv/
-venv/
-node_modules/
-.ipynb_checkpoints/
-*.aux
-*.bbl
-*.blg
+.ipynb_checkpoints
 *.log
-*.out
-*.fls
-*.fdb_latexmk
-*.synctex.gz
 .env
-kaggle.json
-data/
-*.parquet
+secrets.txt
 *.joblib
-*.pkl
+results/
 ```
 
-Los conjuntos de datos, las tablas intermedias, los modelos entrenados y cualquier corpus descargado se excluyen: el repositorio guarda las instrucciones para obtenerlos, nunca los datos.
+Los artefactos de compilación LaTeX (`*.aux`, `*.bbl`, `*.fls`, etc.) tienen su propio `.gitignore` dentro de cada proyecto LaTeX.
 
-**Se versiona a propósito:** el `.bib`, los archivos de configuración con semillas fijas, las tablas de métricas, los registros de ejecución, los cuadernos con salidas y todos los documentos Markdown.
+**Dónde viven los datos y resultados.** Las tablas procesadas, las particiones, los modelos entrenados y todos los resultados (CSV, JSON, figuras) viven en el dataset privado de Kaggle `adrielchavessalazar/ptcg-wp-tablas`, nunca en Git. El repositorio guarda el código y las configuraciones para reconstruirlos.
+
+**Se versiona a propósito:** el código de `src/`, las pruebas, los archivos de `configs/` con semillas fijas, el `.bib`, el PDF del artículo, el cuaderno `06_evaluacion_final.ipynb` con sus salidas y todos los documentos Markdown.
 
 ---
 

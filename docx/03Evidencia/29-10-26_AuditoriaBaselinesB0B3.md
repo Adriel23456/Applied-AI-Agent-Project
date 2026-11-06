@@ -21,7 +21,7 @@
 
 1. **Trazabilidad B2/B3:** los CSV y metadatos no contienen tiempos exactos por artefacto; ese dato nunca se midió ni se guardó. El recuerdo del equipo estima unos cuatro días calendario de búsqueda para B2 y tres para B3, incluyendo interrupciones y reanudaciones; son estimaciones del proceso, no horas de cómputo. Git registra cambios de código y reanudación en varios commits, pero ninguno identifica por sí solo el código exacto que produjo cada archivo final. Los metadatos y hashes verifican configuración y uso del train completo. La duración aproximada y el historial de desarrollo ya quedan registrados; no es un pendiente para repetir entrenamientos.
 2. **Métricas comunes:** B0–B3 comparten `ptcg_wp.evaluation`: `metric_rows` para predicciones en memoria y `evaluate_stream` para modelos evaluados por lotes. La equivalencia de las rutas se comprueba con pesos por partida, etapas y empates en datos sintéticos. El pendiente general del Plan sigue abierto para la integración de B4, que no se incluyó en este trabajo.
-3. **B2:** los tres modelos se ajustaron con todo el train propio de su escenario; ninguno alcanzó la tolerancia del gradiente al llegar a 600 épocas. Se cierra con esa limitación descrita en `docx/03Evidence/25-10-26_B2SeleccionFinalC.md`.
+3. **B2:** los tres modelos se ajustaron con todo el train propio de su escenario; ninguno alcanzó la tolerancia del gradiente al llegar a 600 épocas. Se cierra con esa limitación descrita en `docx/03Evidencia/25-10-26_B2SeleccionFinalC.md`.
 4. **B3:** hay una configuración compartida elegida por macro-AUC global de val, pero tres artefactos de ajuste para evaluar los protocolos A, B y C. Eso no equivale a tres configuraciones finalistas. Aún no se ha escogido el único artefacto para la aplicación; debe definirse durante la integración según el escenario de uso.
 5. **B1:** la fórmula ejecutada se adoptó posteriormente como decisión técnica delegada. El `registro.json` conserva correctamente el estado histórico de propuesta al momento de ejecución. El método de Newton tuvo un máximo de seis iteraciones y la corrida no guardó si llegó a la tolerancia; por tanto, la convergencia de B1 es desconocida.
 6. **B2 por fila:** la demo prueba el solapamiento de partidas cuando se divide por filas y conserva un control agrupado sin solapamiento. La diferencia de AUC cambia de signo entre escenarios, por lo que la evidencia demuestra el problema del procedimiento, no una inflación universal del AUC.
@@ -50,9 +50,9 @@ La existencia de métricas de `val` no completa la evaluación final. Según el 
 
 - Contrato: `docx/05AmbienteDeDesarrollo/DiccionarioDeDatos.md`, sección 10.
 - Lista de entregables y estado: `docx/01SeguimientoDeTareas/PlanDeDesarrollo.md`, etapas 04, 05 y 06.
-- Ejecución y archivos disponibles: `notebooks/README_ejecucion_baselines.md`.
+- Ejecución y archivos disponibles: `notebooks/EjecucionDeLosCuadernos.md`.
 - Resultados agregados: `results/resumen_baselines/README.md` y `metricas_val_B0_B3.csv`.
 - Registro histórico reconstruido con campos desconocidos explícitos: `results/resumen_baselines/registro_historico_B2_B3.json`.
-- Detalle B2 y fuga: `results/baseline2/README.md` y `docx/03Evidence/25-10-26_B2SeleccionFinalC.md`.
-- Selección y artefactos B3: `results/baseline3/README.md` y `docx/03Evidence/28-10-26_VerificacionFinalistasB2B3.json`.
+- Detalle B2 y fuga: `results/baseline2/README.md` y `docx/03Evidencia/25-10-26_B2SeleccionFinalC.md`.
+- Selección y artefactos B3: `results/baseline3/README.md` y `docx/03Evidencia/28-10-26_VerificacionFinalistasB2B3.json`.
 - Implementación de carga y métricas: `src/ptcg_wp/data.py`, `src/ptcg_wp/baselines.py`, `src/ptcg_wp/evaluation.py`, `src/ptcg_wp/b2.py`, `src/ptcg_wp/b2_streaming.py` y `src/ptcg_wp/b3.py`.

@@ -226,7 +226,7 @@ Se marca **después** de confirmar la procedencia de `test`.
 - [ ] **Comparación con las referencias.** B4 supera a B0, B1, B2 y B3 en los tres escenarios, con intervalos que excluyen 0. La etapa final de A llega a 0.936, por encima de la banda de literatura (orden de magnitud). Se cumple el criterio de B1 (III-D). Archivos `comparaciones_X.csv` y `referencias.json`.
 - [ ] **Curvas de aprendizaje.** El último 25 % suma ≤ 0.004 de AUC en `val`. Brecha `train − val` estable (A y C ≈ 0.034; B ≈ 0.09, por el cambio temporal). Sin sobreajuste creciente. Archivos en `evaluacion_final/curvas/`.
 - [ ] **Errores.** Al inicio hay más falsos positivos que negativos. Los errores muy seguros son menos del 1 %, más frecuentes fuera de la población. Archivos en `evaluacion_final/errores/`.
-- [ ] **SHAP.** Revisión de fuga aprobada. Dominan premios, descartes y mazo; hallazgos en `docx/03Evidence/04-11-26_ResultadosEvaluacionFinal.md`. Archivos en `evaluacion_final/shap/`.
+- [ ] **SHAP.** Revisión de fuga aprobada. Dominan premios, descartes y mazo; hallazgos en `docx/03Evidencia/04-11-26_ResultadosEvaluacionFinal.md`. Archivos en `evaluacion_final/shap/`.
 - [ ] **Calibración.** B4 calibrado en A (ECE 0.002, sin corrección). En B, la isotónica baja el ECE de 0.037 a 0.018. Recalibrar B3 en B empeoró `test`. Archivos en `evaluacion_final/calibracion/`.
 - [ ] **H3.** Refutada: ΔDSC del log loss 0.0295 frente a ΔMCB 0.0083, con el contraste bajo 0 en log loss y en Brier. Archivos en `evaluacion_final/hipotesis/`.
 - [ ] **Veredicto.** H1 sostenida en A, B y C. H2 refutada en A y sostenida en B y C. H3 refutada. Archivo `evaluacion_final/veredicto.json`.

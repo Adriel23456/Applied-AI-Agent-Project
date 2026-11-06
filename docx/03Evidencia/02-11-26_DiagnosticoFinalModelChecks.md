@@ -6,7 +6,7 @@ Base: commit `ecb5440` de `05FinalModelChecks`.
 
 ## Alcance de esta revisión
 
-**Se leyó:** `PlanDeDesarrollo.md`, el artículo preliminar en PDF, los cuadernos 02 a 06 (solo código, porque se versionan sin salidas), `src/ptcg_wp/`, las pruebas y los documentos de `docx/03Evidence/` citados aquí.
+**Se leyó:** `PlanDeDesarrollo.md`, el artículo preliminar en PDF, los cuadernos 02 a 06 (solo código, porque se versionan sin salidas), `src/ptcg_wp/`, las pruebas y los documentos de `docx/03Evidencia/` citados aquí.
 
 **No se pudo leer:** el dataset privado de Kaggle. En esta máquina no hay token, tablas ni modelos. Por eso **las métricas de `val` de este documento vienen del plan, no se volvieron a medir**. Los nombres de archivo vienen de los cuadernos, no del índice real. La Parte 1 del cuaderno 06 hace esa comprobación contra los datos.
 
