@@ -1,55 +1,180 @@
 % ============================================================
-% sec/01conventions.tex - how to read and how to write this journal
+% sec/01conventions.tex - proposito, equipo y forma de leer la bitacora
 % ============================================================
-\section{Purpose and Conventions}
+\section{Prop\'osito y convenciones}
 \label{sec:conventions}
 
-\subsection{Purpose}
-This journal records the development of the project across its three
-stages: what was decided, why, what blocked progress, and what evidence
-backs each claim. It is not the paper and it is not the sprint plan. The
-paper reports results; the sprint plan states intent; this document
-records what actually happened.
+\subsection{Prop\'osito}
 
-\subsection{Team and Repository}
+Esta bit\'acora registra c\'omo se construy\'o el proyecto: qu\'e se decidi\'o,
+por qu\'e, qu\'e bloque\'o el avance y d\'onde est\'a la evidencia de cada
+afirmaci\'on. No es el art\'iculo ni el plan de desarrollo. El art\'iculo
+reporta resultados; el plan (\code{PlanDeDesarrollo.md}) declara lo que se
+quer\'ia hacer; esta bit\'acora cuenta lo que realmente pas\'o.
+
+El \'enfasis est\'a en el razonamiento humano detr\'as de cada paso: c\'omo se
+eligieron los modelos de referencia, c\'omo se dise\~n\'o la l\'ogica de
+entrenamiento, c\'omo se protegieron los datos contra la fuga de
+informaci\'on y c\'omo se comprob\'o en cada momento que todo funcionara.
+Esa es la parte del trabajo que no puede reconstruirse leyendo el historial
+del repositorio.
+
+\subsection{El proyecto en un p\'arrafo}
+
+El proyecto estima la probabilidad de que gane el jugador que act\'ua en una
+partida del Pok\'emon Trading Card Game, a partir de un \'unico estado
+observable del tablero. Usa aprendizaje autom\'atico cl\'asico sobre datos
+tabulares (Track~A) y un corpus p\'ublico de partidas entre agentes
+autom\'aticos. La dificultad principal no es el modelo sino la evaluaci\'on:
+cada partida produce m\'as de un centenar de estados casi id\'enticos con la
+misma etiqueta, as\'i que repartirlos al azar entre entrenamiento y prueba
+inflar\'ia cualquier m\'etrica. Por eso toda partici\'on, validaci\'on e
+intervalo se agrupa por partida.
+
+\subsection{Equipo y responsabilidades}
+
 \begin{table}[H]
   \centering
-  \caption{Team members and primary responsibilities.}
+  \caption{Integrantes y responsabilidades principales.}
   \label{tab:team}
-  \begin{tabularx}{\textwidth}{@{}l P{3.2cm} Y@{}}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{3.6cm} P{2.8cm} Y@{}}
     \toprule
-    \textbf{Member} & \textbf{Review axis} & \textbf{Primary responsibility}\\
+    \textbf{Integrante} & \textbf{Eje (Etapa 1)} & \textbf{Responsabilidad principal}\\
     \midrule
-    \docAuthorA & Axis B --- techniques   & \todo{responsibility}\\
-    \docAuthorB & Axis A --- problem      & \todo{responsibility}\\
-    \docAuthorC & Axis C --- dataset      & \todo{responsibility}\\
+    \docAuthorA & Eje B: t\'ecnicas del \textit{track} &
+      Etapa 1: revisi\'on del eje B y ensamblaje del art\'iculo. Etapa 2:
+      preparaci\'on de datos, entorno de Colab, almac\'en en Kaggle,
+      infraestructura, revisi\'on de la l\'ogica de B4, experimentos
+      (LightGBM, ablaciones, H2), ejecuci\'on del cuaderno de evaluaci\'on
+      final y redacci\'on del art\'iculo.\\
+    \docAuthorB & Eje A: problema y dominio &
+      Etapa 1: revisi\'on del eje A y metodolog\'ia del art\'iculo. Etapa 2:
+      implementaci\'on y entrenamiento de B0 a B4, b\'usquedas de
+      hiperpar\'ametros, auditor\'ias de los baselines y protocolo de
+      LightGBM.\\
+    \docAuthorC & Eje C: conjunto de datos &
+      Etapa 1: revisi\'on del eje C, auditor\'ia del corpus y tabla
+      comparativa. Etapa 2: diagn\'ostico del proyecto, protocolo de
+      evaluaci\'on final, cuaderno 06 y documentaci\'on de resultados.\\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\noindent Repository: \code{\docRepo}. Branching and commit conventions
-live in \code{CodeControl.md}; the sprint backlog lives in
-\code{SprintPlanning.md}.
+\noindent Repositorio: \code{\docRepo}. Las reglas de ramas y commits est\'an
+en \code{docx/\allowbreak{}00ReglasGit/\allowbreak{}ReglasGit.md}; el plan, en
+\code{docx/\allowbreak{}01SeguimientoDeTareas/\allowbreak{}PlanDeDesarrollo.md}; la declaraci\'on de uso
+de IA, en \code{docx/\allowbreak{}03Evidencia/\allowbreak{}01UsoDeIA/\allowbreak{}}.
 
-\subsection{How Entries Are Written}
-Every entry opens with a dated header naming the owner and the branch the
-work happened on. Inside an entry, three callouts carry the weight:
+\subsection{C\'omo se leen las entradas}
 
-\decision{The choice that was made.}{Why it was made, with evidence.}{The
-alternatives considered and the reason each was dropped.}
+Cada entrada abre con un encabezado que indica la fecha, el t\'itulo, los
+responsables y la rama donde ocurri\'o el trabajo. Dentro de la entrada, cuatro
+recuadros concentran lo importante:
 
-\blocker{What stopped progress.}{What it delayed and by how much.}{How it
-was resolved, or the condition that will resolve it.}
+\decision{La opci\'on que se eligi\'o.}{La raz\'on, con su evidencia.}{Las
+alternativas consideradas y por qu\'e se dejaron.}
 
-\milestone{What was achieved.}{Where the proof lives: commit, log,
-figure, screenshot.}
+\blocker{Lo que detuvo el avance.}{Qu\'e retras\'o y cu\'anto.}{C\'omo se
+resolvi\'o.}
 
-\notebox[Writing rule]{Write entries the day the work happens. An entry
-written a week later loses the reasoning, which is the only part of this
-document that cannot be reconstructed from the repository history.}
+\milestone{Lo que se logr\'o.}{D\'onde est\'a la prueba: commit, archivo,
+figura o captura.}
 
-\subsection{Traceability}
-Every decision recorded here that affects a technical choice must appear,
-in condensed form, in the corresponding section of the paper. Every
-milestone must point at a committed artifact. AI tool usage is annotated
-inline and consolidated in \code{AI\_USAGE.md}.
+\aiuse{la herramienta}{para qu\'e se us\'o}{qu\'e revis\'o el equipo a mano}
+
+\subsection{Cronolog\'ia general}
+
+La Tabla~\ref{tab:cronologia} resume las ramas de trabajo en orden. Las
+fechas salen del historial de commits del repositorio.
+
+\begin{table}[H]
+  \centering
+  \caption{Ramas del proyecto, en orden cronol\'ogico.}
+  \label{tab:cronologia}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{5.4cm} P{1.7cm} P{2.3cm} Y@{}}
+    \toprule
+    \textbf{Rama} & \textbf{Fechas} & \textbf{Responsables} & \textbf{Resultado}\\
+    \midrule
+    \multicolumn{4}{@{}l}{\textit{Etapa 1}}\\
+    \code{TrackConfirmation} & 21/08 & Equipo & Repositorio creado (PR \#1)\\
+    \code{00TrackConfirmation} & 21/08--30/08 & Equipo & Tema y \textit{track} confirmados; auditor\'ia del corpus (PR \#2)\\
+    \code{01LiteratureReview} & 30/08--05/09 & Cada uno su eje & Revisi\'on de 21 art\'iculos en tres ejes (PR \#3)\\
+    \code{02PaperAndDelivery} & 05/09--17/09 & Equipo & Art\'iculo preliminar entregado (PR \#4, \#6, \#7)\\
+    \midrule
+    \multicolumn{4}{@{}l}{\textit{Etapa 2}}\\
+    {\scriptsize\code{03DataCollectionAndEnvironmentSetup}} & 04/10--11/10 & Adriel & Tabla de estados, particiones y pruebas de fuga (PR \#8)\\
+    {\scriptsize\code{04MainAIModelTrainingAndDevelopment}} & 11/10--30/10 & Daniel y Adriel & B0 a B4, experimentos y modelo final (PR \#9)\\
+    \code{05FinalModelChecks} & 30/10--05/11 & Sebasti\'an y Adriel & Evaluaci\'on \'unica en prueba e hip\'otesis (PR \#10)\\
+    \code{06PendientesDelArticulo} & 05/11--06/11 & Adriel & Art\'iculo con resultados, discusi\'on y conclusiones\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Mapa de la evidencia}
+
+Cada afirmaci\'on de esta bit\'acora remite a un archivo de
+\code{docx/\allowbreak{}03Evidencia/\allowbreak{}}. Las Tablas~\ref{tab:evidencia} y~\ref{tab:evidencia2} los ordenan por fecha.
+
+\begin{table}[H]
+  \centering
+  \caption{Evidencia de la Etapa 1 y de los baselines B2 y B3.}
+  \label{tab:evidencia}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{7.4cm} Y@{}}
+    \toprule
+    \textbf{Archivo} & \textbf{Qu\'e registra}\\
+    \midrule
+    \code{21-\allowbreak{}8-\allowbreak{}26\_\allowbreak{}PrimeraReunionDelEquipo.png} & Primera reuni\'on del equipo y exploraci\'on de conjuntos de datos en Kaggle\\
+    \code{26-\allowbreak{}8-\allowbreak{}26\_\allowbreak{}ConfirmacionDelTema.png} & Sesi\'on de revisi\'on en la que se confirm\'o el tema\\
+    \code{30-\allowbreak{}8-\allowbreak{}26\_\allowbreak{}DesarrolloDeLaEtapa1.png} & Sesi\'on de trabajo de la Etapa 1\\
+    \code{06-\allowbreak{}9-\allowbreak{}26\_\allowbreak{}RevisionFinalEtapa1.png} & Revisi\'on final del art\'iculo antes de la entrega\\
+    \code{12-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}AcuerdosTecnicosModelado.md} & Reglas de modelado acordadas antes de entrenar: B1, validaci\'on cruzada, pesos por partida, b\'usquedas\\
+    \code{18-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}B2MemoriaAcotada.md} & Cambio de B2 a entrenamiento por lotes para caber en la RAM de Colab\\
+    \code{19-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}B2ResultadosYFinalistas.md} & Primera b\'usqueda de regularizaci\'on de B2 y lectura de la falta de convergencia\\
+    \code{19-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}B3B4Checkpoints.md} & Puntos de control para reanudar B3 y B4 si Colab se corta\\
+    \code{23-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}AuditoriaBaselinesYCoste.md} & Auditor\'ia del costo de las b\'usquedas y de los errores de reanudaci\'on\\
+    \code{25-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}B2SeleccionFinalC.md} & Elecci\'on final de $C = 0.1$ para B2\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Evidencia de B4, de los experimentos y de la evaluaci\'on final.}
+  \label{tab:evidencia2}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{7.4cm} Y@{}}
+    \toprule
+    \textbf{Archivo} & \textbf{Qu\'e registra}\\
+    \midrule
+    \code{05\_\allowbreak{}entrenamiento\_\allowbreak{}B4\_\allowbreak{}independiente\_\allowbreak{}original.ipynb} & Cuaderno original de B4 con b\'usqueda \'unica y tope de 4000 \'arboles\\
+    \code{28-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}ProtocoloLightGBM.md} & Presupuesto y regla de comparaci\'on con LightGBM, fijados antes de ejecutar\\
+    \code{28-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}SeleccionB3yDefinicionH2.md} & Regla de macro-AUC para B3 y definici\'on operativa de H2\\
+    \code{28-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}VerificacionFinalistasB2B3.json} & Hashes y metadatos de los modelos finales de B2 y B3\\
+    \code{29-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}AuditoriaBaselinesB0B3.md} & Cumplimiento de B0 a B3 frente al contrato de modelado\\
+    \code{02-\allowbreak{}11-\allowbreak{}26\_\allowbreak{}DiagnosticoFinalModelChecks.md} & Estado del proyecto y riesgos al iniciar la evaluaci\'on final\\
+    \code{02-\allowbreak{}11-\allowbreak{}26\_\allowbreak{}ProtocoloEvaluacionFinal.md} & Reglas de la evaluaci\'on final, congeladas antes de abrir prueba\\
+    \code{04-\allowbreak{}11-\allowbreak{}26\_\allowbreak{}ResultadosEvaluacionFinal.md} & Resultados en prueba, calibraci\'on, SHAP e hip\'otesis\\
+    \code{01UsoDeIA/\allowbreak{}} & Declaraci\'on de uso de IA de las Etapas 1 y 2\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+
+\subsection{Reglas que se respetaron durante todo el proyecto}
+
+\begin{itemize}
+  \item \textbf{La partida es la unidad independiente.} Ninguna partici\'on,
+        pliegue o intervalo separa estados de una misma partida.
+  \item \textbf{El conjunto de prueba se usa una sola vez.} Ninguna
+        decisi\'on depende de sus n\'umeros.
+  \item \textbf{Ning\'un resultado se genera con IA.} Cada cifra viene de una
+        celda ejecutada por el equipo y queda registrada con su SHA-256 y su
+        commit.
+  \item \textbf{Las credenciales nunca se escriben} en cuadernos, archivos
+        versionados ni conversaciones.
+  \item \textbf{Una decisi\'on se documenta antes de ejecutar}, no despu\'es
+        de ver el resultado.
+\end{itemize}

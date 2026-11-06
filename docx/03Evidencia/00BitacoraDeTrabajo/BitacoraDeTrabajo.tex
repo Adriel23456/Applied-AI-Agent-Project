@@ -1,32 +1,32 @@
 % ============================================================
-% WorkJournal.tex - main file
-% Build: latexmk -pdf WorkJournal.tex
+% BitacoraDeTrabajo.tex - archivo principal
+% Compilar: latexmk -pdf BitacoraDeTrabajo.tex
 % ============================================================
 \documentclass[12pt,a4paper]{article}
 
-% ---------- Document metadata (edit only this block) ----------
-\newcommand{\docInstitute}{Costa Rica Institute of Technology}
-\newcommand{\docSchool}{Escuela de Ingenier\'ia en Computaci\'on}
-\newcommand{\docCourse}{Artificial Intelligence}
+% ---------- Metadatos del documento (editar solo este bloque) ----------
+\newcommand{\docInstitute}{Instituto Tecnol\'ogico de Costa Rica}
+\newcommand{\docSchool}{Escuela de Ingenier\'ia en Computadores}
+\newcommand{\docCourse}{Inteligencia Artificial}
 \newcommand{\docCode}{IC-6200}
-\newcommand{\docTitle}{Applied AI Agent Project --- Work Journal}
-\newcommand{\docSubtitle}{Development log across Stages 1, 2 and 3}
-\newcommand{\docKicker}{Semester Project}
-\newcommand{\docTagline}{Decisions, blockers, agreements and milestones}
-\newcommand{\docKeywords}{Work journal \textbullet\ Sprint log \textbullet\ Technical decisions \textbullet\ Traceability}
+\newcommand{\docTitle}{Bit\'acora de Trabajo}
+\newcommand{\docSubtitle}{Registro del desarrollo de las Etapas 1, 2 y 3}
+\newcommand{\docKicker}{Proyecto Semestral: Agente de IA Aplicada}
+\newcommand{\docTagline}{Decisiones, bloqueos, acuerdos e hitos del equipo}
+\newcommand{\docKeywords}{Bit\'acora \textbullet\ Decisiones t\'ecnicas \textbullet\ Prevenci\'on de fuga \textbullet\ Trazabilidad}
 
 \newcommand{\docAuthorA}{Adriel S. Chaves Salazar}
 \newcommand{\docIDA}{2021031465}
 \newcommand{\docAuthorB}{Daniel Duarte Cordero}
-\newcommand{\docIDB}{[TO BE COMPLETED]}
+\newcommand{\docIDB}{2022012866}
 \newcommand{\docAuthorC}{Sebasti\'an Hern\'andez Bonilla}
-\newcommand{\docIDC}{[TO BE COMPLETED]}
+\newcommand{\docIDC}{2022093651}
 \newcommand{\docAuthors}{\docAuthorA, \docAuthorB, \docAuthorC}
 
 \newcommand{\docProfessor}{Kenneth Roberto Obando Rodr\'iguez}
-\newcommand{\docSemester}{II Semester, 2026}
+\newcommand{\docSemester}{II Semestre, 2026}
 \newcommand{\docPlace}{Cartago, Costa Rica}
-\newcommand{\docShortTitle}{Work Journal}
+\newcommand{\docShortTitle}{Bit\'acora de Trabajo}
 \newcommand{\docRepo}{Applied-AI-Agent-Project}
 
 \input{preamble}
@@ -40,36 +40,23 @@
 {
   \hypersetup{linkcolor=black}
   \tableofcontents
-  %\listoffigures
-  %\listoftables
-  %\lstlistoflistings
+  \newpage
+  \listoffigures
+  \listoftables
   \newpage
 }
 
 \pagenumbering{arabic}
 \justifying
 
-% ---------- Body: one file per stage ----------
+% ---------- Cuerpo: un archivo por etapa ----------
 \safeinput{sec/01conventions}
 \safeinput{sec/02stage1}
 \safeinput{sec/03stage2}
 \safeinput{sec/04stage3}
 
-% ---------- Appendices ----------
+% ---------- Apendices ----------
 \appendix
 \safeinput{sec/90meetings}
-
-% ---------- Acronyms and glossary ----------
-%\newpage
-%\printglossary[type=\acronymtype,title={List of Acronyms}]
-%\printglossary[title={Glossary}]
-
-% ---------- Bibliography ----------
-%\IfFileExists{sec/99references.bib}{%
-%  \newpage
-%  \phantomsection
-%  \addcontentsline{toc}{section}{References}
-%  \bibliographystyle{apalike}
-%  \bibliography{sec/99references}}{}
 
 \end{document}

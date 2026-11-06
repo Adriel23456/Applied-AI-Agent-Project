@@ -5,8 +5,8 @@
 % ---------- Language and fonts ----------
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage[english]{babel}
-\usepackage[english=american]{csquotes}
+\usepackage[spanish,es-noquoting,es-nodecimaldot,es-tabla]{babel}
+\usepackage{csquotes}
 \usepackage{microtype}
 
 % ---------- Math ----------
@@ -35,7 +35,7 @@
 
 % ---------- Graphics, TikZ, plots ----------
 \usepackage{graphicx}
-\graphicspath{{img/}{figures/}{./}}
+\graphicspath{{img/}{figures/}{./}{../}}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
@@ -68,20 +68,20 @@
 
 % Continuation labels for tables that split across pages
 \newcommand{\contnext}[1]{%
-  \multicolumn{#1}{r@{}}{\footnotesize\itshape Continued on next page}\\}
+  \multicolumn{#1}{r@{}}{\footnotesize\itshape Contin\'ua en la p\'agina siguiente}\\}
 \newcommand{\contprev}[1]{%
   \multicolumn{#1}{@{}l}{\footnotesize\itshape
-    Table \thetable{} -- continued from previous page}\\}
+    Tabla \thetable{} -- viene de la p\'agina anterior}\\}
 
 % ---------- Theorem environments ----------
 \theoremstyle{definition}
-\newtheorem{definitionx}{Definition}[section]
-\newtheorem{examplex}{Example}[section]
+\newtheorem{definitionx}{Definici\'on}[section]
+\newtheorem{examplex}{Ejemplo}[section]
 \theoremstyle{plain}
-\newtheorem{theoremx}{Theorem}[section]
-\newtheorem{lemmax}{Lemma}[section]
+\newtheorem{theoremx}{Teorema}[section]
+\newtheorem{lemmax}{Lema}[section]
 \theoremstyle{remark}
-\newtheorem*{remarkx}{Remark}
+\newtheorem*{remarkx}{Observaci\'on}
 
 % ---------- Listings ----------
 \usepackage{listings}
@@ -122,7 +122,7 @@
 \fancyhf{}
 \fancyhead[L]{\footnotesize\textsc{\docCode}}
 \fancyhead[R]{\footnotesize\docShortTitle}
-\fancyfoot[C]{\footnotesize Page \thepage\ of \pageref{LastPage}}
+\fancyfoot[C]{\footnotesize P\'agina \thepage\ de \pageref{LastPage}}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0pt}
 
@@ -142,35 +142,23 @@
 \usepackage[acronym,nopostdot,nogroupskip,toc]{glossaries}
 
 % Acronyms
-\newacronym{tec}{TEC}{Costa Rica Institute of Technology}
-\newacronym{ai}{AI}{artificial intelligence}
-\newacronym{ml}{ML}{machine learning}
-\newacronym{dl}{DL}{deep learning}
-\newacronym{rl}{RL}{reinforcement learning}
-\newacronym{mdp}{MDP}{Markov decision process}
-\newacronym{eda}{EDA}{exploratory data analysis}
-\newacronym{llm}{LLM}{large language model}
-\newacronym{rag}{RAG}{retrieval-augmented generation}
-\newacronym{pr}{PR}{pull request}
-\newacronym{ci}{CI}{continuous integration}
+\newacronym{tec}{TEC}{Instituto Tecnol\'ogico de Costa Rica}
+\newacronym{ia}{IA}{inteligencia artificial}
+\newacronym{auc}{AUC}{\'area bajo la curva ROC}
+\newacronym{ece}{ECE}{error de calibraci\'on esperado}
+\newacronym{cv}{CV}{validaci\'on cruzada}
+\newacronym{pr}{PR}{\textit{pull request}}
 
 % Glossary terms
 \newglossaryentry{baseline}{
   name={baseline},
-  description={A reference result the project must match or exceed;
-               either implemented internally or taken from published
-               literature}
+  description={Modelo de referencia contra el que se compara el modelo
+               principal}
 }
 \newglossaryentry{leakage}{
-  name={data leakage},
-  description={Any path by which information from the evaluation set
-               influences training or model selection}
-}
-\newglossaryentry{track}{
-  name={track},
-  description={The technical line chosen for the project: classical
-               machine learning, deep learning, or reinforcement
-               learning}
+  name={fuga de informaci\'on},
+  description={Cualquier v\'ia por la que informaci\'on de evaluaci\'on
+               influye en el entrenamiento o en la selecci\'on del modelo}
 }
 \usepackage{cleveref}
 
@@ -213,7 +201,7 @@
     \missingfilebox{#2}}}
 
 % ---------- Callout box ----------
-\newcommand{\notebox}[2][Note]{%
+\newcommand{\notebox}[2][Nota]{%
   \par\medskip\noindent
   \fcolorbox{tecrule}{boxbg}{%
     \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
@@ -221,7 +209,8 @@
   \par\medskip}
 
 \newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TO BE COMPLETED: #1]}}}
+\setlength{\emergencystretch}{3em}
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[POR COMPLETAR: #1]}}}
 
 % ---------- Work journal macros ----------
 % \jentry{date}{title}{owner(s)}{branch}
@@ -232,7 +221,7 @@
       \vspace{2pt}\color{white}\bfseries #1 \; \textbullet\; #2\vspace{2pt}}}%
   \par\nopagebreak\vspace{2pt}
   \noindent{\footnotesize\color{labelgray}
-    Owner: #3 \quad\textbullet\quad Branch: \code{#4}}
+    Responsables: #3 \quad\textbullet\quad Rama: \code{#4}}
   \par\vspace{4pt}}
 
 % \decision{what}{why}{alternatives discarded}
@@ -241,9 +230,9 @@
   \fcolorbox{decisionamber}{boxbg}{%
     \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
       \vspace{3pt}
-      \textbf{\color{decisionamber}Decision.}\ #1\par\vspace{2pt}
-      \textbf{Rationale.}\ #2\par\vspace{2pt}
-      \textbf{Discarded.}\ #3\vspace{3pt}}}%
+      \textbf{\color{decisionamber}Decisi\'on.}\ #1\par\vspace{2pt}
+      \textbf{Por qu\'e.}\ #2\par\vspace{2pt}
+      \textbf{Descartado.}\ #3\vspace{3pt}}}%
   \par\medskip}
 
 % \blocker{what}{impact}{resolution or trigger}
@@ -252,9 +241,9 @@
   \fcolorbox{blockred}{red!3}{%
     \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
       \vspace{3pt}
-      \textbf{\color{blockred}Blocker.}\ #1\par\vspace{2pt}
-      \textbf{Impact.}\ #2\par\vspace{2pt}
-      \textbf{Resolution.}\ #3\vspace{3pt}}}%
+      \textbf{\color{blockred}Bloqueo.}\ #1\par\vspace{2pt}
+      \textbf{Impacto.}\ #2\par\vspace{2pt}
+      \textbf{Soluci\'on.}\ #3\vspace{3pt}}}%
   \par\medskip}
 
 % \milestone{what}{evidence}
@@ -263,11 +252,11 @@
   \fcolorbox{okgreen}{green!3}{%
     \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
       \vspace{3pt}
-      \textbf{\color{okgreen}Milestone.}\ #1\par\vspace{2pt}
-      \textbf{Evidence.}\ #2\vspace{3pt}}}%
+      \textbf{\color{okgreen}Hito.}\ #1\par\vspace{2pt}
+      \textbf{Evidencia.}\ #2\vspace{3pt}}}%
   \par\medskip}
 
 \newcommand{\aiuse}[3]{%
   \par\smallskip\noindent
-  {\footnotesize\color{labelgray}\textit{AI usage:}}\ {\footnotesize
-   tool: #1 \textbullet\ purpose: #2 \textbullet\ verified: #3}\par\smallskip}
+  {\footnotesize\color{labelgray}\textit{Uso de IA:}}\ {\footnotesize
+   herramienta: #1 \textbullet\ para qu\'e: #2 \textbullet\ verificado: #3}\par\smallskip}
