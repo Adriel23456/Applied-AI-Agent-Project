@@ -1,0 +1,138 @@
+% ============================================================
+% 08discusion.tex
+% Discusión de resultados, hallazgos de XAI y cumplimiento de objetivos
+% ============================================================
+
+\section{Discusión}
+\label{sec:discusion}
+
+\subsection{Respuesta a la pregunta de investigación}
+\label{subsec:respuestapi}
+
+La respuesta a la pregunta de la Sección~\ref{subsec:pregunta} es
+afirmativa: la probabilidad de victoria sí puede estimarse a partir del
+estado observable. B4 supera a la heurística de dominio (B1) en los tres
+escenarios, su AUC crece con la partida y nunca cae al nivel del azar, ni
+siquiera con días posteriores o arquetipos nuevos, donde se mantiene cerca
+de 0.79. La calidad de la estimación depende de la etapa: es modesta al
+inicio (AUC de 0.62 a 0.68) y alta al final (más de 0.91).
+
+Las referencias responden las dos preguntas del \textit{track}. B4 supera a
+B0 por casi 0.33 de AUC, así que el modelo aprende. B4 supera a B2 por
+0.036 a 0.071, así que la complejidad se justifica: el estado tiene
+interacciones que una regresión logística no capta.
+
+\subsection{Lectura de las hipótesis}
+\label{subsec:discusionhipotesis}
+
+\noindent\textbf{H1, sostenida.} El estado predice el resultado desde el
+inicio, y la predicción mejora con la partida. La mejora también aparece en
+las partidas que llegan a las tres etapas, así que no se explica porque las
+partidas largas sean más fáciles. SHAP muestra que el progreso pesa solo el
+6.3\,\%: el modelo no mejora por contar turnos, sino porque el tablero
+acumula diferencias de premios, descartes y mazo.
+
+\noindent\textbf{H2, no sostenida en general.} En A, al inicio, el modelo
+que solo conoce el turno, quién empezó y qué Pok\'emon están activos
+predice igual que B4. Con la regla del protocolo, H2 queda refutada en el
+escenario principal. En B y C el resultado cambia: el modelo restringido
+cae a 0.589 y 0.535, mientras B4 se mantiene en 0.630 y 0.623. Conocer los
+Pok\'emon activos solo sirve cuando la población se repite; leer el estado
+sirve también con días y arquetipos nuevos. Bertram \textit{et al.}
+describen la misma diferencia entre identificar cartas y describirlas
+\cite{bertram_cardrepresentations_2024}. Este resultado confirma que fue
+correcto dejar los identificadores de carta fuera del modelo principal.
+
+\noindent\textbf{H3, refutada.} Guo \textit{et al.} y Xenopoulos \textit{et
+al.} observaron que, cuando cambia la población, la calibración empeora más
+que el ordenamiento \cite{guo_temporalshift_2021,xenopoulos_winprob_2022}.
+Aquí ocurre lo contrario. Una explicación posible es que los mazos y los
+agentes cambian qué posiciones son buenas, no con qué frecuencia se gana.
+El resultado depende de cómo se mida: comparar porcentajes de caída habría
+apoyado H3. La descomposición en calibración y ordenamiento permite
+comparar ambas pérdidas en las mismas unidades.
+
+\subsection{Hallazgos de explicabilidad}
+\label{subsec:discusionxai}
+
+\noindent\textbf{¿Qué variables dominan?} Las de recursos: premios,
+descartes y mazo. Recursos y tablero explican el 72.8\,\% de la predicción,
+y las ablaciones lo confirman, porque es la única familia cuya eliminación
+baja el AUC de forma clara.
+
+\noindent\textbf{¿Tiene sentido que dominen?} Sí. Los premios son la
+condición de victoria. Los descartes cuentan el material perdido: muchos
+descartes propios bajan la probabilidad y muchos del rival la suben. La
+señal más fuerte aparece cuando al rival le quedan pocas cartas en el mazo
+(hasta $+6$ en logit). Tiene sentido porque en este corpus casi ninguna
+partida termina por premios, así que dejar al rival sin mazo es una forma
+común de ganar.
+
+\noindent\textbf{¿Revela algún problema en los datos?} No hay señales de
+fuga: todas las variables dominantes son información pública del tablero.
+Sí aparece una carencia de la representación. Un activo rival con muchos
+puntos de vida máximos sube la probabilidad propia. Una explicación posible
+es que los Pok\'emon ``ex'' entregan dos premios al ser derrotados y solo se
+reconocen por sus puntos de vida altos. Es una hipótesis, no un resultado
+verificado.
+
+De estos hallazgos salen tres acciones concretas:
+\begin{enumerate}
+  \item Agregar una característica con los premios que entrega cada
+        Pok\'emon activo, para que el modelo no dependa de los puntos de
+        vida como sustituto.
+  \item Vigilar en el agente que el evaluador no sobrevalore dejar al rival
+        sin mazo. Es una estrategia válida, pero debe comprobarse.
+  \item Explicar las predicciones del agente en términos de premios,
+        descartes y mazo, que son las variables con que decide el modelo.
+\end{enumerate}
+
+\subsection{Cumplimiento de los objetivos}
+\label{subsec:objetivoscumplidos}
+
+La Tabla~\ref{tab:objetivos} relaciona cada objetivo específico de la
+Sección~\ref{subsec:objetivos} con su evidencia. Se cumplieron los seis. El
+tercero terminó en un resultado contrario a H3, pero se cumplió, porque su
+propósito era contrastar la hipótesis, no confirmarla.
+
+\begin{table}[!t]
+\centering
+\caption{Objetivos específicos y evidencia de su cumplimiento.}
+\label{tab:objetivos}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{2.2cm} Y@{}}
+\toprule
+\textbf{Objetivo} & \textbf{Evidencia}\\
+\midrule
+1. Evolución de la estimación & AUC por etapa y por turno, con el número
+de partidas de cada medición (Tabla~\ref{tab:h1}, Fig.~\ref{fig:aucturno})\\
+2. Generalización estructural & AUC de 0.833 en partidas nuevas (A) y de
+0.787 en arquetipos nuevos (C)\\
+3. Estabilidad temporal & AUC de 0.789 en días posteriores (B); H3
+contrastada (Tabla~\ref{tab:h3})\\
+4. Formalización & Clasificación binaria probabilística con la partida
+como unidad independiente (Sección~\ref{sec:metodologia})\\
+5. Representación auditada & Tabla de 55\,196 partidas y 62
+características, con cobertura de cartas medida
+(Sección~\ref{sec:analisistecnico})\\
+6. Escalera de referencias & B0 $<$ B1 $<$ B2 $<$ B3 $<$ B4 en los tres
+escenarios, 24 pruebas de fuga, SHAP y ablaciones\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Limitaciones}
+\label{subsec:limitaciones}
+
+\begin{itemize}
+  \item Se usó una sola semilla, y los intervalos no incluyen la
+        variación de la búsqueda de hiperparámetros. Pueden ser algo
+        optimistas \cite{brill_winprob_2026}.
+  \item En B, el cambio de fecha y el cambio de versión del juego ocurren
+        juntos y no pueden separarse.
+  \item Los datos son partidas entre agentes automáticos durante diez
+        días. No representan el juego entre personas.
+  \item El modelo no cubre los estados de preparación ni los ya decididos.
+  \item Los Pok\'emon activos solo aproximan la identidad del mazo, lo que
+        limita la lectura de H2.
+\end{itemize}

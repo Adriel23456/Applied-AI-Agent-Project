@@ -1,0 +1,825 @@
+% ============================================================
+% sec/03stage2.tex - Etapa 2 (04/10 - 06/11)
+% ============================================================
+\section{Etapa 2: modelado, explicabilidad y evaluaci\'on}
+\label{sec:stage2}
+
+\notebox[Objetivo de la etapa]{Ejecutar el dise\~no de la Etapa 1: construir
+la tabla de estados, entrenar la escalera de modelos B0 a B4 bajo un
+protocolo sin fuga, evaluar una sola vez en prueba, explicar el modelo final
+con SHAP, analizar la calibraci\'on (m\'odulo del grupo de tres) y escribir
+la metodolog\'ia definitiva y los resultados del art\'iculo. Peso: 45\,\%.}
+
+\subsection{Resumen de ramas}
+
+\begin{table}[H]
+  \centering
+  \caption{Ramas de la Etapa 2 y su resultado.}
+  \label{tab:stage2summary}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{5.4cm} P{1.7cm} P{2.3cm} Y@{}}
+    \toprule
+    \textbf{Rama} & \textbf{Fechas} & \textbf{Responsables} & \textbf{Resultado}\\
+    \midrule
+    {\scriptsize\code{03DataCollectionAndEnvironmentSetup}} & 04/10--11/10 & Adriel & 55\,196 partidas en Parquet, 62 caracter\'isticas, particiones A/B/C y 24 pruebas de fuga\\
+    {\scriptsize\code{04MainAIModelTrainingAndDevelopment}} & 11/10--30/10 & Daniel y Adriel & B0 a B4 entrenados, LightGBM, ablaciones, H2 y modelo final exportado\\
+    \code{05FinalModelChecks} & 30/10--05/11 & Sebasti\'an y Adriel & Protocolo congelado, evaluaci\'on \'unica en prueba, calibraci\'on, SHAP y veredicto de H1 a H3\\
+    \code{06PendientesDelArticulo} & 05/11--06/11 & Adriel & Art\'iculo corregido, con resultados, discusi\'on y conclusiones\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{C\'omo se construy\'o el sistema, parte por parte}
+
+La Fig.~\ref{fig:flujo} muestra el orden en que se construy\'o cada pieza.
+Cada bloque se cerr\'o y se verific\'o antes de empezar el siguiente: no se
+entren\'o ning\'un modelo hasta tener las particiones probadas, y no se abri\'o
+el conjunto de prueba hasta tener todos los modelos, la calibraci\'on y la
+revisi\'on de fuga listos.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    font=\footnotesize,
+    caja/.style={draw=tecsteel, fill=boxbg, rounded corners=2pt,
+                 text width=3.0cm, align=center, minimum height=1.0cm},
+    rama/.style={font=\scriptsize\itshape, text=labelgray},
+    flecha/.style={-{Stealth[length=2mm]}, thick, tecsteel}]
+    \node[caja] (c) {Corpus p\'ublico\\10 d\'ias de JSON};
+    \node[caja, right=0.6cm of c] (t) {Tabla de estados\\62 caracter\'isticas};
+    \node[caja, right=0.6cm of t] (p) {Particiones A, B, C\\por partida};
+    \node[caja, below=1.0cm of p] (b) {B0 $\rightarrow$ B1 $\rightarrow$ B2\\$\rightarrow$ B3 $\rightarrow$ B4};
+    \node[caja, left=0.6cm of b] (x) {LightGBM, ablaciones\\H2, modelo final};
+    \node[caja, left=0.6cm of x] (e) {Evaluaci\'on final\\una sola vez en prueba};
+    \draw[flecha] (c) -- (t);
+    \draw[flecha] (t) -- (p);
+    \draw[flecha] (p) -- (b);
+    \draw[flecha] (b) -- (x);
+    \draw[flecha] (x) -- (e);
+    \node[rama, above=0.05cm of t] {rama 03};
+    \node[rama, below=0.05cm of x] {rama 04};
+    \node[rama, below=0.05cm of e] {rama 05};
+  \end{tikzpicture}
+  \caption{Orden de construcci\'on de la Etapa 2.}
+  \label{fig:flujo}
+\end{figure}
+
+% ============================================================
+\subsection{Rama 03: datos y entorno}
+\label{subsec:rama03}
+
+\jentry{2026-10-04}{Apertura de la etapa y lectura de una partida real}%
+       {Adriel}{03DataCollectionAndEnvironmentSetup}
+
+Se tradujo la documentaci\'on al espa\~nol, se reemplaz\'o el plan \'agil de
+la Etapa 1 por \code{PlanDeDesarrollo.md} y se prepar\'o el entorno de
+Colab. Antes de escribir el extractor se inspeccion\'o el JSON de una
+partida completa para entender el formato real:
+
+\begin{itemize}
+  \item En cada paso hay dos vistas. El jugador \code{ACTIVE} debe decidir;
+        el \code{INACTIVE} espera y su vista va un paso atrasada.
+  \item La mano del oponente llega como \code{null} y los premios como una
+        lista de \code{null}: la informaci\'on oculta ya viene protegida.
+  \item Como todos los premios son nulos, los premios restantes se cuentan
+        por el \emph{largo} de la lista, no por los elementos no nulos.
+\end{itemize}
+
+\decision{Escribir la l\'ogica en \code{src/\allowbreak{}ptcg\_\allowbreak{}wp/\allowbreak{}*.py} y dejar los
+cuadernos solo para ejecutar y mostrar resultados.}{El c\'odigo en m\'odulos
+se puede probar con \code{pytest}, revisar en un PR e importar desde el
+agente de la Etapa 3.}{L\'ogica dentro de las celdas: imposible de probar y
+de reutilizar.}
+
+\milestone{Primer extractor: 61 caracter\'isticas propio/oponente, marca de
+preparaci\'on y descarte de empates.}{Commit ``feat(features): extraer
+estados del jugador activo y a\~nadirlos a la ingesta''.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-11}{Estados resueltos, pruebas de fuga y almac\'en en Kaggle}%
+       {Adriel}{03DataCollectionAndEnvironmentSetup}
+
+Al revisar las partidas completas se encontr\'o que algunos estados ya
+muestran el desenlace: un jugador sin premios por tomar o sin Pok\'emon en
+juego. Se agregaron la columna \code{decided} y el filtro \code{usable}, el
+n\'umero de turno p\'ublico (\code{game\_\allowbreak{}turn}) y los identificadores de los
+Pok\'emon activos. Los agentes se seudonimizaron con SHA-256 truncado.
+
+\decision{Excluir los estados de preparaci\'on y los ya resueltos de toda
+tabla de modelado.}{Un estado resuelto tiene el desenlace a la vista;
+incluirlo inflar\'ia el desempe\~no con casos triviales. Son el 0.2\,\% de los
+estados.}{Conservarlos: el modelo aprender\'ia a leer un tablero ya
+terminado.}
+
+\decision{Probar la ausencia de fuga con pruebas autom\'aticas que
+\emph{intentan} provocarla.}{Las pruebas llenan la mano rival y los premios
+con cartas reales, cambian el resultado y las recompensas, y cortan los
+pasos futuros. En todos los casos las caracter\'isticas deben quedar
+id\'enticas. Si alguien cambia el extractor y filtra algo oculto, la prueba
+falla.}{Revisar a mano el c\'odigo del extractor: no protege contra cambios
+futuros.}
+
+\decision{Guardar las tablas procesadas en un dataset privado de Kaggle,
+nunca en Git.}{Son gigabytes de datos y el repositorio debe guardar la
+receta, no los datos. Kaggle permite que los tres integrantes bajen
+exactamente las mismas tablas.}{Versionar los Parquet en Git o que cada uno
+reconstruyera las tablas (unos 12 minutos por d\'ia).}
+
+\blocker{Los compa\~neros recib\'ian un error 404 al bajar el dataset
+completo, y la herramienta \code{kaggle} informaba \'exito aunque la
+publicaci\'on fallara.}{Nadie m\'as que Adriel pod\'ia trabajar con las
+tablas.}{Se pas\'o a descargar archivo por archivo y \code{store.py} empez\'o
+a leer la salida de \code{kaggle} y fallar si no se bajaba nada.}
+
+\aiuse{Claude}{implementar la ingesta, el extractor, las pruebas y el
+almac\'en en Kaggle, y diagnosticar los errores de Colab}{Adriel ejecut\'o
+cada celda y compar\'o los conteos con lo esperado antes de cada commit}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-11}{Particiones, cobertura de cartas y diccionario de datos}%
+       {Adriel}{03DataCollectionAndEnvironmentSetup}
+
+Se construyeron las particiones de los tres escenarios, agrupadas por
+partida, con la semilla 2026.
+
+\decision{Escenario~B por d\'ias completos: del 18 al 25 de junio a
+entrenamiento, el 7 de julio a validaci\'on, el 11 a calibraci\'on, y el 15 y
+el 22 a prueba. El 17 de junio queda fuera.}{Partir dentro de un d\'ia
+mezclar\'ia el presente con el futuro. El 17 de junio fue un arranque parcial
+de la competencia. Ning\'un d\'ia mostr\'o una concentraci\'on an\'omala de
+mazos (m\'inimo 274 mazos distintos frente a una mediana cercana a 450).}{
+Cortes por fecha y hora dentro de un d\'ia; reservar un d\'ia an\'omalo, que
+al final no existi\'o.}
+
+\decision{Escenario~C por arquetipos: toda partida con alguno de 33
+Pok\'emon principales reservados va a prueba (15.1\,\% de las partidas).}{El
+corpus no trae mazos completos. El Pok\'emon que m\'as tiempo pasa activo
+identifica bien el arquetipo y permite reservar estrategias enteras.}{
+Reservar mazos completos: casi no se repiten, as\'i que la reserva ser\'ia
+arbitraria.}
+
+\decision{Cobertura de cartas: en A y C toda carta activa debe aparecer en
+entrenamiento; si no, se mueve a entrenamiento la partida m\'as corta que la
+contiene. En B no se mueve nada.}{Sin esta regla, la ablaci\'on de H2 se
+evaluar\'ia sobre cartas que el modelo nunca vio. En B, mover partidas
+futuras a entrenamiento ser\'ia fuga temporal, as\'i que las cartas nuevas
+(0.86 a 1.20\,\% de las filas) se aceptan como parte del cambio que B
+mide.}{Regenerar la partici\'on con otra semilla hasta que la cobertura
+saliera completa.}
+
+Al revisar la tabla se encontr\'o que la tasa de victoria de la posici\'on 0
+sub\'ia de 0.507 a 0.559 con los d\'ias. La auditor\'ia mostr\'o la causa: el
+jugador que empieza ocupa la posici\'on 0 en el 76.4\,\% de las partidas del
+17 de junio y en el 100\,\% de las del 22 de julio. No es una ventaja de la
+posici\'on sino de mover primero, y por eso el modelo recibe
+\code{first\_\allowbreak{}player\_\allowbreak{}is\_\allowbreak{}me} y no la posici\'on.
+
+\milestone{Tabla final verificada: 55\,196 partidas, 7\,540\,389 estados,
+7\,286\,386 filas utilizables, 119 empates excluidos, 0 partidas an\'omalas y
+24 pruebas automáticas.}{PR \#8, \code{DiccionarioDeDatos.md} y cuaderno
+\code{01\_\allowbreak{}exploracion}.}
+
+% ============================================================
+\subsection{Rama 04: entrenamiento de la escalera de modelos}
+\label{subsec:rama04}
+
+\jentry{2026-10-12}{Acuerdos t\'ecnicos antes de entrenar}%
+       {Daniel}{04MainAIModelTrainingAndDevelopment}
+
+Antes de escribir una sola l\'inea de entrenamiento, Daniel fij\'o por
+escrito las reglas de modelado (\code{12-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}AcuerdosTecnicosModelado.md}).
+
+\decision{Cada partida pesa lo mismo, en el entrenamiento y en las
+m\'etricas: cada estado recibe peso $1/n$, con $n$ los estados de su
+partida.}{Sin esa correcci\'on, una partida larga pesar\'ia diez veces m\'as
+que una corta solo por durar m\'as.}{Pesar cada fila por igual.}
+
+\decision{B1 es una heur\'istica fija:
+$(\textit{premios rival} - \textit{premios propios}) +
+\textit{diferencia de PV}/\textit{unidad de PV} +
+\textit{diferencia de banca}$. Solo la pendiente y el intercepto que la
+convierten en probabilidad se ajustan con entrenamiento.}{B1 debe responder
+si hace falta aprendizaje autom\'atico; si sus pesos se aprendieran, ser\'ia
+otro modelo supervisado.}{Ajustar los pesos de la heur\'istica con las
+etiquetas.}
+
+\decision{Seleccionar con validaci\'on cruzada agrupada por partida
+(\code{GroupKFold}), comparar finalistas en validaci\'on y dejar prueba
+cerrada.}{Cada conjunto tiene un solo uso: entrenamiento ajusta, validaci\'on
+elige, calibraci\'on recalibra y prueba reporta.}{\code{KFold} o
+\code{StratifiedKFold} sin grupos, que mezclar\'ian estados de una partida
+entre pliegues.}
+
+\decision{La parada temprana de B4 vigila un grupo de partidas completas,
+separado dentro del entrenamiento. Se fija \code{scikit-learn==1.7.2}, la
+primera versi\'on que acepta datos de vigilancia externos.}{La vigilancia
+interna por defecto separa filas al azar y pondr\'ia estados de una misma
+partida a ambos lados.}{La vigilancia por defecto de scikit-learn.}
+
+\aiuse{Claude}{discutir las alternativas de protocolo}{las reglas quedaron
+escritas y fechadas antes de ejecutar}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-12 a 2026-10-13}{B0 y B1}%
+       {Daniel}{04MainAIModelTrainingAndDevelopment}
+
+\blocker{Cargar todas las columnas de todos los d\'ias agotaba la RAM de
+Colab.}{El cuaderno de B0 y B1 no terminaba.}{Leer solo las columnas
+necesarias y recorrer las tablas d\'ia por d\'ia.}
+
+\milestone{B0 y B1 medidos en validaci\'on para A, B y C. AUC de B1: 0.677,
+0.668 y 0.671.}{Cuaderno \code{02\_\allowbreak{}baselines\_\allowbreak{}B0\_\allowbreak{}B1}.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-15 a 2026-10-18}{B2 con todo el entrenamiento en la RAM de Colab}%
+       {Daniel}{04MainAIModelTrainingAndDevelopment}
+
+La primera versi\'on de B2 cargaba la matriz completa y fallaba por memoria.
+Una muestra de 5\,000 partidas lo hac\'ia caber, pero desperdiciaba la mayor
+parte de los datos.
+
+\decision{Entrenar B2 por lotes: \code{StandardScaler.partial\_\allowbreak{}fit} con
+pesos $1/n$ y \code{SGDClassifier} con p\'erdida log\'istica y
+penalizaci\'on L2, leyendo los Parquet en grupos.}{Permite usar todo el
+entrenamiento sin cargarlo en memoria. Se convirti\'o $C$ en
+$\alpha = 1/(C\cdot G)$, con $G$ las partidas, para conservar el mismo
+objetivo ponderado de la regresi\'on log\'istica.}{Entrenar con una muestra:
+el baseline no habr\'ia visto los mismos datos que los dem\'as modelos.}
+
+\blocker{Las pruebas de equivalencia detectaron que, con
+\code{average=True}, scikit-learn dejaba de actualizar el intercepto al
+encadenar \code{partial\_\allowbreak{}fit}.}{B2 habr\'ia dado un modelo distinto del que
+dice describir.}{Se promediaron los coeficientes a mano al terminar cada
+\'epoca. Una medici\'on sint\'etica de 2 millones de estados confirm\'o un pico
+de solo 279~MiB.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-19}{Primera b\'usqueda de B2 y lectura de la falta de convergencia}%
+       {Daniel}{04MainAIModelTrainingAndDevelopment}
+
+Se compararon nueve valores de $C$, de $10^{-4}$ a $10^{4}$, con cinco
+pliegues por partida en A, B y C. Desde $C = 0.1$ las m\'etricas se aplanan.
+Ning\'un pliegue cumpli\'o el criterio de convergencia (gradiente
+$\le 10^{-3}$).
+
+\decision{No relajar la tolerancia para que el indicador dijera
+``convergi\'o''. Volver a entrenar solo las finalistas ($C = 0.1$ y
+$C = 1$) con hasta 600 \'epocas.}{``0 de 5'' significa que el criterio no
+pudo certificar el m\'inimo, no que el modelo haya fallado. Cambiar el umbral
+solo para cambiar el indicador habr\'ia ocultado el problema.}{Bajar la
+tolerancia o reportar la b\'usqueda como concluyente.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-19 a 2026-10-23}{Reanudaci\'on y auditor\'ia del costo}%
+       {Daniel}{04MainAIModelTrainingAndDevelopment}
+
+Colab cortaba las sesiones a mitad de los entrenamientos. Se agregaron
+puntos de control por pliegue y por \textit{trial}, y un orquestador que
+ejecuta B2, B3 y B4 en secuencia. Cuando B3 empez\'o a tardar horas sin
+avanzar, se audit\'o el c\'odigo (\code{23-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}AuditoriaBaselinesYCoste.md})
+y se encontraron cuatro problemas:
+
+\begin{itemize}
+  \item Al reanudar, el muestreador de Optuna se recreaba con la misma
+        semilla y \textbf{repet\'ia configuraciones ya evaluadas}. Se
+        reprodujo: el tercer \textit{trial} repiti\'o los par\'ametros del
+        primero.
+  \item Con 10 \textit{trials} y 10 de arranque aleatorio, \textbf{la
+        b\'usqueda bayesiana nunca llegaba a guiarse} por los resultados.
+  \item Tres estudios por m\'etrica multiplicaban el costo: 900 ajustes de
+        B3 y 450 de B4, sin contar los finales.
+  \item La base SQLite de Optuna viv\'ia directamente en Google Drive, con
+        escrituras cada minuto.
+\end{itemize}
+
+\decision{Versi\'on \code{efficient\_\allowbreak{}v2}: cinco \textit{trials} por
+estudio, tres de arranque aleatorio, espacio de b\'usqueda acotado (por
+ejemplo, bosques de 25 a 100 \'arboles con profundidad 8 o 12), SQLite en
+disco local con respaldos consistentes y reanudaci\'on que reencola el
+\textit{trial} interrumpido.}{Elimina las configuraciones de costo extremo
+que hac\'ian inviable el presupuesto, sin perder los resultados ya
+obtenidos. Las rutas nuevas no se mezclan con las anteriores.}{Seguir con el
+presupuesto original, que no terminaba en semanas.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-25}{Selecci\'on final de B2}%
+       {Daniel}{04MainAIModelTrainingAndDevelopment}
+
+\begin{table}[H]
+  \centering
+  \caption{B2: finalistas en validaci\'on (\code{25-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}B2SeleccionFinalC.md}).}
+  \label{tab:b2final}
+  \footnotesize
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    \textbf{Escenario} & $\mathbf{C}$ & \textbf{AUC} & \textbf{Log loss} & \textbf{Brier}\\
+    \midrule
+    A & \textbf{0.1} & \textbf{0.7607} & \textbf{0.5774} & \textbf{0.1975}\\
+    A & 1.0 & 0.7607 & 0.5775 & 0.1975\\
+    B & \textbf{0.1} & \textbf{0.7281} & \textbf{0.6309} & \textbf{0.2140}\\
+    B & 1.0 & 0.7278 & 0.6324 & 0.2143\\
+    C & \textbf{0.1} & \textbf{0.7603} & \textbf{0.5786} & \textbf{0.1977}\\
+    C & 1.0 & 0.7602 & 0.5787 & 0.1977\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\decision{$C = 0.1$ en los tres escenarios, y cerrar B2 con el presupuesto
+invertido.}{Gana en las tres m\'etricas en los tres escenarios. Los
+gradientes finales (0.0035 a 0.0072) no certifican el m\'inimo, y eso se
+reporta junto a las m\'etricas.}{Seguir aumentando \'epocas sin l\'imite, o
+usar prueba para resolver el empate.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-25 a 2026-10-26}{B4: una sola b\'usqueda, sin fuga entre escenarios}%
+       {Daniel y Adriel}{04MainAIModelTrainingAndDevelopment}
+
+Daniel prepar\'o un cuaderno independiente para B4. Adriel revis\'o su
+l\'ogica antes de lanzar el entrenamiento completo y encontr\'o un riesgo:
+buscar hiperpar\'ametros por separado en cada escenario usaba partidas que
+eran validaci\'on o prueba en \emph{otro} escenario.
+
+\decision{Una sola b\'usqueda (Optuna TPE, 20 \textit{trials}, tres
+pliegues por partida) sobre las 11\,285 partidas que son entrenamiento en A,
+B y C a la vez. Un solo estudio optimiza la p\'erdida logar\'itmica y
+registra AUC y Brier.}{As\'i ning\'un hiperpar\'ametro vio partidas de
+validaci\'on, calibraci\'on o prueba de ning\'un escenario. Un estudio en
+lugar de tres divide el costo entre tres.}{Una b\'usqueda por escenario, que
+filtraba informaci\'on entre escenarios.}
+
+\blocker{En el primer reentrenamiento final, con tope de 2000 \'arboles, los
+tres escenarios llegaron al tope: el modelo segu\'ia mejorando.}{El n\'umero
+de \'arboles no lo decid\'ia la parada temprana sino el tope.}{Se subi\'o el
+tope a 4000. La parada temprana se detuvo sola en 2888, 2370 y 2714
+\'arboles, y las m\'etricas cambiaron menos de 0.002. Se us\'o un servidor
+con 8 n\'ucleos y 51~GiB de RAM.}
+
+\milestone{B4 en validaci\'on: AUC 0.835 (A), 0.786 (B) y 0.836 (C).}{Cuaderno
+\code{05\_\allowbreak{}entrenamiento\_\allowbreak{}B4\_\allowbreak{}independiente\_\allowbreak{}original.ipynb}, conservado como
+evidencia.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-28}{Selecci\'on de B3, definici\'on de H2 y protocolo de LightGBM}%
+       {Daniel}{04MainAIModelTrainingAndDevelopment}
+
+\decision{Usar en B3 una sola configuraci\'on com\'un, la de mayor
+macro-AUC de validaci\'on: el promedio simple del AUC de A, B y C.}{Se
+necesitaba una configuraci\'on compartida, y cada escenario debe pesar lo
+mismo. El macro-AUC solo elige; los resultados siguen report\'andose por
+escenario.}{Elegir una configuraci\'on distinta por escenario, o promediar
+log loss y Brier en un puntaje arbitrario.}
+
+\begin{table}[H]
+  \centering
+  \caption{B3: finalistas con los mismos hiperpar\'ametros en los tres
+  escenarios (AUC en validaci\'on).}
+  \label{tab:b3sel}
+  \footnotesize
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    \textbf{Finalista} & \textbf{A} & \textbf{B} & \textbf{C} & \textbf{Macro-AUC}\\
+    \midrule
+    \'Arbol / log loss & 0.7740 & 0.7343 & 0.7791 & 0.7624\\
+    \'Arbol / Brier & 0.7767 & 0.7344 & 0.7810 & 0.7641\\
+    Bosque / Brier & 0.8016 & 0.7621 & 0.8038 & 0.7892\\
+    \textbf{Bosque / log loss} & \textbf{0.8029} & \textbf{0.7609} & \textbf{0.8063} & \textbf{0.7901}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\decision{Definir H2 como la comparaci\'on entre B4 con las 62
+caracter\'isticas y B4 restringido a cuatro entradas: turno, qui\'en empez\'o
+y los identificadores de los dos Pok\'emon activos.}{La hip\'otesis pregunta
+si la se\~nal temprana se explica solo por el orden de turno y la identidad
+del mazo. Los activos son la mejor aproximaci\'on a esa identidad disponible
+en cada estado sin usar datos del resto de la partida.}{Usar los mazos
+completos, que solo se conocen al terminar la partida.}
+
+\decision{Cambiar B4 por LightGBM solo si, en cada escenario, el intervalo
+del 95\,\% de la diferencia de AUC queda entero por encima de cero y la
+p\'erdida logar\'itmica y el Brier no empeoran. Presupuesto igual al de B4.}{
+La regla se fij\'o antes de ejecutar, para que no pudiera ajustarse al
+resultado.}{Elegir el que saliera mejor sin regla previa.}
+
+\aiuse{Claude}{proponer la regla de LightGBM (decisi\'on delegada)}{Daniel la
+document\'o antes de ejecutar}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-28 a 2026-10-29}{Auditor\'ia de B0 a B3 y Kaggle como almac\'en \'unico}%
+       {Daniel y Adriel}{04MainAIModelTrainingAndDevelopment}
+
+Se audit\'o que B0 a B3 cumplieran el contrato de modelado del diccionario
+de datos (\code{29-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}AuditoriaBaselinesB0B3.md}): carga con filas
+utilizables, transformaciones ajustadas solo con entrenamiento, validaci\'on
+agrupada, roles de cada conjunto, 62 caracter\'isticas sin identificadores y
+m\'etricas por etapa. Todos cumplieron. Tambi\'en se unific\'o la
+evaluaci\'on en una sola funci\'on para todos los modelos.
+
+\blocker{Los resultados viv\'ian en Google Drive personal y en archivos
+\code{.zip} descargados a mano, y los \code{.joblib} no llegaban a GitHub por
+el \code{.gitignore}.}{Cada integrante ve\'ia una versi\'on distinta de los
+resultados.}{Adriel reemplaz\'o Drive por el dataset privado de Kaggle como
+almac\'en \'unico (\code{store.py}). Cada archivo publicado registra su
+SHA-256, el commit que lo produjo y la fecha, y cada publicaci\'on conserva
+todo lo anterior.}
+
+\decision{Cuadernos sin interruptores: cada celda declara los archivos que
+produce y llama a \code{store.asegurar}. Si existen en Kaggle, los baja y
+verifica; si faltan, entrena y publica.}{Un interruptor olvidado en
+\code{True} puede reentrenar y sobrescribir horas de trabajo; uno en
+\code{False}, saltarse un paso. Sin interruptores, ejecutar la celda siempre
+hace lo correcto.}{Variables como \code{EJECUTAR = False} o
+\code{CONSTRUIR = True}.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-10-29 a 2026-10-30}{LightGBM, ablaciones, H2 y modelo final}%
+       {Adriel}{04MainAIModelTrainingAndDevelopment}
+
+\milestone{LightGBM no cumple la regla y se mantiene B4: AUC LightGBM/B4 de
+0.8346/0.8346 (A), 0.7849/0.7863 (B) y 0.8352/0.8355 (C). Dos
+implementaciones independientes coinciden, as\'i que el resultado no depende
+de la librer\'ia.}{Carpeta \code{lightgbm/\allowbreak{}} en Kaggle.}
+
+\milestone{Ablaciones: sin recursos y tablero el AUC cae de 0.05 a 0.06; sin
+progreso, como mucho 0.003; sin diferenciales no cae.}{Carpeta
+\code{b4/\allowbreak{}ablaciones/\allowbreak{}}.}
+
+\decision{No quitar los diferenciales de B4 aunque no aporten.}{Elegir
+caracter\'isticas mirando validaci\'on ser\'ia una selecci\'on sobre el
+mismo conjunto que se usa para comparar.}{Simplificar el modelo con esas
+cifras.}
+
+\blocker{\code{HistGradientBoosting} admite como m\'aximo 255 categor\'ias por
+columna, y H2 necesita 359 cartas activas.}{Las salidas r\'apidas, agrupar o
+descartar las cartas poco frecuentes, perd\'ian informaci\'on de identidad,
+que es justo lo que H2 mide.}{Adriel exigi\'o conservar las 359 cartas. Cada identificador se
+reparti\'o sin p\'erdida en bloques de hasta 255 categor\'ias, ordenados por
+frecuencia. Esto no oblig\'o a reentrenar B4.}
+
+\decision{El modelo final para la Etapa 3 es B4 entrenado en A, expuesto en
+\code{ptcg\_\allowbreak{}wp.predictor.PredictorVictoria}.}{A tiene la poblaci\'on m\'as
+amplia y reciente; B y C sirven para medir generalizaci\'on. El predictor
+recibe la observaci\'on del juego y produce las mismas caracter\'isticas, en
+el mismo orden, que la tabla de entrenamiento.}{Elegir el modelo de B o C, o
+entrenar uno nuevo con todos los datos.}
+
+\milestone{Escalera completa en validaci\'on (Tabla~\ref{tab:escaleraval}) y
+modelo exportado que reproduce las m\'etricas de validaci\'on de B4 con
+diferencia m\'axima de $5.6\times10^{-16}$.}{PR \#9 y carpeta
+\code{modelo\_\allowbreak{}final/\allowbreak{}} en Kaggle.}
+
+\begin{table}[H]
+  \centering
+  \caption{AUC en validaci\'on de la escalera de modelos al cerrar la rama 04.}
+  \label{tab:escaleraval}
+  \footnotesize
+  \begin{tabular}{@{}lccccc@{}}
+    \toprule
+    \textbf{Escenario} & \textbf{B0} & \textbf{B1} & \textbf{B2} & \textbf{B3} & \textbf{B4}\\
+    \midrule
+    A & 0.500 & 0.677 & 0.761 & 0.803 & 0.835\\
+    B & 0.500 & 0.668 & 0.728 & 0.761 & 0.786\\
+    C & 0.500 & 0.671 & 0.760 & 0.806 & 0.836\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\aiuse{Claude}{revisar la b\'usqueda de B4, implementar el almac\'en en
+Kaggle, la codificaci\'on por bloques de H2 y el predictor}{Adriel prob\'o
+cada cambio en Colab y rechaz\'o las propuestas con interruptores, con
+dependencia de Drive o con p\'erdida de categor\'ias}
+
+% ============================================================
+\subsection{Rama 05: evaluaci\'on final}
+\label{subsec:rama05}
+
+\jentry{2026-11-02}{Diagn\'ostico y protocolo congelado antes de abrir prueba}%
+       {Sebasti\'an}{05FinalModelChecks}
+
+Sebasti\'an reconstruy\'o el estado del proyecto
+(\code{02-\allowbreak{}11-\allowbreak{}26\_\allowbreak{}DiagnosticoFinalModelChecks.md}) y encontr\'o tres riesgos
+de m\'etodo antes de escribir el protocolo:
+
+\begin{itemize}
+  \item El orden sugerido del cuaderno dejaba SHAP y la revisi\'on de fuga
+        para despu\'es de prueba. As\'i no pod\'ian funcionar como barrera.
+  \item Comparar directamente la ca\'ida del AUC con la del log loss
+        favorec\'ia a H3, porque est\'an en escalas distintas.
+  \item Comparar etapas con todas las partidas mezcla duraci\'on y progreso:
+        las partidas cortas nunca llegan a la etapa final.
+\end{itemize}
+
+\decision{Congelar el protocolo con un commit antes de abrir prueba
+(\code{02-\allowbreak{}11-\allowbreak{}26\_\allowbreak{}ProtocoloEvaluacionFinal.md}), con este orden: verificar
+la carga de modelos, SHAP y revisi\'on de fuga, decidir la calibraci\'on solo
+con calibraci\'on, curvas de aprendizaje y, solo entonces, prueba.}{Si una
+regla se escribe despu\'es de ver el resultado, puede acomodarse a \'el. La
+celda de prueba se niega a correr si falta alguna barrera.}{Evaluar prueba
+primero y decidir despu\'es.}
+
+\decision{Decidir H3 con la descomposici\'on de la p\'erdida en calibraci\'on
+(MCB) y ordenamiento (DSC), sobre las mismas 1\,405 partidas de prueba de A
+y B.}{Deja ambas p\'erdidas en las mismas unidades. Usar las mismas
+partidas a\'isla el efecto del entrenamiento del de la composici\'on del
+conjunto.}{Comparar porcentajes de ca\'ida de AUC y de log loss.}
+
+\decision{Controlar la duraci\'on en H1 con una cohorte: solo las partidas
+que llegan a las tres etapas.}{Si el AUC sube de inicio a final dentro de las
+mismas partidas, el aumento no viene de que las partidas largas sean m\'as
+f\'aciles.}{Comparar etapas con todas las partidas.}
+
+\decision{Revisi\'on de fuga con SHAP: aprueba si ninguna columna prohibida
+participa, si ninguna caracter\'istica concentra m\'as del 50\,\% de la
+importancia y si ninguna caracter\'istica sola alcanza un AUC de 0.85.}{Una
+variable que domina el modelo suele ser la firma de una fuga. Los umbrales se
+fijaron antes de mirar.}{Revisar las gr\'aficas SHAP a ojo.}
+
+\aiuse{Claude Code}{diagn\'ostico, protocolo, implementaci\'on del cuaderno 06
+y sus pruebas sint\'eticas}{Sebasti\'an revis\'o y aprob\'o el protocolo; la
+herramienta no tuvo acceso a los datos}
+
+% ------------------------------------------------------------
+
+\jentry{2026-11-02 a 2026-11-03}{Ejecuci\'on del cuaderno 06}%
+       {Adriel}{05FinalModelChecks}
+
+Adriel ejecut\'o el cuaderno de arriba abajo en Colab Pro, sin que nadie m\'as
+publicara en Kaggle al mismo tiempo. Antes de prueba pasaron todas las
+barreras: 109 pruebas autom\'aticas, reproducci\'on exacta de las m\'etricas de
+validaci\'on (diferencias $\le 4.4\times10^{-16}$ en log loss y Brier, y
+$\le 4.8\times10^{-7}$ en AUC) y revisi\'on de fuga aprobada (importancia
+m\'axima 0.113; mejor caracter\'istica sola con AUC 0.690).
+
+\blocker{La publicaci\'on del an\'alisis de errores se marc\'o como fallida
+aunque hab\'ia funcionado: los archivos \code{errores\_\allowbreak{}*.csv} contienen la
+palabra ``error'', y \code{store.py} la confund\'ia con un mensaje de
+Kaggle.}{La celda se detuvo despu\'es de abrir prueba.}{Se corrigi\'o la
+detecci\'on para leer solo los mensajes de error reales y se agregaron
+pruebas. Al volver a ejecutar, lo publicado se baj\'o sin recalcular: prueba
+no se volvi\'o a predecir.}
+
+\blocker{Justo despu\'es de publicar, el \'indice del dataset a\'un no mostraba
+la versi\'on nueva a otros servidores.}{Una celda pod\'ia creer que un
+archivo faltaba.}{El almac\'en guarda una marca de publicaci\'on y prefiere la
+copia m\'as reciente; si Kaggle no responde, se espera unos minutos y se
+reintenta.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-11-04 a 2026-11-05}{Resultados y veredicto}%
+       {Sebasti\'an y Adriel}{05FinalModelChecks}
+
+\begin{table}[H]
+  \centering
+  \caption{AUC de B4 en prueba (intervalo del 95\,\%) y veredicto de las hip\'otesis.}
+  \label{tab:resumenprueba}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}l c c c Y@{}}
+    \toprule
+    & \textbf{A} & \textbf{B} & \textbf{C} & \textbf{Lectura}\\
+    \midrule
+    AUC global & 0.833 & 0.789 & 0.787 & Supera a B0--B3 con intervalos que excluyen el cero\\
+    AUC inicio / final & 0.684 / 0.937 & 0.630 / 0.915 & 0.623 / 0.919 & La predicci\'on mejora con la partida\\
+    H1 & Sostenida & Sostenida & Sostenida & Cohorte: +0.32 de inicio a final\\
+    H2 & Refutada & Sostenida & Sostenida & El estado aporta cuando cambia la poblaci\'on\\
+    H3 & \multicolumn{3}{c}{Refutada} & El ordenamiento se degrada m\'as que la calibraci\'on\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \safeimage[width=\linewidth]{../../02Papers/00MainPaper/img/res_auc_por_turno.png}
+    \caption{AUC de B4 por turno (A).}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \safeimage[width=\linewidth]{../../02Papers/00MainPaper/img/res_fiabilidad.png}
+    \caption{Diagramas de fiabilidad de B4.}
+  \end{subfigure}
+  \caption{Dos resultados de la evaluaci\'on final, tomados del cuaderno 06.}
+  \label{fig:resultados}
+\end{figure}
+
+\decision{Usar el modelo final sin calibrador.}{En A, B4 ya est\'a calibrado
+(ECE 0.002) y la isot\'onica lo empeora un poco. En B la isot\'onica baja el
+ECE de 0.037 a 0.018, pero la misma estrategia empeor\'o a B3: corregir bajo
+deriva no es fiable en general. La elecci\'on se hizo con calibraci\'on, antes
+de abrir prueba.}{Calibrar siempre por defecto.}
+
+\decision{No agregar una comprobaci\'on extra de procedencia de los
+archivos de prueba.}{El cuaderno 06 se versiona con sus salidas, y el
+\'indice del dataset ya registra el SHA-256, el commit y la fecha de cada
+archivo. La comprobaci\'on no a\~nad\'ia informaci\'on nueva.}{Una celda
+adicional que repitiera esa verificaci\'on.}
+
+\milestone{Evaluaci\'on final cerrada: 51 archivos de resultados en
+\code{evaluacion\_\allowbreak{}final/\allowbreak{}}, verificados con SHA-256.}{PR \#10,
+\code{04-\allowbreak{}11-\allowbreak{}26\_\allowbreak{}ResultadosEvaluacionFinal.md} y cuaderno \code{06} con
+salidas.}
+
+% ============================================================
+\subsection{Rama 06: art\'iculo y cierre}
+\label{subsec:rama06}
+
+\jentry{2026-11-05 a 2026-11-06}{Correcci\'on del art\'iculo y documentaci\'on final}%
+       {Adriel}{06PendientesDelArticulo}
+
+Se corrigieron en el art\'iculo los datos que la Etapa 2 cambi\'o: el corpus
+final (55\,196 partidas), el conteo de premios, los d\'ias del escenario~B, la
+definici\'on del escenario~C por arquetipos, la cobertura de cartas medida,
+el sesgo de la posici\'on 0 y la URL real del conjunto de datos. Despu\'es se
+escribieron las secciones de resultados, discusi\'on y conclusiones, y se
+actualiz\'o la documentaci\'on del repositorio.
+
+\decision{Declarar en el art\'iculo las desviaciones respecto del dise\~no:
+una sola semilla, ablaciones sobre tres familias, sin coeficientes de B2 ni
+importancia por permutaci\'on, y escenario~C por arquetipos.}{Un cambio no
+declarado har\'ia que el lector crea que se ejecut\'o el dise\~no
+original.}{Omitirlas o reescribir la metodolog\'ia como si siempre hubiera
+sido as\'i.}
+
+\milestone{Art\'iculo con metodolog\'ia definitiva, resultados, discusi\'on y
+conclusiones.}{Commits de la rama \code{06PendientesDelArticulo}.}
+
+% ============================================================
+\subsection{C\'omo protegimos los datos}
+\label{subsec:proteccion}
+
+La Tabla~\ref{tab:proteccion} re\'une las medidas contra la fuga de
+informaci\'on. Cada una responde a una v\'ia concreta por la que el modelo
+podr\'ia ver algo que no deber\'ia.
+
+\begin{table}[H]
+  \centering
+  \caption{V\'ias de fuga y c\'omo se cerr\'o cada una.}
+  \label{tab:proteccion}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{4.2cm} Y P{3.0cm}@{}}
+    \toprule
+    \textbf{V\'ia de fuga} & \textbf{Medida} & \textbf{Comprobaci\'on}\\
+    \midrule
+    Estados de una partida a ambos lados de una partici\'on & Toda partici\'on, pliegue, vigilancia e intervalo se agrupa por partida & Pruebas de particiones\\
+    Informaci\'on oculta (mano rival, premios) & Solo se lee la vista del jugador que act\'ua; los campos ocultos nunca entran & Pruebas que llenan lo oculto y exigen X id\'entico\\
+    Resultado, recompensas y pasos futuros & Columnas prohibidas por c\'odigo & Pruebas de fuga\\
+    Estados con el desenlace a la vista & Filtro \code{usable} (sin preparaci\'on ni estados resueltos) & Prueba de carga\\
+    Futuro en el escenario B & D\'ias completos en orden; no se mueven partidas futuras a entrenamiento & Prueba de cronolog\'ia\\
+    Hiperpar\'ametros que ven otros escenarios & B\'usqueda de B4 solo con las 11\,285 partidas de entrenamiento comunes & Prueba de la b\'usqueda\\
+    Preprocesamiento ajustado con todos los datos & Escalado y cortes de etapa ajustados solo con entrenamiento & Auditor\'ia de B0--B3\\
+    Decisiones tomadas con prueba & Protocolo congelado; prueba se abre una vez, despu\'es de todas las barreras & Celda de prueba con barreras\\
+    Una variable que filtra el resultado & Revisi\'on SHAP con umbrales previos & Aprobada antes de prueba\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{C\'omo aseguramos que todo funcionara}
+\label{subsec:verificacion}
+
+\begin{itemize}
+  \item \textbf{Pruebas autom\'aticas.} Pasaron de 24 al cerrar la rama de
+        datos a 109 al ejecutar la evaluaci\'on final. Cubren fuga,
+        particiones, evaluaci\'on, almac\'en, entrenamiento y predictor, con
+        datos sint\'eticos.
+  \item \textbf{Valor esperado en cada celda.} Cada celda anota lo que debe
+        mostrar (por ejemplo, ``55\,196 partidas''). Si la salida no
+        coincid\'ia, no se hac\'ia commit.
+  \item \textbf{Reproducci\'on antes de avanzar.} El modelo exportado y el
+        cuaderno 06 deb\'ian reproducir las m\'etricas ya publicadas antes de
+        usarse.
+  \item \textbf{Trazabilidad de cada archivo.} Cada resultado en Kaggle
+        guarda su SHA-256, el commit que lo produjo y la fecha.
+  \item \textbf{Reanudaci\'on segura.} Puntos de control por pliegue,
+        \textit{trial} y escenario, con manifiestos que impiden mezclar
+        configuraciones distintas.
+  \item \textbf{Una sola persona publica.} Al ejecutar algo nuevo, se
+        avisaba al grupo para que nadie m\'as publicara al mismo tiempo.
+\end{itemize}
+
+% ============================================================
+\subsection{Registro de experimentos}
+\label{subsec:registro}
+
+Semilla 2026 en todas las corridas, salvo B3 (semilla efectiva 2030). Las
+cifras de AUC van en el orden A / B / C.
+
+\begin{table}[H]
+  \centering
+  \caption{Corridas de la escalera de modelos (B0 a B4).}
+  \label{tab:stage2runs}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{3.0cm} P{4.6cm} P{1.5cm} Y@{}}
+    \toprule
+    \textbf{Corrida} & \textbf{Configuraci\'on} & \textbf{Fecha} & \textbf{Resultado}\\
+    \midrule
+    B0 y B1 & Prevalencia; heur\'istica de recursos con pendiente e intercepto ajustados en entrenamiento & 13/10 & AUC de B1 en validaci\'on 0.668--0.677\\
+    B2, b\'usqueda & 9 valores de $C$, 5 pliegues, todo el entrenamiento & 19/10 & M\'etricas planas desde $C = 0.1$; 0 de 5 pliegues convergen\\
+    B2, finalistas & $C \in \{0.1, 1\}$, hasta 600 \'epocas & 25/10 & $C = 0.1$; AUC 0.761 / 0.728 / 0.760\\
+    B3, \code{efficient\_\allowbreak{}v2} & \'Arbol y bosque, 5 \textit{trials} por estudio & 23--28/10 & Bosque com\'un por macro-AUC; AUC 0.803 / 0.761 / 0.806\\
+    B4, b\'usqueda & Optuna TPE, 20 \textit{trials}, 3 pliegues, 11\,285 partidas & 26/10 & Configuraci\'on del \textit{trial} 20\\
+    B4, tope 2000 & Reentrenamiento final & 26/10 & Los tres escenarios llegaron al tope\\
+    B4, tope 4000 & Reentrenamiento final & 26/10 & 2888 / 2370 / 2714 \'arboles; AUC 0.835 / 0.786 / 0.836\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Corridas de experimentos y evaluaci\'on final.}
+  \label{tab:stage2runs2}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{3.0cm} P{4.6cm} P{1.5cm} Y@{}}
+    \toprule
+    \textbf{Corrida} & \textbf{Configuraci\'on} & \textbf{Fecha} & \textbf{Resultado}\\
+    \midrule
+    LightGBM & Mismo presupuesto que B4 & 29--30/10 & No cumple la regla; se mantiene B4\\
+    Ablaciones & B4 sin cada familia & 29--30/10 & Recursos y tablero es la familia esencial\\
+    H2 & B4 restringido a 4 entradas, 359 cartas sin p\'erdida & 30/10 & AUC 0.733 / 0.614 / 0.743 en validaci\'on\\
+    Curvas de aprendizaje & 25, 50, 75 y 100\,\% del entrenamiento & 03/11 & El \'ultimo 25\,\% suma $\le$ 0.004\\
+    Evaluaci\'on final & Una sola vez en prueba & 03/11 & AUC 0.833 / 0.789 / 0.787\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+
+% ============================================================
+\subsection{Decisiones consolidadas}
+
+\begin{table}[H]
+  \centering
+  \caption{Decisiones de la Etapa 2: datos y baselines (11/10 a 25/10).}
+  \label{tab:stage2decisions}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}l P{4.2cm} Y P{2.4cm}@{}}
+    \toprule
+    \textbf{Fecha} & \textbf{Decisi\'on} & \textbf{Por qu\'e} & \textbf{Art\'iculo}\\
+    \midrule
+    11/10 & Excluir preparaci\'on y estados resueltos & Tienen el desenlace a la vista & Metodolog\'ia\\
+    11/10 & Escenario B por d\'ias completos, sin el 17 de junio & Evita mezclar presente y futuro & Metodolog\'ia\\
+    11/10 & Escenario C por 33 arquetipos & El corpus no trae mazos completos & Metodolog\'ia\\
+    11/10 & Cobertura de cartas en A y C, no en B & En B ser\'ia fuga temporal & Metodolog\'ia\\
+    12/10 & Peso $1/n$ por partida & Una partida larga no debe pesar m\'as & Metodolog\'ia\\
+    12/10 & B1 con pesos fijos & Responde si hace falta aprendizaje & Resultados\\
+    18/10 & B2 por lotes con todo el entrenamiento & Cabe en Colab sin muestrear & Resultados\\
+    19/10 & No relajar la tolerancia de B2 & No ocultar la falta de convergencia & Resultados\\
+    23/10 & B\'usquedas \code{efficient\_\allowbreak{}v2} & El presupuesto original no terminaba & Resultados\\
+    25/10 & $C = 0.1$ en B2 & Mejor en las tres m\'etricas & Resultados\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Decisiones de la Etapa 2: B4, experimentos y evaluaci\'on final (26/10 a 06/11).}
+  \label{tab:stage2decisions2}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}l P{4.2cm} Y P{2.4cm}@{}}
+    \toprule
+    \textbf{Fecha} & \textbf{Decisi\'on} & \textbf{Por qu\'e} & \textbf{Art\'iculo}\\
+    \midrule
+    26/10 & Una sola b\'usqueda de B4 en partidas comunes & Sin fuga entre escenarios & Resultados\\
+    26/10 & Tope de 4000 \'arboles & El tope de 2000 se alcanzaba & Resultados\\
+    28/10 & Macro-AUC para B3 & Una configuraci\'on com\'un, escenarios con igual peso & Resultados\\
+    28/10 & Regla de LightGBM previa & No acomodar la regla al resultado & Resultados\\
+    29/10 & Kaggle como almac\'en \'unico y cuadernos sin interruptores & Una sola versi\'on de los resultados, con trazabilidad & Resultados\\
+    30/10 & H2 con las 359 cartas sin p\'erdida & H2 mide justo la identidad & Resultados\\
+    30/10 & Modelo final: B4 de A & Poblaci\'on m\'as amplia & Conclusiones\\
+    02/11 & Protocolo congelado y barreras antes de prueba & Prueba se usa una vez & Resultados\\
+    02/11 & H3 con descomposici\'on MCB/DSC & Escalas comparables & Resultados\\
+    04/11 & Modelo final sin calibrador & Decidido con calibraci\'on, no con prueba & Resultados\\
+    06/11 & Declarar las desviaciones del dise\~no & Transparencia & Resultados\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+
+\subsection{Retrospectiva}
+
+\begin{table}[H]
+  \centering
+  \caption{Retrospectiva de la Etapa 2.}
+  \label{tab:stage2retro}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{4.0cm} Y@{}}
+    \toprule
+    \textbf{Pregunta} & \textbf{Respuesta}\\
+    \midrule
+    ¿Qu\'e funcion\'o? & Cerrar cada bloque antes del siguiente. Escribir las reglas antes de ejecutar (acuerdos, protocolo de LightGBM, protocolo final). Probar la fuga con pruebas que intentan provocarla. Kaggle como almac\'en \'unico con trazabilidad por archivo.\\
+    ¿Qu\'e nos bloque\'o? & La RAM y los cortes de sesi\'on de Colab, y el costo de las b\'usquedas de B3 y B4 con el presupuesto original. El almac\'en en Drive, que dejaba versiones distintas en cada integrante.\\
+    ¿Qu\'e estimamos mal? & El tiempo de entrenamiento: B2 y B3 tomaron unos cuatro y tres d\'ias de calendario por las reanudaciones. Tambi\'en el tope de \'arboles de B4, que hubo que duplicar.\\
+    ¿Qu\'e cambia para la Etapa 3? & Partir del predictor ya exportado y probado, mantener el almac\'en en Kaggle y las celdas sin interruptores, y fijar por escrito c\'omo se verificar\'a el consumo del modelo antes de construir el agente.\\
+    \bottomrule
+  \end{tabularx}
+\end{table}

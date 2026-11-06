@@ -1,0 +1,109 @@
+% ============================================================
+% sec/90meetings.tex - apendice: reuniones y sesiones de trabajo
+% ============================================================
+\section{Reuniones y sesiones de trabajo}
+\label{sec:meetings}
+
+\subsection{\'Indice}
+
+Las reuniones de la Etapa 1 se hicieron por llamada en Discord y quedaron
+registradas con capturas. Desde la Etapa 2 la coordinaci\'on pas\'o a
+sesiones de trabajo por rama y a acuerdos escritos en
+\code{docx/\allowbreak{}03Evidencia/\allowbreak{}}, que funcionan como actas. La duraci\'on de las
+llamadas es la que muestra el contador de la captura, as\'i que es una cota
+inferior.
+
+\begin{table}[H]
+  \centering
+  \caption{Reuniones y sesiones registradas.}
+  \label{tab:meetingindex}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}l P{2.0cm} P{3.4cm} Y@{}}
+    \toprule
+    \textbf{Fecha} & \textbf{Duraci\'on} & \textbf{Participantes} & \textbf{Tema principal}\\
+    \midrule
+    21/08 & 20 min o m\'as & Adriel, Daniel, Sebasti\'an & Primera reuni\'on; conjuntos de datos en Kaggle\\
+    26/08 & 15 min o m\'as & Adriel, Sebasti\'an & Confirmaci\'on del tema\\
+    30/08 & 13 min o m\'as & Adriel, Daniel, Sebasti\'an & Cierre de la confirmaci\'on y reparto de ejes\\
+    06/09 & 1~h 38~min o m\'as & Adriel, Daniel, Sebasti\'an & Revisi\'on final del art\'iculo de la Etapa 1\\
+    12/10 & Acta escrita & Daniel & Acuerdos t\'ecnicos de modelado\\
+    28/10 & Acta escrita & Daniel & Selecci\'on de B3, definici\'on de H2 y protocolo de LightGBM\\
+    02/11 & Acta escrita & Sebasti\'an & Protocolo de evaluaci\'on final\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Actas}
+
+\jentry{2026-08-21}{Primera reuni\'on del equipo}{Adriel, Daniel, Sebasti\'an}{---}
+
+\noindent\textbf{Temas.}
+\begin{itemize}
+  \item Revisi\'on de conjuntos de datos p\'ublicos en Kaggle.
+  \item Organizaci\'on del repositorio.
+\end{itemize}
+
+\noindent\textbf{Acuerdos.}
+\begin{itemize}
+  \item Adriel crea el repositorio con las reglas de ramas y commits
+        (cumplido el mismo d\'ia, PR \#1).
+  \item El equipo considera las repeticiones del PTCG AI Battle Challenge
+        como corpus candidato.
+\end{itemize}
+
+\jentry{2026-08-26}{Confirmaci\'on del tema}{Adriel, Sebasti\'an}{---}
+
+\noindent\textbf{Acuerdos.}
+\begin{itemize}
+  \item Track~A: probabilidad de victoria en el Pok\'emon TCG desde el estado
+        de la partida.
+  \item Se deja la direcci\'on de aprendizaje por refuerzo explorada
+        antes.
+\end{itemize}
+
+\jentry{2026-08-30}{Cierre de la confirmaci\'on del \textit{track}}%
+       {Adriel, Daniel, Sebasti\'an}{---}
+
+\noindent\textbf{Acuerdos.}
+\begin{itemize}
+  \item Base de investigaci\'on de la Etapa 1 cerrada (PR \#2).
+  \item Revisi\'on de literatura repartida por ejes: Daniel el A, Adriel el
+        B y Sebasti\'an el C.
+\end{itemize}
+
+\jentry{2026-09-06}{Revisi\'on final del art\'iculo}{Adriel, Daniel, Sebasti\'an}{---}
+
+\noindent\textbf{Temas.}
+\begin{itemize}
+  \item Lectura completa del art\'iculo antes de la entrega.
+  \item Ajustes de formato, de la tabla comparativa y de la metodolog\'ia.
+\end{itemize}
+
+\noindent\textbf{Acuerdos.}
+\begin{itemize}
+  \item Integrar \code{02PaperAndDelivery} y \code{Stage1} a \code{master}
+        (PR \#4 y \#5) y entregar.
+\end{itemize}
+
+\jentry{2026-10-12}{Acuerdos t\'ecnicos de modelado}{Daniel}{04MainAIModelTrainingAndDevelopment}
+
+Acta: \code{12-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}AcuerdosTecnicosModelado.md}. Fij\'o la f\'ormula de
+B1, la validaci\'on cruzada agrupada, los pesos por partida, la b\'usqueda de
+B2 en cuadr\'icula, las b\'usquedas de B3 y B4 con Optuna y la parada
+temprana por partidas. Dej\'o abiertas las semillas m\'ultiples y el tipo de
+intervalo, que se cerraron en el protocolo final (una semilla; percentil del
+95\,\% con 1000 remuestreos).
+
+\jentry{2026-10-28}{B3, H2 y LightGBM}{Daniel}{04MainAIModelTrainingAndDevelopment}
+
+Actas: \code{28-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}SeleccionB3yDefinicionH2.md} y
+\code{28-\allowbreak{}10-\allowbreak{}26\_\allowbreak{}ProtocoloLightGBM.md}. Fijaron el macro-AUC para elegir B3,
+la definici\'on de las cuatro entradas de H2 y la regla para reemplazar B4
+por LightGBM, todo antes de ejecutar.
+
+\jentry{2026-11-02}{Protocolo de evaluaci\'on final}{Sebasti\'an}{05FinalModelChecks}
+
+Acta: \code{02-\allowbreak{}11-\allowbreak{}26\_\allowbreak{}ProtocoloEvaluacionFinal.md}. Fij\'o el orden de las
+barreras, las reglas de decisi\'on de H1, H2 y H3, la calibraci\'on decidida
+con \code{calib} y los umbrales de la revisi\'on de fuga. Se congel\'o con un
+commit antes de abrir prueba.

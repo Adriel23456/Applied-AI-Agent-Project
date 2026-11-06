@@ -1,0 +1,256 @@
+% ============================================================
+% sec/02stage1.tex - Etapa 1 (21/08 - 17/09)
+% ============================================================
+\section{Etapa 1: estado del arte y dise\~no}
+\label{sec:stage1}
+
+\notebox[Objetivo de la etapa]{Elegir el tema, revisar la literatura en tres
+ejes, auditar el corpus y entregar un art\'iculo IEEE preliminar con la
+pregunta de investigaci\'on, las hip\'otesis y el protocolo experimental.
+Entrega: 6 de septiembre de 2026. Peso: 30\,\%.}
+
+\subsection{Resumen de ramas}
+
+\begin{table}[H]
+  \centering
+  \caption{Ramas de la Etapa 1 y su resultado.}
+  \label{tab:stage1summary}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}l P{2.0cm} P{2.6cm} Y@{}}
+    \toprule
+    \textbf{Rama} & \textbf{Fechas} & \textbf{Responsables} & \textbf{Resultado}\\
+    \midrule
+    \code{TrackConfirmation} & 21/08 & Adriel & Repositorio, licencia y reglas de Git\\
+    \code{00TrackConfirmation} & 21/08--30/08 & Equipo & Track~A y tema aprobados; corpus auditado\\
+    \code{01LiteratureReview} & 30/08--05/09 & Daniel (A), Adriel (B), Sebasti\'an (C) & Revisi\'on por ejes y bibliograf\'ia verificada\\
+    \code{02PaperAndDelivery} & 05/09--17/09 & Equipo & Art\'iculo preliminar, declaraci\'on de IA y entrega\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Bit\'acora}
+
+\jentry{2026-08-21}{Primera reuni\'on y creaci\'on del repositorio}%
+       {Adriel, Daniel, Sebasti\'an}{TrackConfirmation}
+
+El equipo se reuni\'o por primera vez por llamada (Fig.~\ref{fig:reunion1}).
+Se revisaron conjuntos de datos p\'ublicos en Kaggle, entre ellos las
+repeticiones del PTCG AI Battle Challenge publicadas por The Pok\'emon
+Company. Ese mismo d\'ia Adriel cre\'o el repositorio con su licencia, su
+\code{.gitignore} y las reglas de ramas y commits.
+
+\begin{figure}[H]
+  \centering
+  \safeimage[width=0.85\textwidth]{../21-8-26_PrimeraReunionDelEquipo.png}
+  \caption{Primera reuni\'on del equipo (21/08/2026), revisando conjuntos de
+  datos en Kaggle.}
+  \label{fig:reunion1}
+\end{figure}
+
+\decision{Organizar el repositorio en tres niveles de ramas
+(\code{master}, \code{Stage<N>} y ramas de trabajo numeradas) y usar
+Conventional Commits.}{La autor\'ia individual se califica por el historial de
+commits, y una rama por bloque de trabajo hace visible qui\'en hizo qu\'e y
+cu\'ando.}{Ramas personales y una rama \code{develop}: mezclaban trabajos y
+ocultaban la etapa a la que pertenec\'ia cada cambio.}
+
+\milestone{Repositorio operativo.}{PR \#1 y commit ``docs(repo): add
+branching and commit conventions''.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-08-26}{Confirmaci\'on del tema}%
+       {Adriel, Sebasti\'an}{00TrackConfirmation}
+
+En una sesi\'on de revisi\'on (Fig.~\ref{fig:confirmacion}) se cerr\'o el
+tema: estimar la probabilidad de victoria en el Pok\'emon TCG desde el estado
+de la partida, como clasificaci\'on tabular.
+
+\begin{figure}[H]
+  \centering
+  \safeimage[width=0.40\textwidth]{../26-8-26_ConfirmacionDelTema.png}
+  \caption{Sesi\'on de revisi\'on en la que se confirm\'o el tema
+  (26/08/2026).}
+  \label{fig:confirmacion}
+\end{figure}
+
+\decision{Track~A (aprendizaje cl\'asico sobre datos tabulares) con el corpus
+del PTCG AI Battle Challenge.}{El corpus es p\'ublico, grande y tiene
+etiqueta clara (qui\'en gana). El problema de evaluaci\'on que plantea, miles
+de estados correlacionados por partida, es justo el que el Track~A pide
+tratar con rigor: fuga, baselines y protocolo.}{Una primera direcci\'on de
+aprendizaje por refuerzo (planificaci\'on de rutas de cobertura en terreno
+desconocido). Se abandon\'o tras la reevaluaci\'on del equipo y la
+retroalimentaci\'on del profesor.}
+
+\aiuse{Claude}{explorar direcciones del proyecto y probar si la pregunta era
+falsable}{la elecci\'on del tema, del \textit{track} y la decisi\'on de dejar
+la direcci\'on de refuerzo fueron del equipo}
+
+% ------------------------------------------------------------
+
+\jentry{2026-08-30}{Auditor\'ia del corpus y base de investigaci\'on}%
+       {Adriel, Daniel, Sebasti\'an}{00TrackConfirmation}
+
+En una sesi\'on de trabajo de los tres (Fig.~\ref{fig:etapa1}) se cerr\'o la
+confirmaci\'on del \textit{track} y se fij\'o la base de investigaci\'on. La
+auditor\'ia del corpus analiz\'o diez d\'ias entre el 17 de junio y el 22 de
+julio: 52\,085 partidas y 7\,038\,378 observaciones, unos 180~GiB, sin errores
+de lectura. Tambi\'en midi\'o que, en cada paso, la vista del jugador que
+espera es 98.8\,\% id\'entica a su vista anterior.
+
+\begin{figure}[H]
+  \centering
+  \safeimage[width=0.40\textwidth]{../30-8-26_DesarrolloDeLaEtapa1.png}
+  \caption{Sesi\'on de trabajo de la Etapa 1 (30/08/2026).}
+  \label{fig:etapa1}
+\end{figure}
+
+\decision{Agrupar por partida toda partici\'on, validaci\'on cruzada e
+intervalo.}{La auditor\'ia midi\'o que una partici\'on aleatoria por fila
+colocar\'ia pr\'acticamente todas las partidas a ambos lados de la divisi\'on:
+el modelo se evaluar\'ia sobre estados casi id\'enticos a los que vio. La
+decisi\'on se apoya en una medici\'on sobre el propio corpus, no en una
+analog\'ia.}{Partici\'on aleatoria por fila. Solo se conserva como
+demostraci\'on del sesgo, nunca para reportar resultados.}
+
+\decision{Tomar solo la vista del jugador que debe actuar y describir cada
+estado desde su perspectiva (propio, oponente y diferencia).}{La vista del
+jugador que espera repite casi siempre la anterior y duplicar\'ia filas sin
+informaci\'on nueva. La perspectiva propio/oponente evita que el modelo
+aprenda ``la posici\'on 0 gana m\'as''.}{Usar ambas vistas por paso, o
+columnas por posici\'on fija en la mesa.}
+
+\decision{Declarar una lista de campos prohibidos: mano del oponente,
+contenido de los premios, resultado, recompensas, nombres de agentes e
+historial de jugadas.}{Son informaci\'on que el jugador no ve en ese instante
+o que revela el desenlace. Usarlos ser\'ia fuga.}{Confiar en que el modelo
+``no los usar\'ia'': la fuga se previene por construcci\'on, no por
+inspecci\'on posterior.}
+
+\milestone{Tema confirmado y corpus auditado.}{PR \#2 y commit ``docs(repo):
+close track confirmation and establish the Stage 1 research base''.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-08-30 a 2026-09-05}{Revisi\'on de literatura por ejes}%
+       {Daniel (eje A), Adriel (eje B), Sebasti\'an (eje C)}{01LiteratureReview}
+
+Cada integrante revis\'o un eje: el problema y su dominio (A), las t\'ecnicas
+del \textit{track} (B) y el conjunto de datos (C). Se seleccionaron 21
+art\'iculos arbitrados. Cada uno resolvi\'o los DOI de sus fuentes y ley\'o
+el texto completo antes de agregarlas a la bibliograf\'ia.
+
+\decision{Una entrada solo entra al \code{.bib} principal si su DOI resuelve
+y su contenido corresponde a lo que se le atribuye.}{Las herramientas de IA
+proponen metadatos plausibles pero a veces falsos; una cita incorrecta
+invalida el argumento que sostiene.}{Aceptar los metadatos que sugiere una
+herramienta. Cuando un dato no pudo confirmarse, se dej\'o vac\'io en lugar
+de rellenarlo con una suposici\'on.}
+
+\decision{Usar como baseline de literatura el AUC de 0.78 a 0.80 del
+desaf\'io AAIA'17 sobre Hearthstone.}{Es el antecedente m\'as cercano: un
+juego de cartas por turnos con predicci\'on de victoria desde el estado.}{
+Usar cifras de juegos de estrategia en tiempo real, cuyo estado y din\'amica
+son muy distintos.}
+
+\blocker{Varios candidatos eran \textit{preprints} sin arbitraje.}{Retras\'o
+el cierre de la bibliograf\'ia.}{Se marcaron como tales y se excluyeron, o
+se consult\'o con el profesor antes de incluirlos.}
+
+\aiuse{Consensus, Claude y ChatGPT}{buscar candidatos, clasificarlos y
+detectar \textit{preprints}}{cada DOI se resolvi\'o a mano y cada art\'iculo
+se ley\'o}
+
+\milestone{Revisi\'on de literatura integrada al borrador.}{PR \#3.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-09-05 a 2026-09-06}{Ensamblaje del art\'iculo y revisi\'on final}%
+       {Adriel, Daniel, Sebasti\'an}{02PaperAndDelivery}
+
+Se integraron la introducci\'on, los trabajos relacionados, la tabla
+comparativa, el baseline de literatura, la metodolog\'ia, el an\'alisis
+t\'ecnico y las consideraciones \'eticas. La revisi\'on final dur\'o m\'as
+de hora y media con los tres integrantes (Fig.~\ref{fig:revision}).
+
+\begin{figure}[H]
+  \centering
+  \safeimage[width=0.30\textwidth]{../06-9-26_RevisionFinalEtapa1.png}
+  \caption{Revisi\'on final del art\'iculo de la Etapa 1 (06/09/2026).}
+  \label{fig:revision}
+\end{figure}
+
+\decision{Formular tres hip\'otesis refutables (H1 a H3) sin umbrales
+num\'ericos fijos.}{Sin resultados previos sobre este corpus, cualquier
+umbral ser\'ia arbitrario. Cada hip\'otesis declara qu\'e resultado la
+refutar\'ia.}{Hip\'otesis del tipo ``el modelo funciona bien'', que no
+pueden fallar.}
+
+\decision{Una escalera de cinco modelos, B0 a B4, en la que cada nivel
+responde una pregunta.}{B0 (probabilidad a priori) fija el piso; B1
+(heur\'istica) pregunta si hace falta aprendizaje; B2 (regresi\'on
+log\'istica) si la relaci\'on es lineal; B3 (bosque) si hay interacciones;
+B4 (potenciaci\'on del gradiente) cu\'anto a\~nade la complejidad.}{Comparar
+solo contra un modelo trivial, que no dice si la complejidad vale la pena.}
+
+\decision{Tres escenarios de evaluaci\'on: partidas nuevas (A), d\'ias
+posteriores (B) y mazos reservados (C).}{Cada uno responde una pregunta de
+generalizaci\'on distinta, y se reportan por separado.}{Un solo conjunto de
+prueba aleatorio, que no mide el cambio de la poblaci\'on ni la
+memorizaci\'on de mazos.}
+
+\milestone{Art\'iculo preliminar entregado.}{PR \#4, PR \#5 (\code{Stage1}
+$\rightarrow$ \code{master}) y etiqueta \code{v1.0.0}.}
+
+% ------------------------------------------------------------
+
+\jentry{2026-09-06 a 2026-09-17}{Correcciones posteriores a la entrega}%
+       {Adriel}{02PaperAndDelivery}
+
+Se corrigieron figuras, la integraci\'on de las referencias y el t\'itulo de
+los autores.
+
+\milestone{Correcciones integradas.}{PR \#6 (etiqueta \code{v1.0.1}) y
+PR \#7.}
+
+\subsection{Decisiones consolidadas}
+
+\begin{table}[H]
+  \centering
+  \caption{Decisiones t\'ecnicas de la Etapa 1.}
+  \label{tab:stage1decisions}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}l P{3.8cm} Y P{2.2cm}@{}}
+    \toprule
+    \textbf{Fecha} & \textbf{Decisi\'on} & \textbf{Por qu\'e} & \textbf{Secci\'on del art\'iculo}\\
+    \midrule
+    26/08 & Track~A con el corpus del PTCG AI Battle Challenge & Datos p\'ublicos con etiqueta clara y un reto de evaluaci\'on real & Introducci\'on\\
+    30/08 & Agrupar todo por partida & Medido: la partici\'on por fila mezcla casi todas las partidas & Metodolog\'ia, an\'alisis t\'ecnico\\
+    30/08 & Una fila por estado del jugador que act\'ua, en perspectiva propia & Evita duplicados y el sesgo de posici\'on & Metodolog\'ia\\
+    30/08 & Lista de campos prohibidos & Previene la fuga por construcci\'on & An\'alisis t\'ecnico\\
+    05/09 & Baseline de literatura: AUC 0.78--0.80 (Hearthstone) & Antecedente m\'as cercano & Baseline de literatura\\
+    06/09 & Hip\'otesis H1 a H3 refutables & Sin umbrales arbitrarios & Introducci\'on\\
+    06/09 & Escalera B0--B4 y escenarios A, B, C & Cada nivel y escenario responde una pregunta & Metodolog\'ia\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Retrospectiva}
+
+\begin{table}[H]
+  \centering
+  \caption{Retrospectiva de la Etapa 1.}
+  \label{tab:stage1retro}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{4.0cm} Y@{}}
+    \toprule
+    \textbf{Pregunta} & \textbf{Respuesta}\\
+    \midrule
+    ¿Qu\'e funcion\'o? & Repartir la literatura por ejes y medir el corpus antes de dise\~nar el protocolo. La decisi\'on de agrupar por partida qued\'o respaldada por una medici\'on propia.\\
+    ¿Qu\'e nos bloque\'o? & Verificar los metadatos de cada referencia contra la fuente primaria tom\'o m\'as tiempo del previsto.\\
+    ¿Qu\'e estimamos mal? & El tiempo de ensamblaje del art\'iculo: la mayor parte del trabajo se concentr\'o en los \'ultimos dos d\'ias.\\
+    ¿Qu\'e cambia para la Etapa 2? & Traducir la documentaci\'on al espa\~nol, reemplazar el plan \'agil por un plan de desarrollo por ramas y abrir una rama propia para los datos antes de entrenar.\\
+    \bottomrule
+  \end{tabularx}
+\end{table}

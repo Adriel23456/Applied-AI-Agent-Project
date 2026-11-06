@@ -1,0 +1,62 @@
+% ============================================================
+% BitacoraDeTrabajo.tex - archivo principal
+% Compilar: latexmk -pdf BitacoraDeTrabajo.tex
+% ============================================================
+\documentclass[12pt,a4paper]{article}
+
+% ---------- Metadatos del documento (editar solo este bloque) ----------
+\newcommand{\docInstitute}{Instituto Tecnol\'ogico de Costa Rica}
+\newcommand{\docSchool}{Escuela de Ingenier\'ia en Computadores}
+\newcommand{\docCourse}{Inteligencia Artificial}
+\newcommand{\docCode}{IC-6200}
+\newcommand{\docTitle}{Bit\'acora de Trabajo}
+\newcommand{\docSubtitle}{Registro del desarrollo de las Etapas 1, 2 y 3}
+\newcommand{\docKicker}{Proyecto Semestral: Agente de IA Aplicada}
+\newcommand{\docTagline}{Decisiones, bloqueos, acuerdos e hitos del equipo}
+\newcommand{\docKeywords}{Bit\'acora \textbullet\ Decisiones t\'ecnicas \textbullet\ Prevenci\'on de fuga \textbullet\ Trazabilidad}
+
+\newcommand{\docAuthorA}{Adriel S. Chaves Salazar}
+\newcommand{\docIDA}{2021031465}
+\newcommand{\docAuthorB}{Daniel Duarte Cordero}
+\newcommand{\docIDB}{2022012866}
+\newcommand{\docAuthorC}{Sebasti\'an Hern\'andez Bonilla}
+\newcommand{\docIDC}{2022093651}
+\newcommand{\docAuthors}{\docAuthorA, \docAuthorB, \docAuthorC}
+
+\newcommand{\docProfessor}{Kenneth Roberto Obando Rodr\'iguez}
+\newcommand{\docSemester}{II Semestre, 2026}
+\newcommand{\docPlace}{Cartago, Costa Rica}
+\newcommand{\docShortTitle}{Bit\'acora de Trabajo}
+\newcommand{\docRepo}{Applied-AI-Agent-Project}
+
+\input{preamble}
+
+\begin{document}
+\pagenumbering{roman}
+
+\safeinput{sec/00cover}
+
+\newpage
+{
+  \hypersetup{linkcolor=black}
+  \tableofcontents
+  \newpage
+  \listoffigures
+  \listoftables
+  \newpage
+}
+
+\pagenumbering{arabic}
+\justifying
+
+% ---------- Cuerpo: un archivo por etapa ----------
+\safeinput{sec/01conventions}
+\safeinput{sec/02stage1}
+\safeinput{sec/03stage2}
+\safeinput{sec/04stage3}
+
+% ---------- Apendices ----------
+\appendix
+\safeinput{sec/90meetings}
+
+\end{document}
