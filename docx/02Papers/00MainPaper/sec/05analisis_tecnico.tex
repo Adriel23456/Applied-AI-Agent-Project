@@ -33,10 +33,14 @@ días, elegidos para abarcar las fases inicial, media y tardía de la
 competencia, con tres días consecutivos al comienzo de modo que pudiera
 medirse la variación entre días contiguos.
 
-Dentro de esa muestra se analizaron 52\,085 partidas a partir de unos
-180~GiB de datos, sin errores de lectura, y se obtuvieron 7\,038\,378
-observaciones utilizables. Toda afirmación de esta sección está acotada a esa
-muestra y no caracteriza los días no auditados.
+Dentro de esa muestra la auditoría analizó 52\,085 partidas a partir de unos
+180~GiB de datos, sin errores de lectura. La tabla materializada después
+sobre los mismos diez días contiene 55\,196 partidas y 7\,540\,389 estados,
+de los que 7\,286\,386 son utilizables para modelar: la plataforma siguió
+agregando partidas a esos días tras la auditoría. Las cifras descriptivas de
+esta sección proceden de la auditoría salvo que se indique lo contrario.
+Toda afirmación está acotada a esa muestra y no caracteriza los días no
+auditados.
 
 \subsubsection{Estructura y unidad de observación}
 
@@ -58,7 +62,7 @@ propio estado anterior en el 98.8\,\% de los casos. Tratar ambos lados de
 cada paso como filas separadas duplicaría casi todas las observaciones sin
 añadir información, y repesaría las partidas por su duración.
 
-Siete millones de observaciones frente a cincuenta y dos mil partidas es el
+Siete millones de observaciones frente a cincuenta y cinco mil partidas es el
 hecho estructural del que depende todo lo que sigue.
 
 \subsubsection{Distribución del desenlace}
@@ -90,20 +94,23 @@ forma explícita
 \cite{hodge_winprediction_2021,xenopoulos_winprob_2022,saravanan_metadiscovery_2024};
 no poder hacerlo aquí es una limitación propia.
 
-Una consecuencia de esa variación amenaza a una característica concreta: la
-probabilidad de que el jugador que mueve primero ocupe la primera posición
-en la mesa era 0.5089 en un día temprano y 0.9991 desde un día intermedio en
-adelante. En los días tardíos, posición y orden de turno son casi la misma
-variable, y de ahí la normalización de perspectiva descrita en la
-Sección~\ref{subsec:pipeline}.
+Una consecuencia de esa variación amenaza a una característica concreta: en
+la tabla materializada, el jugador que mueve primero ocupa la primera
+posición en la mesa en el 76.4\,\% de las partidas del 17 de junio y en el
+100\,\% de las del 22 de julio. Por eso la tasa de victoria de la primera
+posición sube de 0.507 a 0.559 a lo largo de la muestra: refleja la ventaja
+de mover primero y no una ventaja de la posición. En los días tardíos,
+posición y orden de turno son la misma variable, y de ahí la normalización
+de perspectiva descrita en la Sección~\ref{subsec:pipeline}.
 
 \subsection{Diccionario de datos}
 \label{subsec:diccionario}
 
 Un censo sobre 139\,672 estados encontró 34 campos presentes en la totalidad
 de las observaciones inspeccionadas: 11 globales, 13 por jugador y 10 por
-Pok\'emon. El diccionario es preliminar y se revisará tras el análisis
-exploratorio de la tabla materializada.
+Pok\'emon. La tabla materializada conserva 64 características por estado,
+agrupadas en las familias de la Tabla~\ref{tab:diccionario}; el diccionario
+completo, con los rangos observados, acompaña al código.
 
 \begin{table*}[!t]
 \centering
@@ -141,7 +148,8 @@ Presencia 100\,\%
 \addlinespace[3pt]
 
 Premios & entero &
-Cartas de premio restantes, derivadas contando las ranuras no vacías &
+Cartas de premio restantes, derivadas del largo de la lista de premios,
+cuyas ranuras son todas nulas &
 Presencia 100\,\%; el contenido está siempre oculto
 \\
 \addlinespace[3pt]
@@ -172,17 +180,19 @@ Derivados. Construcción análoga a la empleada por Hodge \textit{et al.}
 \addlinespace[3pt]
 
 Contexto de mazo & categórico &
-Identificador del mazo sobre un catálogo de 2\,376 mazos distintos &
+Identificadores de carta de los dos Pok\'emon activos, sobre 362 cartas
+distintas &
 Cardinalidad elevada y riesgo alto de memorizar el conjunto de estrategias
-dominante. Se admite únicamente en la ablación declarada, con mazos
-reservados
+dominante. Fuera del modelo principal; solo en la comparación restringida
+de H2
 \\
 \midrule
 
 Agrupación \newline \textit{(nunca características)} & --- &
-Identificador de partida, fecha y número de turno &
-Se conservan para agrupar, estratificar y reportar por etapa; excluidos del
-vector predictivo por construcción
+Identificador de partida, fecha, paso y número de turno &
+Se conservan para agrupar, estratificar y asignar la etapa; excluidos del
+vector predictivo por construcción. El número de turno entra además como
+característica pública de progreso
 \\
 
 \bottomrule
@@ -230,15 +240,16 @@ consecutivas son casi idénticas por construcción. Eso no es un defecto que
 deba eliminarse, es la estructura de dependencia de los datos, y se
 aborda agrupando, no deduplicando.
 
-\subsubsection{Verificaciones pendientes}
+\subsubsection{Verificaciones sobre la tabla materializada}
 
-La auditoría verificó el corpus crudo. Sobre la tabla materializada deben
-reverificarse, y se consignan aquí como pendientes antes que como supuestos:
-la ausencia de valores por columna; los rangos imposibles, puntos de vida
-negativos o superiores al máximo, recuentos negativos, ocupación de banca
-por encima de su límite; la consistencia lógica entre campos
-relacionados; las filas duplicadas; y la cardinalidad efectiva de las
-columnas categóricas.
+La auditoría verificó el corpus crudo, y la tabla materializada se
+reverificó antes de modelar. Ningún identificador de partida se repite entre
+días, ninguna partida terminó de forma anómala y ningún empate conserva
+filas. Ninguna fila presenta premios fuera del intervalo de 0 a 6,
+recuentos negativos de mazo, mano o banca, ni puntos de vida del activo
+superiores a su máximo, y ninguna columna resultó constante. La única
+ausencia es estructural: el 3.99\,\% de las filas utilizables no tiene
+Pok\'emon activo, caso que trata la Sección~\ref{subsec:imputacion}.
 
 \subsection{Valores ausentes e imputación}
 \label{subsec:imputacion}
@@ -315,15 +326,16 @@ A nivel de partida el desenlace está cerca del equilibrio: 52.10\,\% frente
 a 47.70\,\%. Esa no es, sin embargo, la distribución que verá el modelo. La
 etiqueta se define desde la perspectiva del jugador que actúa, y cada
 partida aporta un número distinto de observaciones desde cada lado, de modo
-que la prevalencia sobre la tabla final es función de la tabularización y
-aún no ha sido medida. Debe recalcularse sobre la tabla materializada antes
-de tomar decisión alguna; presentar la proporción por partida como si fuera
-la proporción por fila reportaría como medido algo que no lo está.
+que la prevalencia sobre la tabla final es función de la tabularización.
+Medida sobre la tabla materializada, es 0.517 en las filas utilizables,
+mayor que 0.5 porque el ganador suele acumular más acciones propias, y se
+mantiene entre 0.497 y 0.527 en cada subconjunto de los tres escenarios.
 
-La regla de decisión queda fijada de antemano, de modo que no pueda elegirse
-para acomodar un resultado.
+La regla de decisión quedó fijada de antemano, de modo que no pudiera
+elegirse para acomodar un resultado.
 
-\noindent\textbf{Si el desbalance resulta leve, no se corrige.} Corregir un
+\noindent\textbf{Si el desbalance resulta leve, no se corrige}, que es el
+caso medido. Corregir un
 desbalance que no lo necesita distorsiona las probabilidades predichas, y
 esas probabilidades son la salida de este trabajo y no un subproducto. Van
 den Goorbergh \textit{et al.} muestran que el submuestreo, el sobremuestreo
@@ -347,7 +359,7 @@ De esta subsección depende la validez de todo lo demás.
 
 \subsubsection{La estructura de dependencia, medida}
 
-Cada partida aporta en promedio unas 135 observaciones, y dos observaciones
+Cada partida aporta en promedio unas 137 observaciones, y dos observaciones
 consecutivas difieren en una sola acción atómica. Las filas son por tanto
 fuertemente dependientes dentro de una partida e independientes solo entre
 partidas.
@@ -491,9 +503,10 @@ una precaución declarada.
 La tubería incorpora invariantes que deben fallar antes de cualquier
 entrenamiento. Primero, ninguna columna excluida puede aparecer en el
 conjunto de características. Segundo, la intersección de identificadores de
-partida entre cualquier par de subconjuntos debe ser vacía. Tercero, toda
-carta del corpus debe estar presente en el conjunto de entrenamiento, según
-el procedimiento de la Sección~\ref{subsec:protocolo}. Y cuarto, ninguna
+partida entre cualquier par de subconjuntos debe ser vacía. Tercero, en los
+escenarios A y C, toda carta activa del corpus debe estar presente en el
+conjunto de entrenamiento, según el procedimiento de la
+Sección~\ref{subsec:protocolo}. Y cuarto, ninguna
 transformación puede haberse ajustado con datos de validación, calibración o
 prueba.
 
@@ -502,8 +515,12 @@ intención y no una mitigación.
 
 \subsubsection{Medición de la inflación atribuible a la fuga}
 
-Se ejecutará el modelo B2 bajo dos particiones, aleatoria por fila y
-agrupada por partida, y se reportará la diferencia. Ese procedimiento
+El modelo B2 se ajustó bajo dos particiones, aleatoria por fila y agrupada
+por partida, sobre una misma muestra de 200 partidas de entrenamiento por
+escenario. La partición por fila compartió partidas entre ajuste y
+evaluación en los tres escenarios, como anticipa la
+Sección~\ref{subsec:leakage}, pero con el modelo lineal no produjo un AUC
+mayor en el escenario~B. Ese procedimiento
 convierte la prevención de fuga en un resultado medido sobre los propios
 datos, siguiendo el diseño con que Figueiredo y Mendes cuantifican el efecto
 en su dominio \cite{figueiredo_leakage_2024}.

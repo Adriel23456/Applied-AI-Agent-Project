@@ -1,0 +1,333 @@
+% ============================================================
+% 07resultados.tex
+% Experimentos y resultados (Etapa 2)
+% Fuente de las cifras: notebooks/06_evaluacion_final.ipynb y
+% docx/03Evidencia/04-11-26_ResultadosEvaluacionFinal.md
+% ============================================================
+
+\section{Experimentos y Resultados}
+\label{sec:resultados}
+
+Esta sección explica cómo se entrenaron y evaluaron los modelos, y presenta
+los resultados sobre el conjunto de prueba. En todas las métricas cada
+partida pesa lo mismo, sin importar cuántos estados tenga. Los intervalos
+entre corchetes son intervalos de confianza del 95\,\%, calculados
+remuestreando partidas 1000 veces.
+
+\subsection{Ejecución del protocolo}
+\label{subsec:ejecucion}
+
+\noindent\textbf{Datos.} Las repeticiones de los diez días se convirtieron
+en una tabla con una fila por estado, vista desde el jugador que actúa. La
+tabla tiene 55\,196 partidas, 7\,286\,386 estados utilizables y las 62
+características públicas de la Tabla~\ref{tab:diccionario}. Las etapas se
+definieron con el entrenamiento: inicio hasta el turno 5, medio del 6 al 9
+y final desde el 10. Cada partida quedó completa en un solo subconjunto, y
+24 pruebas automáticas comprueban que no haya fuga
+(Sección~\ref{subsec:leakage}).
+
+\noindent\textbf{Modelos.} Se entrenaron cinco modelos, de menor a mayor
+complejidad:
+\begin{itemize}
+  \item \textbf{B0:} predice siempre la proporción de victorias del
+        entrenamiento.
+  \item \textbf{B1:} convierte una diferencia fija de recursos en
+        probabilidad.
+  \item \textbf{B2:} regresión logística regularizada ($C = 0.1$).
+  \item \textbf{B3:} bosque aleatorio.
+  \item \textbf{B4:} potenciación del gradiente
+        (\texttt{HistGradientBoostingClassifier}). Es el modelo principal.
+\end{itemize}
+
+\noindent\textbf{Búsqueda de hiperparámetros de B4.} Se usó Optuna con 20
+ensayos y validación cruzada de tres pliegues por partida. La búsqueda usó
+solo las 11\,285 partidas que son de entrenamiento en los tres escenarios,
+y minimizó la pérdida logarítmica. Se buscaron los cuatro parámetros que
+controlan la capacidad del modelo: tasa de aprendizaje entre 0.02 y 0.2,
+regularización $L_2$ entre $10^{-6}$ y 10, número máximo de hojas en
+$\{8, 16, 31\}$ y mínimo de muestras por hoja en $\{20, 50, 100\}$. El
+número de árboles no se buscó: lo decide la parada temprana. Se limitó a 20
+ensayos porque el cómputo disponible era una máquina de ocho núcleos sin
+GPU. Con la mejor configuración, B4 se reentrenó con todo el entrenamiento
+de cada escenario. Como control, LightGBM con el mismo presupuesto dio el
+mismo AUC en validación (diferencia $\le 0.002$), así que el resultado no
+depende de la librería.
+
+\noindent\textbf{Evaluación.} El plan de evaluación se fijó antes de mirar
+el conjunto de prueba. Antes de abrirlo se comprobó que pasaran 109 pruebas
+automáticas, que los modelos reprodujeran exactamente sus métricas de
+validación y que SHAP no mostrara fuga (Sección~\ref{subsec:xai}). El
+conjunto de prueba se usó una sola vez.
+
+\subsubsection{Cambios respecto del diseño}
+\label{subsec:desviaciones}
+
+\begin{itemize}
+  \item Se usó una sola semilla. No se midió cuánto varían los resultados
+        al repetir el entrenamiento.
+  \item El escenario C reserva arquetipos de mazo, definidos por su
+        Pok\'emon principal, y no mazos completos.
+  \item Las ablaciones quitaron tres familias de características: progreso,
+        recursos y tablero, y diferenciales. El contexto de mazo se evaluó
+        en la prueba de H2. No se entrenó la variante de 64 características.
+  \item La explicabilidad usó solo SHAP sobre B4. No se reportan los
+        coeficientes de B2 ni la importancia por permutación.
+\end{itemize}
+
+\subsection{Desempeño frente a las referencias}
+\label{subsec:resgeneral}
+
+La Tabla~\ref{tab:resultados} muestra el AUC en prueba. El AUC mide si el
+modelo asigna más probabilidad a los estados ganadores que a los
+perdedores: 0.5 es azar y 1 es perfecto. Cada modelo supera al anterior en
+los tres escenarios, y B4 es el mejor. Todas las diferencias entre B4 y
+B0--B3 tienen intervalos que excluyen el cero, así que no se deben al azar
+de la muestra. Frente a B2, B4 gana 0.071, 0.043 y 0.036 de AUC en A, B y
+C.
+
+\begin{table}[!t]
+\centering
+\caption{AUC en prueba, con intervalo del 95\,\%, y pérdidas de B4.}
+\label{tab:resultados}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Modelo} & \textbf{A} & \textbf{B} & \textbf{C}\\
+\midrule
+B0 & 0.500 & 0.500 & 0.500\\
+B1 & 0.683 {\scriptsize[0.674, 0.691]} & 0.718 {\scriptsize[0.711, 0.726]} & 0.705 {\scriptsize[0.697, 0.713]}\\
+B2 & 0.762 {\scriptsize[0.754, 0.768]} & 0.746 {\scriptsize[0.740, 0.753]} & 0.751 {\scriptsize[0.745, 0.758]}\\
+B3 & 0.804 {\scriptsize[0.798, 0.809]} & 0.771 {\scriptsize[0.765, 0.777]} & 0.767 {\scriptsize[0.761, 0.773]}\\
+\textbf{B4} & \textbf{0.833} {\scriptsize[0.827, 0.838]} & \textbf{0.789} {\scriptsize[0.784, 0.795]} & \textbf{0.787} {\scriptsize[0.782, 0.793]}\\
+\midrule
+B4 log loss & 0.494 & 0.551 & 0.550\\
+B4 Brier & 0.166 & 0.188 & 0.188\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+En A y B el AUC de prueba es casi igual al de validación (0.835 y 0.786).
+En C baja de 0.836 a 0.787. Es lo esperado: la validación de C tiene
+arquetipos que el modelo ya conoce y la prueba tiene arquetipos nuevos. La
+literatura reporta AUC de 0.78 a 0.80 (Sección~\ref{sec:baseline}). B4 llega
+a esa banda desde el turno 7 y alcanza 0.937 en la etapa final de A
+(Fig.~\ref{fig:aucturno}). Esta comparación es solo orientativa, porque los
+juegos y los datos son distintos.
+
+\subsection{Evolución con la partida (H1)}
+\label{subsec:resh1}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{res_auc_por_turno.png}
+\caption{AUC de B4 por turno en la prueba del escenario A, con banda del
+95\,\%. La franja gris marca el rango de la literatura.}
+\label{fig:aucturno}
+\end{figure}
+
+El AUC sube con cada turno: 0.58 en el turno 1 y cerca de 0.92 desde el
+turno 15 (Fig.~\ref{fig:aucturno}). Las partidas largas podrían ser más
+fáciles de predecir, y eso inflaría la etapa final. Para descartarlo, la
+Tabla~\ref{tab:h1} también mide solo las partidas que llegan a las tres
+etapas. En ellas el AUC sube unos 0.32 de inicio a final en los tres
+escenarios. Además, en la etapa de inicio el AUC ya es claramente mayor que
+0.5.
+
+\begin{table}[!t]
+\centering
+\caption{AUC de B4 por etapa en prueba, y aumento de inicio a final en las
+partidas que llegan a las tres etapas.}
+\label{tab:h1}
+\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+& \textbf{A} & \textbf{B} & \textbf{C}\\
+\midrule
+Inicio & 0.684 & 0.630 & 0.623\\
+Medio & 0.828 & 0.774 & 0.787\\
+Final & 0.937 & 0.915 & 0.919\\
+\midrule
+Partidas en las tres etapas & 6\,839 & 8\,269 & 7\,412\\
+Final $-$ inicio & 0.317 & 0.325 & 0.328\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Identidad frente a estado (H2) y ablaciones}
+\label{subsec:resh2}
+
+Para probar H2 se entrenó un modelo restringido que solo conoce el turno,
+quién empezó y qué Pok\'emon están activos. La Tabla~\ref{tab:h2} lo
+compara con B4 en la etapa de inicio. En A, los dos modelos empatan. En B y
+C, B4 es claramente mejor. En la etapa final de A, el modelo restringido
+llega a 0.769 y B4 a 0.937.
+
+\begin{table}[!t]
+\centering
+\caption{H2: AUC en la etapa de inicio, B4 frente al modelo restringido.}
+\label{tab:h2}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccl@{}}
+\toprule
+& \textbf{B4} & \textbf{Restr.} & \textbf{Diferencia [IC]} & \textbf{H2}\\
+\midrule
+A & 0.684 & 0.682 & 0.002 {\scriptsize[$-$0.008, 0.011]} & Refutada\\
+B & 0.630 & 0.589 & 0.041 {\scriptsize[0.031, 0.051]} & Sostenida\\
+C & 0.623 & 0.535 & 0.088 {\scriptsize[0.077, 0.099]} & Sostenida\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las ablaciones quitan una familia de características y miden cuánto cae el
+AUC en validación. Sin recursos y tablero, el AUC cae entre 0.05 y 0.06: es
+la familia esencial. Sin progreso, cae como mucho 0.003. Sin diferenciales
+no cae, porque el modelo puede calcular esas diferencias por sí mismo. B4 no
+se cambió con estos resultados, porque elegir características mirando la
+validación sesgaría la evaluación.
+
+\subsection{Calibración y recalibración}
+\label{subsec:rescalibracion}
+
+La calibración es el módulo adicional que eligió el equipo. Un modelo está
+calibrado si sus probabilidades coinciden con lo que ocurre: de los estados
+a los que asigna 0.8, debería ganar el 80\,\%. Se mide con el error de
+calibración esperado (ECE), donde 0 es perfecto. Para corregir un modelo
+mal calibrado se probaron dos métodos, Platt e isotónica, ajustados solo con
+el conjunto de calibración. El método de cada modelo se eligió antes de
+abrir la prueba.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{res_fiabilidad.png}
+\caption{Diagramas de fiabilidad de B4 en prueba. La diagonal es la
+calibración perfecta. Se muestran el modelo sin corrección y con las
+correcciones isotónica y de Platt.}
+\label{fig:fiabilidad}
+\end{figure}
+
+\begin{table}[!t]
+\centering
+\caption{Calibración en prueba, antes $\rightarrow$ después de corregir.}
+\label{tab:calibracion}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Modelo} & \textbf{Log loss} & \textbf{Brier} & \textbf{ECE}\\
+\midrule
+A, B4 (ninguno) & 0.494 & 0.166 & 0.002\\
+A, B3 (Platt) & 0.534 $\rightarrow$ 0.531 & 0.181 $\rightarrow$ 0.180 & 0.030 $\rightarrow$ 0.008\\
+B, B4 (isotónica) & 0.551 $\rightarrow$ 0.547 & 0.188 $\rightarrow$ 0.187 & 0.037 $\rightarrow$ 0.018\\
+B, B3 (Platt) & 0.564 $\rightarrow$ 0.568 & 0.193 $\rightarrow$ 0.195 & 0.013 $\rightarrow$ 0.034\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La Fig.~\ref{fig:fiabilidad} y la Tabla~\ref{tab:calibracion} muestran tres
+resultados:
+\begin{itemize}
+  \item En A, B4 ya está calibrado (ECE 0.002) y no necesita corrección. El
+        boosting suele distorsionar las probabilidades
+        \cite{niculescumizil_probabilities_2005}, pero aquí no ocurre.
+  \item En B, B4 es demasiado confiado: cuando predice 0.87, gana alrededor
+        del 80\,\%. La corrección isotónica reduce el ECE a la mitad
+        (0.037 a 0.018) sin cambiar el AUC.
+  \item La misma estrategia empeora a B3 en B. Una corrección ajustada con
+        el 11 de julio no siempre sirve para el 15 y el 22.
+\end{itemize}
+
+\subsection{Degradación bajo cambio temporal (H3)}
+\label{subsec:resh3}
+
+H3 predice que, cuando cambia la población, las probabilidades se
+estropean más que el orden. Para probarlo se usaron las 1\,405 partidas que
+son de prueba en A y en B (15 y 22 de julio). Sobre esas mismas partidas se
+compara el modelo de A, que vio esos días, con el de B, que solo vio días
+anteriores. La pérdida extra del modelo de B se divide en dos partes
+(Fig.~\ref{fig:descomposicion}): la que se debe a peor calibración
+($\Delta$MCB) y la que se debe a peor ordenamiento ($\Delta$DSC).
+
+\begin{table}[!t]
+\centering
+\caption{H3: pérdida extra del modelo de B frente al de A en las mismas
+partidas.}
+\label{tab:h3}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Medida} & \textbf{Log loss} & \textbf{Brier}\\
+\midrule
+Calibración ($\Delta$MCB) & 0.008 {\scriptsize[0.005, 0.012]} & 0.002 {\scriptsize[0.002, 0.003]}\\
+Ordenamiento ($\Delta$DSC) & 0.030 {\scriptsize[0.023, 0.036]} & 0.012 {\scriptsize[0.009, 0.014]}\\
+Contraste & $-$0.021 {\scriptsize[$-$0.028, $-$0.015]} & $-$0.009 {\scriptsize[$-$0.012, $-$0.007]}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La Tabla~\ref{tab:h3} muestra lo contrario de H3. La calibración empeora un
+poco, pero el ordenamiento empeora entre 3.5 y 4.9 veces más; el AUC baja
+0.027. Comparar porcentajes de caída habría dado la conclusión opuesta
+(22.9\,\% en log loss contra 8.9\,\% en AUC), porque las dos métricas tienen
+escalas distintas. Por eso el protocolo decide con la descomposición. El
+modelo de B tampoco empeora día a día: su AUC oscila entre 0.775 y 0.792 del
+7 al 22 de julio.
+
+\subsection{Curvas de aprendizaje y sobreajuste}
+\label{subsec:rescurvas}
+
+B4 se entrenó con el 25, 50, 75 y 100\,\% de las partidas de
+entrenamiento. El último 25\,\% sube el AUC de validación como mucho 0.004,
+así que más datos aportarían poco. La diferencia entre el AUC de
+entrenamiento y el de validación se mantiene en unos 0.034 en A y C a
+medida que crecen los datos, así que no hay sobreajuste creciente. En B esa
+diferencia es de 0.09 y tampoco cambia con el tamaño. No es sobreajuste: se
+debe a que validación tiene días distintos a los de entrenamiento.
+
+\subsection{Análisis de errores}
+\label{subsec:reserrores}
+
+Se clasificó cada estado como victoria si $p \ge 0.5$. Los principales
+hallazgos son:
+\begin{itemize}
+  \item Al inicio, el modelo sobreestima la victoria de quien actúa: los
+        falsos positivos (0.22--0.25 de los estados) superan a los falsos
+        negativos (0.15--0.17). En la etapa final se igualan.
+  \item Los errores muy seguros ($p \ge 0.9$ con derrota o $p \le 0.1$ con
+        victoria) son menos del 1\,\% de los estados, y son más frecuentes
+        en B y C que en A.
+  \item Las predicciones muy seguras aciertan entre el 80 y el 90\,\% al
+        inicio y entre el 96 y el 98\,\% al final. El peor caso es el inicio
+        de B, con 79.7\,\%.
+  \item Ninguna característica aislada explica los errores muy seguros:
+        suelen ocurrir en estados poco avanzados de la partida.
+\end{itemize}
+
+\subsection{Explicabilidad}
+\label{subsec:xai}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.92\columnwidth]{res_shap.png}
+\caption{Valores SHAP del modelo final (B4 de A) en partidas de validación.
+Cada punto es un estado. A la derecha del cero la característica aumenta la
+probabilidad de ganar; el color indica si su valor es alto o bajo.}
+\label{fig:shap}
+\end{figure}
+
+SHAP indica cuánto aporta cada característica a cada predicción. Se aplicó
+al modelo final, B4 entrenado en A, sobre partidas de validación
+(Fig.~\ref{fig:shap}). Recursos y tablero explican el 72.8\,\% de la
+predicción, los diferenciales el 20.9\,\% y el progreso el 6.3\,\%. Las
+características más importantes son la diferencia de premios (0.113), los
+descartes propios y rivales (0.082 y 0.077), los premios propios y los
+puntos de vida máximos de ambos activos. La diferencia de premios gana peso
+con la partida: pasa de 0.057 al inicio a 0.149 al final.
+
+SHAP también sirvió para buscar fuga antes de abrir la prueba. Si una
+característica concentra demasiada importancia, suele ser porque filtra el
+resultado. No se encontró fuga: ninguna columna prohibida participa, la
+característica principal concentra 0.113 (el límite era 0.5) y la mejor
+característica sola llega a un AUC de 0.690 (el límite era 0.85).

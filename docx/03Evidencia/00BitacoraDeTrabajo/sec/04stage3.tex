@@ -1,0 +1,61 @@
+% ============================================================
+% sec/04stage3.tex - Etapa 3
+% ============================================================
+\section{Etapa 3: agente y art\'iculo final}
+\label{sec:stage3}
+
+\notebox[Estado]{No iniciada. Esta secci\'on registra lo que la Etapa 2
+entrega a la Etapa 3 y las condiciones que quedaron fijadas. Las entradas de
+la bit\'acora se agregar\'an a medida que ocurra el trabajo, con las ramas
+numeradas desde \code{07}.}
+
+\subsection{Alcance}
+
+Construir un agente inteligente que consuma el modelo de forma verificable,
+documentar la \'etica de su despliegue e integrar los resultados de la Etapa 2
+en el art\'iculo final. Peso: 25\,\%.
+
+\subsection{Lo que recibe de la Etapa 2}
+
+\begin{table}[H]
+  \centering
+  \caption{Piezas que la Etapa 2 deja listas para el agente.}
+  \label{tab:entregaetapa3}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{4.2cm} Y@{}}
+    \toprule
+    \textbf{Pieza} & \textbf{Detalle}\\
+    \midrule
+    Modelo final & B4 entrenado en el escenario A, sin calibrador. En Kaggle, \code{modelo\_\allowbreak{}final/\allowbreak{}b4\_\allowbreak{}victoria.joblib} con su ficha (origen, SHA-256, versi\'on de scikit-learn y m\'etricas)\\
+    Interfaz & \code{ptcg\_\allowbreak{}wp.predictor.PredictorVictoria}: recibe la observaci\'on del jugador que act\'ua y devuelve la probabilidad de que gane. En preparaci\'on y en estados ya resueltos devuelve \code{None}\\
+    Garant\'ia de consistencia & \code{tests/\allowbreak{}test\_\allowbreak{}predictor.py} comprueba que la observaci\'on produce las mismas caracter\'isticas, en el mismo orden, que la tabla de entrenamiento\\
+    Explicaciones & SHAP mostr\'o que el modelo decide por premios, descartes y mazo; las explicaciones del agente pueden darse en esos t\'erminos\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Condiciones fijadas para la integraci\'on}
+
+\begin{itemize}
+  \item Las probabilidades extremas en los primeros turnos merecen menos
+        confianza, sobre todo ante agentes o mazos que no aparecen en el
+        corpus: al inicio de B, solo el 80\,\% de las predicciones muy seguras
+        acert\'o.
+  \item El evaluador tiende a valorar mucho dejar al rival sin mazo. Es una
+        estrategia v\'alida, pero hay que comprobar que el agente no la
+        sobrevalore.
+  \item Bajo cambio de poblaci\'on el modelo se vuelve algo sobreconfiado.
+        Si el agente se usa con datos de otro periodo, conviene volver a
+        medir la calibraci\'on antes de confiar en las probabilidades.
+\end{itemize}
+
+\subsection{Trabajo pendiente heredado}
+
+\begin{itemize}
+  \item Repetir los experimentos principales con varias semillas.
+  \item Agregar una caracter\'istica con los premios que entrega cada
+        Pok\'emon activo, que hoy el modelo aproxima con sus puntos de vida
+        m\'aximos.
+  \item Entrenar la variante de 64 caracter\'isticas (estado completo m\'as
+        identificadores de carta).
+\end{itemize}

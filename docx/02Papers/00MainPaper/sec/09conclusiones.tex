@@ -1,0 +1,39 @@
+% ============================================================
+% 09conclusiones.tex
+% Conclusiones finales
+% ============================================================
+
+\section{Conclusiones}
+\label{sec:conclusiones}
+
+Este trabajo estimó la probabilidad de victoria en el Pok\'emon Trading Card
+Game a partir de un solo estado de la partida. Cada partida quedó completa
+en un único subconjunto, y el conjunto de prueba se usó una sola vez. El
+modelo principal, potenciación del gradiente con 62 características
+públicas, obtuvo un AUC de 0.833 en partidas nuevas y cerca de 0.79 con
+días posteriores y arquetipos de mazo nuevos. Superó a las cuatro
+referencias en los tres escenarios, y en su propia población sus
+probabilidades ya están calibradas.
+
+La predicción mejora a medida que avanza la partida. Al inicio es modesta,
+y en la población conocida no supera a un modelo que solo sabe el turno,
+quién empezó y qué Pok\'emon están activos. Desde la etapa media domina el
+estado del tablero, y al final el AUC supera 0.91 en todos los escenarios.
+Con días o arquetipos nuevos, conocer los Pok\'emon activos deja de servir y
+el estado sigue funcionando. Esa es la propiedad que necesita un evaluador
+de posiciones.
+
+Con el paso del tiempo, el modelo empeoró más en ordenar posiciones que en
+calibrar sus probabilidades, al contrario de lo reportado en otros
+dominios. Recalibrar con un día intermedio mejoró a B4, pero empeoró a B3,
+así que no es una solución general. SHAP mostró que el modelo decide por
+premios, descartes y mazo, sin señales de fuga, e identificó una
+característica que falta: los premios que entrega cada Pok\'emon.
+
+Para la integración con el agente se usará B4 entrenado en el escenario A,
+sin calibrador. Sus probabilidades extremas en los primeros turnos deben
+tomarse con cautela, sobre todo ante agentes o mazos que no aparecen en los
+datos. Como trabajo futuro quedan repetir los experimentos con varias
+semillas, agregar la característica de premios por Pok\'emon, entrenar la
+variante de 64 características y seguir midiendo el desempeño a medida que
+cambie la población de agentes.

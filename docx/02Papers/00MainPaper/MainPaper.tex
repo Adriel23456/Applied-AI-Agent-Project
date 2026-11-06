@@ -12,8 +12,8 @@
 \title{Estimación de la Probabilidad de Victoria a partir del Estado de
 Juego en el Pok\'emon Trading Card Game: un Estudio de Clasificación
 Tabular con Control Explícito de Fuga de Información\\
-{\footnotesize \textit{Versión preliminar --- Etapa 1: estado del arte y
-diseño propuesto - Curso IC-6200 Inteligencia Artificial, II Semestre 2026}}}
+{\footnotesize \textit{Etapa 2: modelado, explicabilidad y evaluación ---
+Curso IC-6200 Inteligencia Artificial, II Semestre 2026}}}
 
 \author{
 \IEEEauthorblockN{Adriel S. Chaves Salazar}
@@ -51,18 +51,22 @@ central no es de modelado sino de evaluación: una partida produce del orden
 de un centenar de estados sucesivos que difieren en una sola acción y
 comparten la misma etiqueta final, de modo que repartirlos al azar entre
 entrenamiento y prueba haría que el modelo se evaluara sobre situaciones
-casi idénticas a las que ya vio; sobre la muestra auditada medimos que una
-partición por fila colocaría prácticamente todas las partidas a ambos lados
-de la división. Se propone en consecuencia una representación tabular con
-una fila por estado y características restringidas a la información
-disponible en ese instante, una escalera de modelos clásicos desde un
-predictor trivial hasta potenciación del gradiente, una lista explícita de
-campos cuyo uso constituiría fuga de información, y particiones que
-mantienen cada partida completa dentro de un único subconjunto. La
-evaluación reporta por separado la capacidad de ordenar posiciones y la
-calidad de las probabilidades, de forma global y por etapa de la partida,
-bajo tres escenarios: partidas nuevas, mazos no vistos y periodos
-posteriores.
+casi idénticas a las que ya vio. Se emplea en consecuencia una
+representación tabular con una fila por estado y 62 características
+restringidas a la información pública de ese instante, una escalera de
+modelos clásicos desde un predictor trivial hasta potenciación del
+gradiente, y particiones que mantienen cada partida completa dentro de un
+único subconjunto, bajo tres escenarios: partidas nuevas, arquetipos de mazo
+no vistos y periodos posteriores. Sobre 55\,196 partidas, el modelo de
+potenciación del gradiente alcanza en prueba un AUC de 0.833 sobre partidas
+nuevas y de 0.789 y 0.787 bajo cambio temporal y arquetipos no vistos, y
+supera a todas las referencias con intervalos que excluyen el cero. La
+capacidad predictiva crece de 0.68 al inicio a 0.94 en la etapa final; la
+señal temprana no se distingue de la que aportan el orden de turno y la
+identidad de los Pok\'emon activos dentro de la población conocida, pero sí
+fuera de ella. Bajo cambio temporal, contra lo esperado, el ordenamiento se
+degrada más que la calibración. El análisis SHAP muestra que el modelo
+evalúa la posición por balance de recursos: premios, descartes y mazo.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -76,7 +80,10 @@ calibración de clasificadores, machine learning
 \safeinput{sec/03baseline_literatura}
 \safeinput{sec/04metodologia}
 \safeinput{sec/05analisis_tecnico}
+\safeinput{sec/07resultados}
+\safeinput{sec/08discusion}
 \safeinput{sec/06etica}
+\safeinput{sec/09conclusiones}
 
 \bibliographystyle{IEEEtran}
 \bibliography{sec/99referencias}

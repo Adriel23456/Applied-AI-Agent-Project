@@ -15,9 +15,8 @@
 % Convención de claves: autor_palabraclave_anio
 %
 % ESTADO DE VERIFICACIÓN
-%   Las entradas de los Ejes A y B están verificadas contra
-%   fuente primaria. Las del Eje C marcadas VERIFICAR requieren
-%   completarse desde el registro del editor antes de la entrega.
+%   Las entradas de los tres ejes están verificadas contra
+%   fuente primaria (Eje C revisado el 2026-11-06).
 % ============================================================
 
 
@@ -424,20 +423,19 @@
 % coleccionables. Análogo solo en cuanto a generalización de
 % contenido: su tarea es predecir una elección humana de carta.
 %
-% Publicación consultada: preprint en arXiv.
-%
+% VERIFICADO (2026-11-06): versión arbitrada en IEEE CoG 2024.
+% Sustituye al preprint arXiv:2407.05879, que no se cita.
 % ------------------------------------------------------------
 
-@misc{bertram_cardrepresentations_2024,
-  author       = {Bertram, Timo and F{\"u}rnkranz, Johannes and M{\"u}ller, Martin},
-  title        = {Learning With Generalised Card Representations
-                  for ``{Magic}: The Gathering''},
-  year         = {2024},
-  eprint       = {2407.05879},
-  archivePrefix = {arXiv},
-  primaryClass = {cs.AI},
-  doi          = {10.48550/arXiv.2407.05879},
-  url          = {https://arxiv.org/abs/2407.05879}
+@inproceedings{bertram_cardrepresentations_2024,
+  author    = {Bertram, Timo and F{\"u}rnkranz, Johannes and M{\"u}ller, Martin},
+  title     = {Learning With Generalised Card Representations
+               for ``{Magic}: The Gathering''},
+  booktitle = {Proceedings of the 2024 IEEE Conference on Games (CoG)},
+  pages     = {1--8},
+  year      = {2024},
+  publisher = {IEEE},
+  doi       = {10.1109/CoG60054.2024.10645602}
 }
 
 
@@ -446,19 +444,22 @@
 % PTCG AI Battle Challenge. Contiene replays JSON de episodios
 % completados en las simulaciones de Kaggle.
 %
-% Se cita la versión correspondiente al 2026-06-18, cuya versión
-% publicada del dataset tiene un tamaño de 21.48 GB.
+% Se publica un conjunto por día, con la URL
+%   kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-AAAA-MM-DD
+% Se cita el del 2026-06-18 como representante de la serie; el
+% corpus emplea diez días (ver la nota de la entrada).
 %
 % Licencia: CC0 1.0 (Public Domain).
 % ------------------------------------------------------------
 
 @misc{ptcg_dataset_2026,
   author       = {{The Pok{\'e}mon Company}},
-  title        = {{PTCG AI} Battle Challenge Simulation Episodes 2026-06-18},
+  title        = {{PTCG AI} Battle Challenge Simulation Episodes},
   year         = {2026},
-  howpublished = {Kaggle dataset},
-  note         = {CC0 1.0, version dated 2026-06-18},
-  url          = {URL_EXACTA_DEL_DATASET}
+  howpublished = {Conjunto de datos en Kaggle, publicado por día},
+  note         = {CC0 1.0. Días empleados: 17, 18, 19, 20, 22 y 25 de junio;
+                  7, 11, 15 y 22 de julio de 2026},
+  url          = {https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-06-18}
 }
 
 % Simple referencia del Pokémon TCG Pocket Battle
