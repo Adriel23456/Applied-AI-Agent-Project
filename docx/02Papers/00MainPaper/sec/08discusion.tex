@@ -87,11 +87,42 @@ De estos hallazgos salen tres acciones concretas:
         descartes y mazo, que son las variables con que decide el modelo.
 \end{enumerate}
 
+Las acciones 2 y 3 se aplicaron en el agente. Sus explicaciones traducen
+SHAP a premios, descartes, mazo y tablero, y la validación humana confirmó
+la señal del mazo: dejar al rival sin mazo sube la probabilidad propia y
+quedarse sin mazo la hunde (de 66.1 a 1.7\,\%), como en el juego. La
+primera queda como trabajo futuro, porque exige reentrenar el modelo.
+
+\subsection{El agente: qué aporta y qué no}
+\label{subsec:discusionagente}
+
+El agente vuelve útil el estimador sin cambiarlo. Su aporte principal es
+la trazabilidad: toda cifra que ve el usuario sale del modelo, pasa por
+un verificador determinista y queda en un registro. En la validación, el
+modelo de lenguaje cometió errores de redacción, como dar porcentajes de
+otros pasos para un estado sin predicción, pero ninguno llegó al usuario,
+porque el verificador los rechazó. Separar las tareas, el lenguaje para
+planificar y redactar y el código para calcular y verificar, es lo que
+hace confiable al conjunto.
+
+Lo que el agente no puede aportar es saber cuándo el modelo se equivoca.
+Los errores muy seguros de las etapas media y final son invisibles para el
+agente y para el usuario: el modelo está seguro y el estado es conocido.
+Es el mismo límite del modelo, ahora frente a una persona; por eso se
+declara en la Sección~\ref{sec:etica} y no se oculta tras el AUC promedio.
+
+La validación humana conecta con la explicabilidad. Los cambios que el
+modelo sigue con sentido de juego son los de premios, mazo, puntos de vida
+y banca, las mismas familias que SHAP señaló como dominantes. Los que no
+sigue, las condiciones especiales poco frecuentes y las energías en el
+Pok\'emon activo, muestran que una contribución SHAP describe lo que el
+modelo aprendió del corpus, no una regla del juego.
+
 \subsection{Cumplimiento de los objetivos}
 \label{subsec:objetivoscumplidos}
 
 La Tabla~\ref{tab:objetivos} relaciona cada objetivo específico de la
-Sección~\ref{subsec:objetivos} con su evidencia. Se cumplieron los seis. El
+Sección~\ref{subsec:objetivos} con su evidencia. Se cumplieron los siete. El
 tercero terminó en un resultado contrario a H3, pero se cumplió, porque su
 propósito era contrastar la hipótesis, no confirmarla.
 
@@ -117,6 +148,9 @@ características, con cobertura de cartas medida
 (Sección~\ref{sec:analisistecnico})\\
 6. Escalera de referencias & B0 $<$ B1 $<$ B2 $<$ B3 $<$ B4 en los tres
 escenarios, 24 pruebas de fuga, SHAP y ablaciones\\
+7. Agente validado & Agente de cuatro roles con verificador; 35 casos
+automáticos y 31 consultas aprobadas (Tabla~\ref{tab:agente},
+Sección~\ref{sec:agente})\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -135,4 +169,11 @@ escenarios, 24 pruebas de fuga, SHAP y ablaciones\\
   \item El modelo no cubre los estados de preparación ni los ya decididos.
   \item Los Pok\'emon activos solo aproximan la identidad del mazo, lo que
         limita la lectura de H2.
+  \item La validación del agente usó 31 consultas y un solo modelo de
+        lenguaje; con otra versión del modelo de lenguaje el número de
+        rondas del redactor puede cambiar, aunque el verificador sigue
+        siendo el mismo.
+  \item La validación humana probó 15 cambios sobre un solo estado real;
+        sirve para detectar direcciones sin sentido, no para medir la
+        calidad del modelo.
 \end{itemize}

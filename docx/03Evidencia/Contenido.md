@@ -14,6 +14,15 @@ El rastro del avance del equipo. No son los entregables formales, sino los peque
 - **`02-11-26_DiagnosticoFinalModelChecks.md`**: reconstrucción del estado del proyecto, contraste con el artículo y riesgos detectados al iniciar `05FinalModelChecks`.
 - **`04-11-26_ResultadosEvaluacionFinal.md`**: resultados del cuaderno 06 (test, curvas, calibración, errores, SHAP y H1 a H3) con su interpretación, y el texto propuesto para marcar el plan.
 - **`29-10-26_AuditoriaBaselinesB0B3.md`**: cruce de B0–B3 con el contrato de la sección 10 y el estado de sus entregables en las etapas 04, 05 y 06; registra desviaciones y tareas aún abiertas.
+- **`07-11-26_ArquitecturaDelAgente.md`**: roles del agente (planificador, ejecutor, verificador y redactor), herramientas, flujo de una consulta, formato de los registros y cómo se verifica cada respuesta.
+- **`08-11-26_RegistroSesionClaudeCode.jsonl`** y **`.png`**: sesión real con Claude Code y el servidor MCP; el verificador rechazó un primer borrador y aprobó el corregido.
+- **`08-11-26_RegistroOrquestador.jsonl`**: tres consultas del orquestador en Python (cuaderno 08), con los cuatro agentes.
+- **`08-11-26_ProtocoloValidacionAgente.md`**: escenarios, entradas, comportamiento esperado y criterio de aprobación de la validación del agente, escritos antes de ejecutar.
+- **`08-11-26_ResultadosValidacionAgente.md`**: resultados de N1 (sin LLM) y N2 (con Claude), métricas del agente, fragilidad y revisión humana de Q-01, Q-02 y Q-07.
+- **`08-11-26_ValidacionN1Corregida.csv`**, **`08-11-26_ValidacionN2.csv`** y **`.jsonl`**: salidas de la batería con las correcciones y de las 31 consultas con Claude (cuaderno 10).
+- **`08-11-26_ValidacionHumanaSimulador.md`**: 15 pruebas distintas con el simulador, 5 por integrante, con la dirección esperada fijada antes.
+- **`08-11-26_SimuladorEstadoPersonalizado.png`** y **`08-11-26_SimuladorPartida87363568.png`**: capturas del simulador con el modelo final.
+- **`08-11-26_EticaDelDespliegue.md`**: riesgos del despliegue, datos sensibles, mitigaciones con su archivo y su prueba, límites declarados y uso aceptable.
 - **Evidencia en la raíz**: Capturas de pantalla, exportaciones, notas de reunión y registros breves que respaldan el avance, los hitos y los acuerdos del equipo (por ejemplo, `21-8-26_PrimeraReunionDelEquipo.png`, `26-8-26_ConfirmacionDelTema.png`). Capturan el momento en que algo funcionó por primera vez, compiló por primera vez o se decidió.
 
 *Nota: Este no es el lugar para las aprobaciones oficiales del profesor, las figuras finales del artículo ni los artefactos calificados; esos viven junto al entregable correspondiente.*
