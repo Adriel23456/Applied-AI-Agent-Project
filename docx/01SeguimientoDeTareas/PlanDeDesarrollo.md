@@ -149,7 +149,7 @@ Contexto obligatorio para trabajar: el modelo final es B4 entrenado en A, expues
 - El modelo no se reentrena ni se recalibra. El agente consume el modelo final tal como quedó en la Etapa 2, verificado por SHA-256 contra `ficha.json`.
 - El agente nunca recibe ni pide información oculta (mano rival, contenido de los premios). Solo usa la observación pública del jugador que actúa, igual que el modelo.
 - Toda cifra que el agente dé al usuario sale de una herramienta y queda en el registro de invocaciones. El agente no inventa probabilidades.
-- La lógica vive en `src/ptcg_wp/` y se prueba con `pytest`; los cuadernos y las interfaces solo la ejecutan.
+- La lógica vive en `src/ptcg_wp/` (datos y modelos) y en `src/ptcg_agente/` (agente, validación y simulador), y se prueba con `pytest`; los cuadernos y las interfaces solo la ejecutan.
 - Las claves de API se tratan igual que el token de Kaggle: nunca en cuadernos, archivos versionados ni conversaciones.
 - Una decisión de diseño o un protocolo de validación se escribe en `docx/03Evidencia/` antes de ejecutarse.
 
@@ -195,10 +195,10 @@ Integración del modelo en una arquitectura multiagente con *tool calling*, cons
 
 ### `08AgentValidationAndSimulator`
 
-Validación del agente frente a escenarios normales, casos límite, entradas inesperadas y errores del modelo, y un simulador gráfico que el agente puede abrir para que un humano manipule un estado y vea la probabilidad cambiar en tiempo real.
+Validación del agente frente a escenarios normales, casos límite, entradas inesperadas y errores del modelo, y un simulador gráfico que el agente puede abrir para que un humano manipule un estado y vea la probabilidad cambiar en tiempo real. Protocolo: `docx/03Evidencia/08-11-26_ProtocoloValidacionAgente.md`. Nivel N1 (sin LLM): cuaderno `09_validacion_agente` (Colab). Nivel N2 (con Claude): cuaderno `10_validacion_llm` (PC).
 
 **Protocolo de validación** (escrito antes de ejecutar)
-- [ ] Protocolo en `docx/03Evidencia/`: escenarios, entradas, comportamiento esperado y criterio de aprobación de cada uno
+- [x] Protocolo en `docx/03Evidencia/`: escenarios, entradas, comportamiento esperado y criterio de aprobación de cada uno (`08-11-26_ProtocoloValidacionAgente.md`)
 - [ ] Escenarios normales: estados de partidas de `test` de A en inicio, medio y final
 - [ ] Casos límite: preparación, estado resuelto, banca vacía, mazo en cero, un premio por tomar, turno 1, partidas muy largas
 - [ ] Entradas inesperadas: JSON mal formado, tipos incorrectos, campos faltantes, cartas no vistas, valores imposibles, observación del jugador que espera
@@ -207,12 +207,12 @@ Validación del agente frente a escenarios normales, casos límite, entradas ine
 - [ ] Consultas adversas al LLM: pedir la mano rival, pedir certeza absoluta, instrucciones inyectadas dentro de los datos de la partida
 
 **Ejecución y análisis**
-- [ ] Batería automática de escenarios con resultados guardados (aprobado o fallido por caso)
+- [ ] Batería automática de escenarios con resultados guardados (aprobado o fallido por caso): código del nivel N1 en `src/ptcg_agente/validacion/` con pruebas (`tests/test_validacion.py`) y cuaderno `09_validacion_agente` (Colab); falta ejecutarlo, y el nivel N2 con Claude (`10_validacion_llm`)
 - [ ] Métricas del agente: herramienta correcta por consulta, cifras de la respuesta iguales a las herramientas, advertencias emitidas cuando corresponden, rechazos correctos fuera de dominio y latencia
 - [ ] Análisis de fragilidad: qué pasa cuando el modelo se equivoca y el agente confía en él, qué detecta el verificador y qué no
 - [ ] Resultados documentados en `docx/03Evidencia/`
 
-**Simulador gráfico** (`src/ptcg_wp/simulador/`)
+**Simulador gráfico** (`src/ptcg_agente/simulador/`)
 - [ ] Aplicación web local que muestra un estado de partida de forma gráfica: activos, banca, premios, mano, mazo, descartes y energías de ambos jugadores
 - [ ] Edición del estado por el usuario (premios, PV, banca, cartas en mazo y descarte, energías) con la probabilidad de victoria actualizada en tiempo real por el modelo final
 - [ ] Reproducción de partidas reales del corpus turno a turno, con la curva de probabilidad y los puntos de giro

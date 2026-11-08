@@ -15,14 +15,14 @@ N1 es determinista y cubre muchos estados. N2 cuesta tiempo de Claude, así que 
 
 ## 2. De dónde salen los casos
 
-Todos los estados se eligen con la semilla **2026** antes de correr nada, y se publican en Kaggle (`agente/validacion/casos/`) para que N1 y N2 usen exactamente los mismos.
+Todos los estados se eligen con la semilla **2026** antes de correr nada, y se publican en Kaggle (`agente/validacion/casos.csv`, `observaciones.json` y `partidas.json.gz`) para que N1 y N2 usen exactamente los mismos. Las 30 partidas de cada fuente aportan un estado por etapa cada una; las 10 primeras de A se guardan completas para N-06.
 
 | Fuente | Regla de selección |
 |---|---|
 | `test` de A | 30 estados por etapa (inicio, medio, final), de partidas distintas |
 | `test` de B (días 15 y 22 de julio) | 30 estados por etapa, **solo de partidas que también están en `test` de A** |
 | `test` de C (arquetipos reservados) | 30 estados por etapa, **solo de partidas que también están en `test` de A** |
-| Errores de la Etapa 2 | Estados de `test` de A, B y C con probabilidad ≥ 0.9 y derrota real, o ≤ 0.1 y victoria real; hasta 10 por etapa y escenario |
+| Errores del modelo | Estados de `test` de A con probabilidad ≥ 0.9 y derrota real, o ≤ 0.1 y victoria real, según el modelo del agente (el mismo criterio de "muy seguro" del análisis de errores de la Etapa 2); hasta 10 por etapa en A completa, 10 en las partidas de B y 10 en las de C, de partidas distintas |
 | Sintéticos | Estados reales de `test` de A modificados a mano (sección 3.5) |
 
 **Por qué B y C se filtran con `test` de A:** el modelo del agente se entrenó en A, que reparte las partidas al azar entre todos los días y arquetipos. Una partida de B o C que estuvo en `train` de A no sería nueva para el modelo. Con el filtro, todos los estados son partidas que el modelo nunca vio. Aun así, B y C no son un dominio nuevo para el modelo de A, porque sus días y arquetipos también aparecen en el entrenamiento. Por eso el fuera de dominio real se prueba con los estados sintéticos (3.5). La caída por días posteriores y arquetipos nuevos ya se midió en la Etapa 2 con modelos entrenados en B y en C, y el agente la reporta con `describir_modelo`.
@@ -168,7 +168,7 @@ Con los resultados se responde por escrito:
 
 | Paso | Dónde | Resultado |
 |---|---|---|
-| Selección de casos y N1 | Colab, `notebooks/09_validacion_agente.ipynb` | Kaggle: `agente/validacion/casos/` y `agente/validacion/resultados_n1.csv` |
+| Selección de casos y N1 | Colab, `notebooks/09_validacion_agente.ipynb` | Kaggle: `agente/validacion/casos.csv`, `observaciones.json`, `partidas.json.gz`, `resultados_n1.csv`, `detalle_n1.csv` y `latencias_n1.csv` |
 | N2 | PC, `notebooks/10_validacion_llm.ipynb` | `docx/03Evidencia/DD-MM-AA_ValidacionLLM.jsonl` y `agente/validacion/resultados_n2.csv` |
 | Informe | — | `docx/03Evidencia/DD-MM-AA_ResultadosValidacionAgente.md` |
 
