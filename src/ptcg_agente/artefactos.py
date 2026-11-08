@@ -84,6 +84,18 @@ def preparar_ejemplos(raiz=None):
     return [raiz / r for r in rutas]
 
 
+def preparar_cartas(raiz=None):
+    """Baja (verificando SHA-256) el catalogo de cartas del simulador, si ya esta publicado."""
+    from ptcg_agente import cartas
+    raiz = Path(raiz or ARTEFACTOS_DIR)
+    if cartas.RUTA in store.leer_indice():
+        store.listo([cartas.RUTA], raiz)
+        return raiz / cartas.RUTA
+    print("aviso: no hay catalogo de cartas en Kaggle (parte 4 del cuaderno 09); el simulador "
+          "solo conocera los PV de las cartas que aparecen en los ejemplos")
+    return None
+
+
 def preparar_validacion(raiz=None):
     """Baja (verificando SHA-256) los casos de validacion que publico el cuaderno 09."""
     from ptcg_agente.validacion import casos
@@ -148,6 +160,9 @@ def main():
           f"{Path(args.raiz or ARTEFACTOS_DIR).resolve()}")
     for ruta in preparar_ejemplos(args.raiz):
         print("ejemplo:", ruta)
+    catalogo = preparar_cartas(args.raiz)
+    if catalogo:
+        print("catalogo de cartas:", catalogo)
 
 
 if __name__ == "__main__":

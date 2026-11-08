@@ -107,6 +107,7 @@ El protocolo de `09` y `10` está en [`docx/03Evidencia/08-11-26_ProtocoloValida
 | 1 | `PARTE 1 - CASOS DE VALIDACION` | `agente/validacion/casos.csv`, `observaciones.json` y `partidas.json` |
 | 2 | `PARTE 2 - BATERIA N1` | `agente/validacion/resultados_n1.csv` (un caso por fila), `detalle_n1.csv` y `latencias_n1.csv` |
 | 3 | `PARTE 3 - ANALISIS` | Nada: tablas por población, errores muy seguros y dirección de los cambios |
+| 4 | `PARTE 4 - CATALOGO DE CARTAS PARA EL SIMULADOR` | `agente/cartas.json`: PV máximos de cada carta vista como activo en el train de A |
 
 ---
 

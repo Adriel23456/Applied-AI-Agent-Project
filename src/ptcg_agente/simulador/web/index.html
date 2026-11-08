@@ -284,6 +284,7 @@ function mostrarResultado(r) {
   $("etapa").textContent = (r.etapa ? `Etapa de ${r.etapa} · ` : "") + `turno ${r.turno} · le toca actuar al jugador ${actua}`;
   (r.advertencias || []).forEach((w) => { const d = document.createElement("div"); d.className = "aviso"; d.textContent = aJugadores(w.mensaje, actua); avisos.append(d); });
   if (!(r.advertencias || []).length) avisos.innerHTML = '<div class="sub" style="text-align:left">Ninguna.</div>';
+  if (p === null) avisos.insertAdjacentHTML("beforeend", '<div class="nota">Para que el modelo estime: turno 1 o más, al menos un premio por tomar y un Pokémon en juego en cada jugador.</div>');
   const v = r.verificacion || {};
   $("verif").innerHTML = v.aprobado ? '<span style="color:var(--bien)">Aprobado</span>: probabilidad, SHAP y advertencias coherentes'
     : `<span style="color:var(--mal)">No aprobado</span>: ${html((v.problemas || []).join("; "))}`;

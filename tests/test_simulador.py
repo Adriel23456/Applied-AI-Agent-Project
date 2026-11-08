@@ -109,23 +109,40 @@ def test_servidor_mcp_expone_abrir_simulador(modelo, tmp_path, monkeypatch):  # 
     assert datos.get("result", datos)["ok"]
 
 
-def test_estado_nuevo_sin_partida_se_evalua(simulador, modelo):  # noqa: F811
+def test_estado_nuevo_vacio_y_armado_desde_cero(simulador, modelo, monkeypatch, tmp_path):  # noqa: F811
     url, _, _ = simulador
-    cartas = json.loads(_get(url + "api/catalogo"))["cartas"]
-    assert cartas and {c["id"] for c in cartas} <= set(modelo.perfil["cartas_activas"])
-    assert any(c["maxHp"] for c in cartas)  # los PV salen de las repeticiones disponibles
     vacio = json.loads(_get(url + "api/vacio"))["observacion"]
+    for j in vacio["players"]:
+        assert (j["deckCount"], j["handCount"], j["prize"], j["discard"], j["active"], j["bench"]) == (0, 0, [], [], [], [])
     r = _post(url + "api/evaluar", {"observacion": vacio})
-    assert r["ok"] and r["probabilidad"] is not None and r["verificacion"]["aprobado"]
-    assert r["probabilidad"] == pytest.approx(modelo.predictor.probabilidad(vacio), abs=1e-12)
-    actua_1 = copy.deepcopy(vacio)
-    actua_1["yourIndex"] = 1
-    r1 = _post(url + "api/evaluar", {"observacion": actua_1})
-    assert r1["ok"] and r1["jugador"] == 1
+    assert r["ok"] and r["probabilidad"] is None and "sin_prediccion" in [a["codigo"] for a in r["advertencias"]]
+    armado = copy.deepcopy(vacio)
+    armado["turn"] = 3
+    for j, carta in zip(armado["players"], (10, 20)):
+        j.update(deckCount=40, handCount=6, prize=[None] * 6,
+                 active=[{"id": carta, "hp": 100, "maxHp": 100, "energies": [], "tools": []}])
+    r2 = _post(url + "api/evaluar", {"observacion": armado})
+    assert r2["ok"] and r2["probabilidad"] == pytest.approx(modelo.predictor.probabilidad(armado), abs=1e-12)
+
+
+def test_catalogo_usa_cartas_json_con_todas_las_cartas(modelo, monkeypatch, tmp_path):  # noqa: F811
+    import pandas as pd
+    from ptcg_agente import cartas
+    tabla = pd.DataFrame({"own_active_card": [10, 10, 10, -1], "own_active_max_hp": [100, 100, 130, -1],
+                          "opp_active_card": [20, 11, 20, 20], "opp_active_max_hp": [90, 70, 90, 90]})
+    catalogo = cartas.construir(tabla)
+    assert {c["id"]: c["maxHp"] for c in catalogo["cartas"]} == {10: 100, 11: 70, 20: 90}
+    (tmp_path / "agente").mkdir()
+    (tmp_path / cartas.RUTA).write_text(json.dumps(catalogo), encoding="utf-8")
+    monkeypatch.setattr(sv, "ARTEFACTOS_DIR", tmp_path)
+    sim = sv.Simulador(modelo)
+    pv = {c["id"]: c["maxHp"] for c in sim.catalogo()}
+    assert pv[10] == 100 and pv[20] == 90  # 11 nunca fue activo en el entrenamiento sintetico
+    assert set(pv) == set(modelo.perfil["cartas_activas"])
 
 
 def test_abrir_simulador_vacio(modelo):  # noqa: F811
     from ptcg_agente.herramientas import abrir_simulador
     s = abrir_simulador.ejecutar(modelo, vacio=True, abrir=False)
     inicio = json.loads(_get(s["url"] + "api/inicio"))
-    assert inicio["partida"] is None and inicio["observacion"]["turn"] == 3
+    assert inicio["partida"] is None and inicio["observacion"]["turn"] == 0

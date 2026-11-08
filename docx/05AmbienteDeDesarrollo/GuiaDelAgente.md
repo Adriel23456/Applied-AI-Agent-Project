@@ -214,7 +214,7 @@ Se abre el navegador en `http://127.0.0.1:8765/`. Para cerrarlo, presiona Ctrl+C
 **Abrirlo desde Claude** (servidor `ptcg-victoria`): pide, por ejemplo, *"Abre el simulador con un estado nuevo"* o *"Abre el simulador con la partida artefactos_agente/agente/ejemplos/partida_XXXX.json en el paso 120"*. Claude usa la herramienta `abrir_simulador` y responde con la dirección.
 
 **Dos modos:**
-- **Estado nuevo (sin partida):** botón azul arriba. Empieza en el turno 3 con 6 premios, 40 cartas en el mazo, 6 en la mano y un Pokémon activo y uno en banca por jugador. Se arma desde ahí, sin contexto de ninguna partida.
+- **Estado nuevo (sin partida):** botón azul arriba. Empieza vacío, como antes de repartir: turno 0, sin premios, mano, mazo, descarte ni Pokémon. Se arma desde cero, sin contexto de ninguna partida. Mientras sea turno 0, algún jugador no tenga premios por tomar o no tenga un Pokémon en juego, el modelo no da probabilidad (la partida no ha empezado o ya terminó); el panel lo indica.
 - **Cargar partida:** elige una repetición de ejemplo y recórrela paso a paso sobre su curva. Cualquier paso se puede editar; **Deshacer cambios** vuelve al estado del paso.
 
 **Qué se puede editar:**
@@ -223,9 +223,11 @@ Se abre el navegador en `http://127.0.0.1:8765/`. Para cerrarlo, presiona Ctrl+C
 |---|---|
 | Turno (arriba) | Número de turno, a quién le toca actuar, quién empezó la partida, acciones hechas en el turno, si ya unió energía, se retiró, jugó un partidario o un estadio, y si hay un estadio en juego |
 | Cada jugador (jugador 1 arriba, jugador 0 abajo) | Premios por tomar, cartas en la mano, en el mazo y en el descarte; condiciones del activo (dormido, quemado, confundido, paralizado, envenenado) |
-| Cada Pokémon (activo y hasta 5 en banca) | Qué carta es (lista de cartas vistas en el entrenamiento, con sus PV cuando se conocen), PV y PV máximos, energías, herramientas, si es una evolución y si entró este turno; pasar de la banca al activo, quitar o agregar |
+| Cada Pokémon (activo y hasta 5 en banca) | Qué carta es (las cartas vistas como activo en el entrenamiento, cada una con sus PV máximos), PV y PV máximos, energías, herramientas, si es una evolución y si entró este turno; pasar de la banca al activo, quitar o agregar |
 
 La mano y los premios se editan como cantidades porque el modelo solo usa cuántas cartas hay, nunca cuáles son.
+
+Los PV máximos de cada carta salen de `agente/cartas.json` (parte 4 del cuaderno 09). Si la lista muestra cartas sin PV, falta bajar ese archivo: vuelve a ejecutar `python -m ptcg_agente.artefactos`.
 
 El panel derecho muestra la probabilidad del jugador 0 y del jugador 1, las advertencias (por ejemplo, fuera del dominio si un valor nunca se vio en el entrenamiento), el resultado del verificador y las contribuciones SHAP: en azul lo que favorece al jugador 0 y en naranja lo que favorece al jugador 1. Cada evaluación queda en `registros/agente_AAAA-MM-DD.jsonl` con el agente `simulador`.
 

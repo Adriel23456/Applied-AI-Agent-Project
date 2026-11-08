@@ -14,12 +14,13 @@ API (JSON):
 
 import json
 import threading
-from collections import Counter
 import webbrowser
+from collections import Counter
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from ptcg_agente import cartas
 from ptcg_agente import herramientas as hz
 from ptcg_agente.artefactos import ARTEFACTOS_DIR
 from ptcg_agente.entradas import EntradaInvalida, leer_json, observacion_de_paso
@@ -72,51 +73,46 @@ class Simulador:
         return {"paso": n, "observacion": observacion_de_paso(self.repeticion, n)}
 
     def catalogo(self):
-        """Cartas que se pueden poner en juego: las vistas en el entrenamiento (perfil del dominio),
-        con los PV maximos y el nombre que traen las repeticiones disponibles cuando aparecen."""
+        """Cartas que se pueden poner en juego: todas las vistas como activo en el entrenamiento,
+        con sus PV maximos del catalogo agente/cartas.json. Si el catalogo no esta, los PV salen
+        de las repeticiones disponibles (solo de las cartas que aparecen en ellas)."""
         if getattr(self, "_catalogo", None) is None:
             vistas = set(self.modelo.perfil.get("cartas_activas", []))
             pv, nombres = {}, {}
-            for ruta in self.ejemplos() + ([self.archivo] if self.archivo else []):
-                try:
-                    rep = leer_json(ruta)
-                except EntradaInvalida:
-                    continue
-                for paso in rep.get("steps", []):
-                    for entrada in paso:
-                        cur = (entrada.get("observation") or {}).get("current") or {}
-                        for jugador in cur.get("players") or []:
-                            for m in [x for x in (jugador.get("active") or []) + (jugador.get("bench") or []) if x]:
-                                if isinstance(m.get("id"), int) and isinstance(m.get("maxHp"), int):
-                                    pv.setdefault(m["id"], Counter())[m["maxHp"]] += 1
-                                    if m.get("name"):
-                                        nombres[m["id"]] = m["name"]
-            cartas = [{"id": c, "maxHp": pv[c].most_common(1)[0][0] if c in pv else None,
-                       "nombre": nombres.get(c)} for c in sorted(vistas)]
-            # primero las que tienen PV conocidos (aparecen en las repeticiones disponibles)
-            self._catalogo = sorted(cartas, key=lambda c: (c["maxHp"] is None, c["id"]))
+            ruta = ARTEFACTOS_DIR / cartas.RUTA
+            if ruta.exists():
+                for c in json.loads(ruta.read_text(encoding="utf-8"))["cartas"]:
+                    pv[c["id"]] = Counter({c["maxHp"]: 1})
+            else:
+                for archivo in self.ejemplos() + ([self.archivo] if self.archivo else []):
+                    try:
+                        rep = leer_json(archivo)
+                    except EntradaInvalida:
+                        continue
+                    for paso in rep.get("steps", []):
+                        for entrada in paso:
+                            cur = (entrada.get("observation") or {}).get("current") or {}
+                            for jugador in cur.get("players") or []:
+                                for m in [x for x in (jugador.get("active") or []) + (jugador.get("bench") or []) if x]:
+                                    if isinstance(m.get("id"), int) and isinstance(m.get("maxHp"), int):
+                                        pv.setdefault(m["id"], Counter())[m["maxHp"]] += 1
+                                        if m.get("name"):
+                                            nombres[m["id"]] = m["name"]
+            cartas_vistas = [{"id": c, "maxHp": pv[c].most_common(1)[0][0] if c in pv else None,
+                              "nombre": nombres.get(c)} for c in sorted(vistas)]
+            self._catalogo = sorted(cartas_vistas, key=lambda c: (c["maxHp"] is None, c["id"]))
         return self._catalogo
 
     def vacio(self):
-        """Estado nuevo, sin partida: turno 3, actua el jugador 0, 6 premios y un Pokemon activo y
-        uno en banca por lado. El usuario lo arma desde aqui."""
-        conocidas = [c for c in self.catalogo() if c["maxHp"]] or [{"id": -1, "maxHp": 100, "nombre": None}]
-
-        def pokemon(k):
-            c = conocidas[k % len(conocidas)]
-            m = {"id": c["id"], "hp": c["maxHp"], "maxHp": c["maxHp"], "energies": [], "tools": [],
-                 "preEvolution": None, "appearThisTurn": False}
-            if c.get("nombre"):
-                m["name"] = c["nombre"]
-            return m
-
-        def jugador(k):
-            j = {"deckCount": 40, "handCount": 6, "discard": [], "prize": [None] * 6,
-                 "active": [pokemon(2 * k)], "bench": [pokemon(2 * k + 1)]}
+        """Estado nuevo, sin partida y sin nada en la mesa: turno 0, sin premios, mano, mazo,
+        descarte ni Pokemon. El usuario lo arma desde cero. Mientras sea turno 0, no haya premios
+        por tomar o algun jugador no tenga Pokemon en juego, el modelo no da probabilidad."""
+        def jugador():
+            j = {"deckCount": 0, "handCount": 0, "discard": [], "prize": [], "active": [], "bench": []}
             j.update({f: False for f in ("asleep", "burned", "confused", "paralyzed", "poisoned")})
             return j
 
-        return {"players": [jugador(0), jugador(1)], "yourIndex": 0, "turn": 3, "firstPlayer": 0,
+        return {"players": [jugador(), jugador()], "yourIndex": 0, "turn": 0, "firstPlayer": 0,
                 "turnActionCount": 0, "energyAttached": False, "retreated": False, "supporterPlayed": False,
                 "stadiumPlayed": False, "stadium": None}
 
