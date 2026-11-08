@@ -108,12 +108,13 @@ def describir_modelo() -> dict:
 
 @servidor.tool(description=abrir_simulador_hz.DESCRIPCION)
 def abrir_simulador(observacion: dict | None = None, archivo: str | None = None,
-                    paso: int | None = None) -> dict:
-    """archivo: repeticion completa (con 'paso' opcional) u observacion. Sin argumentos abre el
-    primer ejemplo."""
+                    paso: int | None = None, vacio: bool = False) -> dict:
+    """archivo: repeticion completa (con 'paso' opcional) u observacion. vacio=true: estado nuevo
+    sin partida. Sin argumentos abre el primer ejemplo."""
     try:
         modelo = _modelo()
-        salida = abrir_simulador_hz.ejecutar(modelo, observacion, archivo, paso, registro=_estado["registro"])
+        salida = abrir_simulador_hz.ejecutar(modelo, observacion, archivo, paso, vacio=vacio,
+                                             registro=_estado["registro"])
     except EntradaInvalida as e:
         salida = {"ok": False, "error": str(e)}
     except Exception as e:  # el modelo no esta listo u otro problema local: se explica en vez de caer

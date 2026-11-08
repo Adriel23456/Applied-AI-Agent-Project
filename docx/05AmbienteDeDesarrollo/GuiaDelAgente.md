@@ -191,38 +191,43 @@ El cuaderno corre las pruebas, hace tres consultas (estado final, partida comple
 
 ## 8. Simulador gráfico
 
-Página web local para ver un estado de partida, editarlo y ver cómo cambia la probabilidad de victoria en tiempo real. Toda cifra sale de las mismas herramientas del agente, así que pasa por la revisión de dominio y el verificador.
+Página web local para armar o recorrer un estado de partida y ver cómo cambia la probabilidad de victoria en tiempo real. Toda cifra sale de las mismas herramientas del agente, así que pasa por la revisión de dominio y el verificador.
+
+**La cifra grande es siempre la probabilidad de que gane el jugador 0 (azul).** El jugador 1 (naranja) tiene el resto. Esto no cambia al moverse por la partida ni al cambiar a quién le toca actuar. Internamente, el modelo estima la probabilidad del jugador que actúa, y el simulador la convierte a la del jugador 0 (y cambia el signo de las contribuciones SHAP cuando actúa el jugador 1).
 
 **Abrirlo desde la terminal** (raíz del repositorio, `.venv` activo):
 
 ```powershell
 # Windows (PowerShell)
 $env:PYTHONPATH = "src"
-python -m ptcg_agente.simulador
+python -m ptcg_agente.simulador           # con el primer ejemplo
+python -m ptcg_agente.simulador --vacio   # con un estado nuevo, sin partida
 ```
 
 ```bash
 # Linux o macOS
-PYTHONPATH=src python -m ptcg_agente.simulador
+PYTHONPATH=src python -m ptcg_agente.simulador --vacio
 ```
 
-Se abre el navegador en `http://127.0.0.1:8765/` con el primer ejemplo de `artefactos_agente/agente/ejemplos/`. Para cerrarlo, presiona Ctrl+C en la terminal. Opciones:
-- `--archivo RUTA --paso N`: abre una repetición concreta en un paso.
-- `--puerto 8770`: usa otro puerto si el 8765 está ocupado.
-- `--sin-navegador`: no abre el navegador (útil si ya está abierto).
+Se abre el navegador en `http://127.0.0.1:8765/`. Para cerrarlo, presiona Ctrl+C en la terminal. Otras opciones: `--archivo RUTA --paso N` (una repetición concreta en un paso), `--puerto 8770` (otro puerto) y `--sin-navegador`.
 
-**Abrirlo desde Claude** (Claude Code o Claude Desktop con el servidor `ptcg-victoria`): pide, por ejemplo, *"Abre el simulador con la partida artefactos_agente/agente/ejemplos/partida_XXXX.json en el paso 120"*. Claude llama a la herramienta `abrir_simulador` y responde con la dirección. El simulador sigue activo mientras Claude esté abierto.
+**Abrirlo desde Claude** (servidor `ptcg-victoria`): pide, por ejemplo, *"Abre el simulador con un estado nuevo"* o *"Abre el simulador con la partida artefactos_agente/agente/ejemplos/partida_XXXX.json en el paso 120"*. Claude usa la herramienta `abrir_simulador` y responde con la dirección.
 
-**Qué se puede hacer:**
+**Dos modos:**
+- **Estado nuevo (sin partida):** botón azul arriba. Empieza en el turno 3 con 6 premios, 40 cartas en el mazo, 6 en la mano y un Pokémon activo y uno en banca por jugador. Se arma desde ahí, sin contexto de ninguna partida.
+- **Cargar partida:** elige una repetición de ejemplo y recórrela paso a paso sobre su curva. Cualquier paso se puede editar; **Deshacer cambios** vuelve al estado del paso.
 
-| Zona | Qué muestra | Qué se puede editar |
-|---|---|---|
-| Tablero (rival arriba, jugador que actúa abajo) | Premios, cartas en la mano (solo cuántas), mazo, descarte, Pokémon activo y banca con PV y energías | Premios, mano, mazo y descarte con − y +; PV, PV máximos y energías de cada Pokémon; agregar, quitar o pasar a activo un Pokémon de la banca; el turno |
-| Probabilidad (derecha) | Probabilidad del jugador que actúa, etapa, advertencias y resultado del verificador | Se actualiza sola después de cada cambio |
-| Por qué (derecha) | Las contribuciones SHAP más fuertes, en puntos porcentuales | — |
-| Curva de la partida (abajo) | Probabilidad del jugador 0 en cada paso y los puntos de giro | Clic en la curva, el deslizador o los botones de paso para moverse; **Restaurar el estado del paso** deshace las ediciones |
+**Qué se puede editar:**
 
-Cuando el estado está editado, arriba aparece *"Estado editado: la probabilidad es de un estado hipotético"*. Cada evaluación queda en `registros/agente_AAAA-MM-DD.jsonl` con el agente `simulador`.
+| Zona | Campos |
+|---|---|
+| Turno (arriba) | Número de turno, a quién le toca actuar, quién empezó la partida, acciones hechas en el turno, si ya unió energía, se retiró, jugó un partidario o un estadio, y si hay un estadio en juego |
+| Cada jugador (jugador 1 arriba, jugador 0 abajo) | Premios por tomar, cartas en la mano, en el mazo y en el descarte; condiciones del activo (dormido, quemado, confundido, paralizado, envenenado) |
+| Cada Pokémon (activo y hasta 5 en banca) | Qué carta es (lista de cartas vistas en el entrenamiento, con sus PV cuando se conocen), PV y PV máximos, energías, herramientas, si es una evolución y si entró este turno; pasar de la banca al activo, quitar o agregar |
+
+La mano y los premios se editan como cantidades porque el modelo solo usa cuántas cartas hay, nunca cuáles son.
+
+El panel derecho muestra la probabilidad del jugador 0 y del jugador 1, las advertencias (por ejemplo, fuera del dominio si un valor nunca se vio en el entrenamiento), el resultado del verificador y las contribuciones SHAP: en azul lo que favorece al jugador 0 y en naranja lo que favorece al jugador 1. Cada evaluación queda en `registros/agente_AAAA-MM-DD.jsonl` con el agente `simulador`.
 
 ---
 

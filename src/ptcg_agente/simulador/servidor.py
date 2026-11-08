@@ -8,10 +8,13 @@ API (JSON):
   POST /api/evaluar           {"observacion": {...}} -> probabilidad, SHAP, advertencias, verificacion
   POST /api/partida           {"archivo": "..."} -> curva, turnos, puntos de giro y pasos con observacion
   GET  /api/paso?n=PASO       observacion del jugador que actua en ese paso de la partida cargada
+  GET  /api/vacio             estado nuevo, sin partida, para armarlo desde cero
+  GET  /api/catalogo          cartas que se pueden poner en juego (vistas en entrenamiento)
 """
 
 import json
 import threading
+from collections import Counter
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -68,6 +71,55 @@ class Simulador:
             raise EntradaInvalida("no hay una partida cargada")
         return {"paso": n, "observacion": observacion_de_paso(self.repeticion, n)}
 
+    def catalogo(self):
+        """Cartas que se pueden poner en juego: las vistas en el entrenamiento (perfil del dominio),
+        con los PV maximos y el nombre que traen las repeticiones disponibles cuando aparecen."""
+        if getattr(self, "_catalogo", None) is None:
+            vistas = set(self.modelo.perfil.get("cartas_activas", []))
+            pv, nombres = {}, {}
+            for ruta in self.ejemplos() + ([self.archivo] if self.archivo else []):
+                try:
+                    rep = leer_json(ruta)
+                except EntradaInvalida:
+                    continue
+                for paso in rep.get("steps", []):
+                    for entrada in paso:
+                        cur = (entrada.get("observation") or {}).get("current") or {}
+                        for jugador in cur.get("players") or []:
+                            for m in [x for x in (jugador.get("active") or []) + (jugador.get("bench") or []) if x]:
+                                if isinstance(m.get("id"), int) and isinstance(m.get("maxHp"), int):
+                                    pv.setdefault(m["id"], Counter())[m["maxHp"]] += 1
+                                    if m.get("name"):
+                                        nombres[m["id"]] = m["name"]
+            cartas = [{"id": c, "maxHp": pv[c].most_common(1)[0][0] if c in pv else None,
+                       "nombre": nombres.get(c)} for c in sorted(vistas)]
+            # primero las que tienen PV conocidos (aparecen en las repeticiones disponibles)
+            self._catalogo = sorted(cartas, key=lambda c: (c["maxHp"] is None, c["id"]))
+        return self._catalogo
+
+    def vacio(self):
+        """Estado nuevo, sin partida: turno 3, actua el jugador 0, 6 premios y un Pokemon activo y
+        uno en banca por lado. El usuario lo arma desde aqui."""
+        conocidas = [c for c in self.catalogo() if c["maxHp"]] or [{"id": -1, "maxHp": 100, "nombre": None}]
+
+        def pokemon(k):
+            c = conocidas[k % len(conocidas)]
+            m = {"id": c["id"], "hp": c["maxHp"], "maxHp": c["maxHp"], "energies": [], "tools": [],
+                 "preEvolution": None, "appearThisTurn": False}
+            if c.get("nombre"):
+                m["name"] = c["nombre"]
+            return m
+
+        def jugador(k):
+            j = {"deckCount": 40, "handCount": 6, "discard": [], "prize": [None] * 6,
+                 "active": [pokemon(2 * k)], "bench": [pokemon(2 * k + 1)]}
+            j.update({f: False for f in ("asleep", "burned", "confused", "paralyzed", "poisoned")})
+            return j
+
+        return {"players": [jugador(0), jugador(1)], "yourIndex": 0, "turn": 3, "firstPlayer": 0,
+                "turnActionCount": 0, "energyAttached": False, "retreated": False, "supporterPlayed": False,
+                "stadiumPlayed": False, "stadium": None}
+
     def ejemplos(self):
         carpeta = ARTEFACTOS_DIR / "agente" / "ejemplos"
         return [str(p) for p in sorted(carpeta.glob("partida_*.json"))]
@@ -104,6 +156,10 @@ def _manejador(sim):
                 partida = sim.cargar_partida(sim.archivo) if sim.archivo else None
                 self._seguro(lambda: {"observacion": sim.inicial, "paso": sim.paso_inicial, "partida": partida,
                                      "ejemplos": sim.ejemplos()})
+            elif url.path == "/api/vacio":
+                self._seguro(lambda: {"observacion": sim.vacio()})
+            elif url.path == "/api/catalogo":
+                self._seguro(lambda: {"cartas": sim.catalogo()})
             elif url.path == "/api/paso":
                 n = int(parse_qs(url.query).get("n", ["-1"])[0])
                 self._seguro(lambda: sim.paso(n))

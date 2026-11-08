@@ -1,4 +1,4 @@
-"""python -m ptcg_agente.simulador [--archivo PARTIDA.json] [--paso N] [--puerto 8765]"""
+"""python -m ptcg_agente.simulador [--archivo PARTIDA.json] [--paso N] [--vacio] [--puerto 8765]"""
 
 import argparse
 import sys
@@ -18,18 +18,21 @@ def main(argv=None):
     p.add_argument("--archivo", help="repeticion completa de Kaggle (JSON)")
     p.add_argument("--paso", type=int, help="paso inicial de la repeticion")
     p.add_argument("--puerto", type=int, default=8765)
+    p.add_argument("--vacio", action="store_true", help="empezar con un estado nuevo, sin partida")
     p.add_argument("--sin-navegador", action="store_true", help="no abrir el navegador")
     args = p.parse_args(argv)
     modelo = ModeloAgente.cargar()
     registro = Registro("simulador", modelo.modelo_sha256, modelo.commit)
     archivo = args.archivo
-    if archivo is None:
+    if archivo is None and not args.vacio:
         from ptcg_agente.artefactos import ARTEFACTOS_DIR
         ejemplos = sorted((ARTEFACTOS_DIR / "agente" / "ejemplos").glob("partida_*.json"))
         if not ejemplos:
             raise SystemExit("indica --archivo o baja los ejemplos con python -m ptcg_agente.artefactos")
         archivo = str(ejemplos[0])
     servidor = crear(modelo, registro, archivo=archivo, paso=args.paso, puerto=args.puerto)
+    if args.vacio:
+        servidor.simulador.inicial = servidor.simulador.vacio()
     url = url_de(servidor)
     print(f"Simulador en {url} (Ctrl+C para cerrar)")
     if not args.sin_navegador:

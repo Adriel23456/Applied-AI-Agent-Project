@@ -107,3 +107,25 @@ def test_servidor_mcp_expone_abrir_simulador(modelo, tmp_path, monkeypatch):  # 
     datos = r.structured_content if hasattr(r, "structured_content") else None
     datos = datos or json.loads(r.content[0].text)
     assert datos.get("result", datos)["ok"]
+
+
+def test_estado_nuevo_sin_partida_se_evalua(simulador, modelo):  # noqa: F811
+    url, _, _ = simulador
+    cartas = json.loads(_get(url + "api/catalogo"))["cartas"]
+    assert cartas and {c["id"] for c in cartas} <= set(modelo.perfil["cartas_activas"])
+    assert any(c["maxHp"] for c in cartas)  # los PV salen de las repeticiones disponibles
+    vacio = json.loads(_get(url + "api/vacio"))["observacion"]
+    r = _post(url + "api/evaluar", {"observacion": vacio})
+    assert r["ok"] and r["probabilidad"] is not None and r["verificacion"]["aprobado"]
+    assert r["probabilidad"] == pytest.approx(modelo.predictor.probabilidad(vacio), abs=1e-12)
+    actua_1 = copy.deepcopy(vacio)
+    actua_1["yourIndex"] = 1
+    r1 = _post(url + "api/evaluar", {"observacion": actua_1})
+    assert r1["ok"] and r1["jugador"] == 1
+
+
+def test_abrir_simulador_vacio(modelo):  # noqa: F811
+    from ptcg_agente.herramientas import abrir_simulador
+    s = abrir_simulador.ejecutar(modelo, vacio=True, abrir=False)
+    inicio = json.loads(_get(s["url"] + "api/inicio"))
+    assert inicio["partida"] is None and inicio["observacion"]["turn"] == 3
