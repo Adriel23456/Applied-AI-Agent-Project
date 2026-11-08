@@ -149,7 +149,7 @@ Contexto obligatorio para trabajar: el modelo final es B4 entrenado en A, expues
 - El modelo no se reentrena ni se recalibra. El agente consume el modelo final tal como quedó en la Etapa 2, verificado por SHA-256 contra `ficha.json`.
 - El agente nunca recibe ni pide información oculta (mano rival, contenido de los premios). Solo usa la observación pública del jugador que actúa, igual que el modelo.
 - Toda cifra que el agente dé al usuario sale de una herramienta y queda en el registro de invocaciones. El agente no inventa probabilidades.
-- La lógica vive en `src/ptcg_wp/` y se prueba con `pytest`; los cuadernos y las interfaces solo la ejecutan.
+- La lógica vive en `src/ptcg_wp/` (datos y modelos) y en `src/ptcg_agente/` (agente, validación y simulador), y se prueba con `pytest`; los cuadernos y las interfaces solo la ejecutan.
 - Las claves de API se tratan igual que el token de Kaggle: nunca en cuadernos, archivos versionados ni conversaciones.
 - Una decisión de diseño o un protocolo de validación se escribe en `docx/03Evidencia/` antes de ejecutarse.
 
@@ -191,35 +191,35 @@ Integración del modelo en una arquitectura multiagente con *tool calling*, cons
 - [x] Pruebas del verificador: detecta probabilidades fuera de rango, SHAP que no suma, cifras inventadas, advertencias omitidas y promesas de certeza
 - [x] Prueba del servidor MCP de punta a punta con un cliente MCP real por stdio
 - [x] Evidencia del flujo completo con Claude Code: `docx/03Evidencia/08-11-26_RegistroSesionClaudeCode.jsonl` y `.png` (consulta sobre la partida 87406956; el verificador rechazó un primer borrador y aprobó el corregido)
-- [x] Evidencia del orquestador en Python (registro de una corrida con planificador, ejecutor, verificador y redactor)
+- [x] Evidencia del orquestador en Python: `docx/03Evidencia/08-11-26_RegistroOrquestador.jsonl` (cuaderno `08_agente_orquestador`, partida 87363568: 3 consultas, 3 de 3 respuestas aprobadas en la primera ronda del redactor)
 
 ### `08AgentValidationAndSimulator`
 
-Validación del agente frente a escenarios normales, casos límite, entradas inesperadas y errores del modelo, y un simulador gráfico que el agente puede abrir para que un humano manipule un estado y vea la probabilidad cambiar en tiempo real.
+Validación del agente frente a escenarios normales, casos límite, entradas inesperadas y errores del modelo, y un simulador gráfico que el agente puede abrir para que un humano manipule un estado y vea la probabilidad cambiar en tiempo real. Protocolo: `docx/03Evidencia/08-11-26_ProtocoloValidacionAgente.md`. Nivel N1 (sin LLM): cuaderno `09_validacion_agente` (Colab). Nivel N2 (con Claude): cuaderno `10_validacion_llm` (PC).
 
 **Protocolo de validación** (escrito antes de ejecutar)
-- [ ] Protocolo en `docx/03Evidencia/`: escenarios, entradas, comportamiento esperado y criterio de aprobación de cada uno
-- [ ] Escenarios normales: estados de partidas de `test` de A en inicio, medio y final
-- [ ] Casos límite: preparación, estado resuelto, banca vacía, mazo en cero, un premio por tomar, turno 1, partidas muy largas
-- [ ] Entradas inesperadas: JSON mal formado, tipos incorrectos, campos faltantes, cartas no vistas, valores imposibles, observación del jugador que espera
-- [ ] Datos fuera del dominio de entrenamiento: estados de B (días posteriores) y C (arquetipos reservados), y estados sintéticos alejados de la distribución
-- [ ] Errores del modelo: predicciones muy seguras y equivocadas del análisis de errores de la Etapa 2; qué dice el agente y si advierte la incertidumbre
-- [ ] Consultas adversas al LLM: pedir la mano rival, pedir certeza absoluta, instrucciones inyectadas dentro de los datos de la partida
+- [x] Protocolo en `docx/03Evidencia/`: escenarios, entradas, comportamiento esperado y criterio de aprobación de cada uno (`08-11-26_ProtocoloValidacionAgente.md`)
+- [x] Escenarios normales: estados de partidas de `test` de A en inicio, medio y final
+- [x] Casos límite: preparación, estado resuelto, banca vacía, mazo en cero, un premio por tomar, turno 1, partidas muy largas
+- [x] Entradas inesperadas: JSON mal formado, tipos incorrectos, campos faltantes, cartas no vistas, valores imposibles, observación del jugador que espera
+- [x] Datos fuera del dominio de entrenamiento: estados de B (días posteriores) y C (arquetipos reservados), y estados sintéticos alejados de la distribución
+- [x] Errores del modelo: predicciones muy seguras y equivocadas del análisis de errores de la Etapa 2; qué dice el agente y si advierte la incertidumbre
+- [x] Consultas adversas al LLM: pedir la mano rival, pedir certeza absoluta, instrucciones inyectadas dentro de los datos de la partida
 
 **Ejecución y análisis**
-- [ ] Batería automática de escenarios con resultados guardados (aprobado o fallido por caso)
-- [ ] Métricas del agente: herramienta correcta por consulta, cifras de la respuesta iguales a las herramientas, advertencias emitidas cuando corresponden, rechazos correctos fuera de dominio y latencia
-- [ ] Análisis de fragilidad: qué pasa cuando el modelo se equivoca y el agente confía en él, qué detecta el verificador y qué no
-- [ ] Resultados documentados en `docx/03Evidencia/`
+- [x] Batería automática de escenarios con resultados guardados (aprobado o fallido por caso): nivel N1 en `src/ptcg_agente/validacion/` y cuaderno `09_validacion_agente` (Kaggle `agente/validacion/`): 35 casos, 32 aprobados, 2 fallidos (L-09 y L-10) y 1 de registro (M-02); tras corregir, 34 aprobados y 1 de registro (cuaderno `10_validacion_llm`, parte 2). Nivel N2 con Claude: 31 consultas, 31 aprobadas
+- [x] Métricas del agente: herramienta correcta 18/18, cifras trazables 31/31, advertencias 13/13 casos, rechazos 7/7 casos, 0 excepciones; latencia p95 de una consulta 31 s y de `evaluar_partida` 0.5 s tras la corrección (34 s antes)
+- [x] Análisis de fragilidad: 50 de 60 errores muy seguros de medio y final llegan sin advertencia y el agente los presenta como fiables; el verificador detecta cifras inventadas, advertencias omitidas, porcentajes sin predicción y promesas de certeza, pero no interpretaciones equivocadas de cifras reales
+- [x] Resultados documentados en `docx/03Evidencia/08-11-26_ResultadosValidacionAgente.md`, con la revisión humana de Q-01, Q-02 y Q-07
 
-**Simulador gráfico** (`src/ptcg_wp/simulador/`)
-- [ ] Aplicación web local que muestra un estado de partida de forma gráfica: activos, banca, premios, mano, mazo, descartes y energías de ambos jugadores
-- [ ] Edición del estado por el usuario (premios, PV, banca, cartas en mazo y descarte, energías) con la probabilidad de victoria actualizada en tiempo real por el modelo final
-- [ ] Reproducción de partidas reales del corpus turno a turno, con la curva de probabilidad y los puntos de giro
-- [ ] Panel con las contribuciones SHAP del estado actual y las advertencias del verificador
-- [ ] Herramienta del agente `abrir_simulador` para lanzarlo con un estado o una partida dados
-- [ ] Validación humana: sesiones de cada integrante con el simulador, registrando si la dirección de los cambios de probabilidad tiene sentido de juego
-- [ ] Pruebas del simulador (la probabilidad mostrada coincide con la del predictor) y capturas o grabación como evidencia
+**Simulador gráfico** (`src/ptcg_agente/simulador/`)
+- [x] Aplicación web local que muestra un estado de partida de forma gráfica: activos, banca, premios, mano, mazo, descartes y energías de ambos jugadores (`python -m ptcg_agente.simulador`; servidor de la biblioteca estándar, sin dependencias nuevas). La mano se muestra solo como cantidad: el modelo no usa su contenido
+- [x] Edición del estado por el usuario (premios, PV, banca, cartas en mazo y descarte, energías, turno) con la probabilidad de victoria actualizada en tiempo real por el modelo final
+- [x] Reproducción de partidas reales del corpus paso a paso, con la curva de probabilidad y los puntos de giro
+- [x] Panel con las contribuciones SHAP del estado actual y las advertencias del verificador
+- [x] Herramienta del agente `abrir_simulador` para lanzarlo con un estado o una partida dados (servidor MCP)
+- [x] Validación humana: sesiones de cada integrante con el simulador (`docx/03Evidencia/08-11-26_ValidacionHumanaSimulador.md`): 15 pruebas distintas, 10 con la dirección esperada (todas las de premios, mazo, PV y banca); las condiciones especiales casi no mueven la probabilidad y las energías en el activo la bajan (asociación no causal)
+- [x] Pruebas del simulador (la probabilidad mostrada coincide con la del predictor, ediciones, navegación, estado nuevo, catálogo de cartas y `abrir_simulador`: `tests/test_simulador.py`, 8 pruebas) y capturas como evidencia con el modelo final: `docx/03Evidencia/08-11-26_SimuladorEstadoPersonalizado.png` (estado armado desde cero) y `08-11-26_SimuladorPartida87363568.png` (paso 34 de la partida 87363568)
 
 ### `09EthicsPaperAndDocumentation`
 

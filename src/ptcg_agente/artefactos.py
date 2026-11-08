@@ -84,6 +84,39 @@ def preparar_ejemplos(raiz=None):
     return [raiz / r for r in rutas]
 
 
+def preparar_cartas(raiz=None):
+    """Baja (verificando SHA-256) el catalogo de cartas del simulador, si ya esta publicado."""
+    from ptcg_agente import cartas
+    raiz = Path(raiz or ARTEFACTOS_DIR)
+    if cartas.RUTA in store.leer_indice():
+        store.listo([cartas.RUTA], raiz)
+        return raiz / cartas.RUTA
+    print("aviso: no hay catalogo de cartas en Kaggle (parte 4 del cuaderno 09); el simulador "
+          "solo conocera los PV de las cartas que aparecen en los ejemplos")
+    return None
+
+
+def preparar_validacion(raiz=None):
+    """Baja (verificando SHA-256) los casos de validacion que publico el cuaderno 09."""
+    from ptcg_agente.validacion import casos
+    raiz = Path(raiz or ARTEFACTOS_DIR)
+    rutas = [casos.CASOS, casos.OBSERVACIONES, casos.PARTIDAS]
+    if not store.listo(rutas, raiz):
+        raise RuntimeError("Kaggle todavia no muestra todos los casos de validacion. Si la parte 1 "
+                           "del cuaderno 09 se publico hace poco, espera unos minutos a que Kaggle "
+                           "termine de procesar la version nueva y vuelve a ejecutar esta celda; "
+                           "si no se ha ejecutado, ejecutala en Colab")
+    return raiz
+
+
+def configurar_kaggle():
+    """Token de Kaggle desde la variable KAGGLE_API_TOKEN o desde secrets.txt en la raiz del
+    repo (mismo formato de los cuadernos); si no esta, lo pide sin mostrarlo."""
+    if not (os.environ.get("KAGGLE_API_TOKEN") or os.environ.get("KAGGLE_KEY")):
+        from ptcg_wp.colab import _configure_kaggle, read_secret
+        _configure_kaggle(read_secret("KAGGLE_API_TOKEN", path=str(REPO_DIR / "secrets.txt")))
+
+
 def verificar(raiz=None, rutas=REQUERIDOS):
     """Comprueba SHA-256 contra el manifiesto y la version de scikit-learn contra la ficha.
     Devuelve el manifiesto. Lanza RuntimeError con un mensaje claro si algo no coincide."""
@@ -121,14 +154,15 @@ def main():
     parser = argparse.ArgumentParser(description="Baja y verifica los archivos del agente")
     parser.add_argument("--raiz", default=None)
     args = parser.parse_args()
-    if not (os.environ.get("KAGGLE_API_TOKEN") or os.environ.get("KAGGLE_KEY")):
-        from ptcg_wp.colab import _configure_kaggle, read_secret
-        _configure_kaggle(read_secret("KAGGLE_API_TOKEN", path=str(REPO_DIR / "secrets.txt")))
+    configurar_kaggle()
     manifiesto = preparar(args.raiz)
     print(f"Listo: {len(manifiesto['archivos'])} archivos verificados en "
           f"{Path(args.raiz or ARTEFACTOS_DIR).resolve()}")
     for ruta in preparar_ejemplos(args.raiz):
         print("ejemplo:", ruta)
+    catalogo = preparar_cartas(args.raiz)
+    if catalogo:
+        print("catalogo de cartas:", catalogo)
 
 
 if __name__ == "__main__":

@@ -189,13 +189,57 @@ El cuaderno corre las pruebas, hace tres consultas (estado final, partida comple
 
 ---
 
-## 8. Registros (evidencia)
+## 8. Simulador gráfico
+
+Página web local para armar o recorrer un estado de partida y ver cómo cambia la probabilidad de victoria en tiempo real. Toda cifra sale de las mismas herramientas del agente, así que pasa por la revisión de dominio y el verificador.
+
+**La cifra grande es siempre la probabilidad de que gane el jugador 0 (azul).** El jugador 1 (naranja) tiene el resto. Esto no cambia al moverse por la partida ni al cambiar a quién le toca actuar. Internamente, el modelo estima la probabilidad del jugador que actúa, y el simulador la convierte a la del jugador 0 (y cambia el signo de las contribuciones SHAP cuando actúa el jugador 1).
+
+**Abrirlo desde la terminal** (raíz del repositorio, `.venv` activo):
+
+```powershell
+# Windows (PowerShell)
+$env:PYTHONPATH = "src"
+python -m ptcg_agente.simulador           # con el primer ejemplo
+python -m ptcg_agente.simulador --vacio   # con un estado nuevo, sin partida
+```
+
+```bash
+# Linux o macOS
+PYTHONPATH=src python -m ptcg_agente.simulador --vacio
+```
+
+Se abre el navegador en `http://127.0.0.1:8765/`. Para cerrarlo, presiona Ctrl+C en la terminal. Otras opciones: `--archivo RUTA --paso N` (una repetición concreta en un paso), `--puerto 8770` (otro puerto) y `--sin-navegador`.
+
+**Abrirlo desde Claude** (servidor `ptcg-victoria`): pide, por ejemplo, *"Abre el simulador con un estado nuevo"* o *"Abre el simulador con la partida artefactos_agente/agente/ejemplos/partida_XXXX.json en el paso 120"*. Claude usa la herramienta `abrir_simulador` y responde con la dirección.
+
+**Dos modos:**
+- **Estado nuevo (sin partida):** botón azul arriba. Empieza vacío, como antes de repartir: turno 0, sin premios, mano, mazo, descarte ni Pokémon. Se arma desde cero, sin contexto de ninguna partida. Mientras sea turno 0, algún jugador no tenga premios por tomar o no tenga un Pokémon en juego, el modelo no da probabilidad (la partida no ha empezado o ya terminó); el panel lo indica.
+- **Cargar partida:** elige una repetición de ejemplo y recórrela paso a paso sobre su curva. Cualquier paso se puede editar; **Deshacer cambios** vuelve al estado del paso.
+
+**Qué se puede editar:**
+
+| Zona | Campos |
+|---|---|
+| Turno (arriba) | Número de turno, a quién le toca actuar, quién empezó la partida, acciones hechas en el turno, si ya unió energía, se retiró, jugó un partidario o un estadio, y si hay un estadio en juego |
+| Cada jugador (jugador 1 arriba, jugador 0 abajo) | Premios por tomar, cartas en la mano, en el mazo y en el descarte; condiciones del activo (dormido, quemado, confundido, paralizado, envenenado) |
+| Cada Pokémon (activo y hasta 5 en banca) | Qué carta es (las cartas vistas como activo en el entrenamiento, cada una con sus PV máximos), PV y PV máximos, energías, herramientas, si es una evolución y si entró este turno; pasar de la banca al activo, quitar o agregar |
+
+La mano y los premios se editan como cantidades porque el modelo solo usa cuántas cartas hay, nunca cuáles son.
+
+Los PV máximos de cada carta salen de `agente/cartas.json` (parte 4 del cuaderno 09). Si la lista muestra cartas sin PV, falta bajar ese archivo: vuelve a ejecutar `python -m ptcg_agente.artefactos`.
+
+El panel derecho muestra la probabilidad del jugador 0 y del jugador 1, las advertencias (por ejemplo, fuera del dominio si un valor nunca se vio en el entrenamiento), el resultado del verificador y las contribuciones SHAP: en azul lo que favorece al jugador 0 y en naranja lo que favorece al jugador 1. Cada evaluación queda en `registros/agente_AAAA-MM-DD.jsonl` con el agente `simulador`.
+
+---
+
+## 9. Registros (evidencia)
 
 Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl` (fecha UTC). El campo `agente` dice quién actuó: `planificador`, `ejecutor`, `redactor` o `verificador`. Para guardar una sesión de Claude Code o Claude Desktop como evidencia, copia el archivo a `docx/03Evidencia/` con un nombre descriptivo y agrega una captura de la conversación. El cuaderno local copia la sesión del orquestador por su cuenta.
 
 ---
 
-## 9. Si algo falla
+## 10. Si algo falla
 
 | Síntoma | Causa | Solución |
 |---|---|---|
@@ -210,5 +254,6 @@ Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl` (fecha UTC). El ca
 | `Failed to build 'scikit-learn'` al instalar | La versión de Python es demasiado nueva y no hay paquete precompilado | Borrar `.venv` y crearlo con Python 3.12 (sección 2) |
 | `no se encontro 'claude'` en el orquestador | Claude Code no está instalado o VS Code se abrió antes de instalarlo | Instalarlo (sección 3.1) y reiniciar VS Code |
 | `Claude respondio con error` en el orquestador | No se inició sesión en Claude Code o se agotó el límite de la membresía | Abrir `claude` una vez e iniciar sesión; si es el límite, esperar a que se renueve |
+| `Address already in use` al abrir el simulador | El puerto 8765 está ocupado (quizá por otro simulador abierto) | Cerrar el otro o usar `--puerto 8770` |
 | `/consulta-ptcg` no existe | Claude Code no se abrió en la raíz del repositorio | Cerrar y abrir `claude` desde la raíz |
 | Pruebas | — | Primera celda de pruebas de `notebooks/08_agente_orquestador.ipynb` (o `python -m pytest -q tests/test_agente.py`) |

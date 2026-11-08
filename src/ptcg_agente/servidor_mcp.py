@@ -24,6 +24,8 @@ if __package__ in (None, ""):
 from mcp.server.mcpserver import MCPServer
 
 from ptcg_agente import herramientas as hz
+from ptcg_agente.entradas import EntradaInvalida
+from ptcg_agente.herramientas import abrir_simulador as abrir_simulador_hz
 from ptcg_agente.agentes.verificador import verificar_texto
 from ptcg_agente.modelo import ModeloAgente
 from ptcg_agente.registro import Registro
@@ -39,6 +41,8 @@ Sigue este flujo en cada consulta:
    tablero) y sus limites. Toda cifra debe salir de una herramienta. Menciona las advertencias.
 4. VERIFICA: llama a verificar_respuesta con tu borrador. Si no aprueba, corrige y vuelve a
    verificar. Si no logras aprobarlo, di que no puedes afirmar mas de lo que dicen las herramientas.
+Si el usuario quiere ver el tablero, manipular un estado o recorrer una partida, usa abrir_simulador
+y dale la direccion que devuelve.
 Nunca pidas ni supongas la mano del rival ni el contenido de los premios. No prometas certeza."""
 
 servidor = MCPServer(name="ptcg-victoria", instructions=INSTRUCCIONES)
@@ -100,6 +104,25 @@ def revisar_dominio(observacion: dict | None = None, archivo: str | None = None,
 @servidor.tool(description=hz.describir_modelo.DESCRIPCION)
 def describir_modelo() -> dict:
     return _llamar("describir_modelo")
+
+
+@servidor.tool(description=abrir_simulador_hz.DESCRIPCION)
+def abrir_simulador(observacion: dict | None = None, archivo: str | None = None,
+                    paso: int | None = None, vacio: bool = False) -> dict:
+    """archivo: repeticion completa (con 'paso' opcional) u observacion. vacio=true: estado nuevo
+    sin partida. Sin argumentos abre el primer ejemplo."""
+    try:
+        modelo = _modelo()
+        salida = abrir_simulador_hz.ejecutar(modelo, observacion, archivo, paso, vacio=vacio,
+                                             registro=_estado["registro"])
+    except EntradaInvalida as e:
+        salida = {"ok": False, "error": str(e)}
+    except Exception as e:  # el modelo no esta listo u otro problema local: se explica en vez de caer
+        salida = {"ok": False, "error": f"no se pudo abrir el simulador: {e}"}
+    if _estado["registro"] is not None:
+        _estado["registro"].anotar("abrir_simulador", {"archivo": archivo, "paso": paso}, salida, 0.0,
+                                   agente="ejecutor")
+    return salida
 
 
 @servidor.tool(description="Verifica el borrador de respuesta contra los resultados de las herramientas "

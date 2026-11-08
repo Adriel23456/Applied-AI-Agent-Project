@@ -115,7 +115,8 @@ def consultar(pregunta, archivo=None, paso=None, modelo=None, llm=llamar_claude,
                 time.perf_counter(), "verificador")
 
     return {"pregunta": pregunta, "archivo": archivo, "paso": paso, "plan": plan,
-            "fuente_plan": fuente_plan, "resultados": resultados, "rondas_redactor": rondas,
+            "fuente_plan": fuente_plan, "historial_plan": historial, "resultados": resultados,
+            "rondas_redactor": rondas,
             "respuesta": texto, "fuente_respuesta": fuente, "verificacion": verificacion,
             "sesion": registro.sesion, "registro": str(registro.archivo)}
 

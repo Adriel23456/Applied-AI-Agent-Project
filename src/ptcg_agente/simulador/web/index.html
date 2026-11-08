@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador PTCG</title>
+<style>
+  :root {
+    --fondo: #f4f5f7; --panel: #ffffff; --borde: #d9dce1; --texto: #1d2330; --suave: #5f6b7a;
+    --j0: #2f6fdb; --j1: #c2410c; --bien: #15803d; --mal: #b91c1c; --aviso: #b45309;
+    --sombra: 0 1px 2px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --fondo: #14171c; --panel: #1d2128; --borde: #343a45; --texto: #e7eaf0; --suave: #9aa4b2;
+            --j0: #6b9cf5; --j1: #f08a4b; --bien: #4ade80; --mal: #f87171; --aviso: #fbbf24; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--fondo); color: var(--texto); }
+  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--borde); background: var(--panel); }
+  header h1 { font-size: 17px; margin: 0 10px 0 0; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 16px; padding: 16px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--borde); border-radius: 10px; padding: 12px; box-shadow: var(--sombra); margin-bottom: 12px; }
+  .lado { border-left: 5px solid var(--color); }
+  .lado h2 { font-size: 15px; margin: 0 0 8px; color: var(--color); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .turno { font-size: 12px; font-weight: 600; color: var(--panel); background: var(--color); border-radius: 10px; padding: 1px 8px; }
+  .fila { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+  .contador { border: 1px solid var(--borde); border-radius: 8px; padding: 6px 8px; min-width: 112px; }
+  .contador .et { font-size: 12px; color: var(--suave); }
+  .contador .val { font-size: 18px; font-weight: 600; }
+  button { font: inherit; border: 1px solid var(--borde); background: var(--fondo); color: var(--texto); border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+  button:hover { border-color: var(--suave); }
+  button.principal { background: var(--j0); border-color: var(--j0); color: #fff; }
+  .mini { padding: 0 6px; min-width: 24px; }
+  input[type=number] { width: 64px; font: inherit; padding: 2px 4px; border: 1px solid var(--borde); border-radius: 6px; background: var(--fondo); color: var(--texto); }
+  select { font: inherit; padding: 3px; border-radius: 6px; border: 1px solid var(--borde); background: var(--fondo); color: var(--texto); max-width: 330px; }
+  label.check { display: inline-flex; gap: 4px; align-items: center; font-size: 13px; margin-right: 10px; }
+  .carta { border: 1px solid var(--borde); border-radius: 8px; padding: 8px; width: 215px; background: var(--fondo); }
+  .carta.activo { width: 235px; border-width: 2px; border-color: var(--color); }
+  .carta select { width: 100%; font-size: 12px; margin-bottom: 4px; }
+  .carta input[type=number] { width: 54px; }
+  .carta .check { white-space: nowrap; font-size: 12px; margin-right: 6px; }
+  .carta .marcas { display: flex; flex-wrap: wrap; margin: 3px 0; }
+  .titulo-carta { font-weight: 600; font-size: 12px; color: var(--suave); margin-bottom: 2px; }
+  .barra { height: 8px; border-radius: 4px; background: var(--borde); overflow: hidden; margin: 4px 0; }
+  .barra > div { height: 100%; background: var(--bien); }
+  .linea { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: 3px 0; font-size: 13px; }
+  .vacio { color: var(--suave); font-style: italic; padding: 8px; }
+  .premios { display: flex; gap: 3px; margin-top: 4px; }
+  .premio { width: 12px; height: 17px; border-radius: 2px; background: var(--color); opacity: .85; }
+  .premio.tomado { background: transparent; border: 1px dashed var(--borde); }
+  .estados { margin-top: 8px; }
+  #prob { font-size: 46px; font-weight: 700; text-align: center; margin: 2px 0; color: var(--j0); }
+  #probBarra { height: 16px; border-radius: 8px; overflow: hidden; display: flex; }
+  #probBarra .a { background: var(--j0); } #probBarra .b { background: var(--j1); }
+  .leyenda { display: flex; justify-content: space-between; font-size: 12px; margin-top: 3px; }
+  .sub { color: var(--suave); font-size: 12px; text-align: center; }
+  h3 { font-size: 14px; margin: 14px 0 6px; }
+  .aviso { border-left: 4px solid var(--aviso); padding: 4px 8px; margin: 4px 0; font-size: 13px; background: var(--fondo); border-radius: 4px; }
+  .verif { font-size: 13px; padding: 4px 8px; border-radius: 4px; background: var(--fondo); }
+  .shap { display: grid; grid-template-columns: 1fr 110px 52px; gap: 4px 6px; align-items: center; font-size: 12px; }
+  .shap .b { height: 10px; border-radius: 3px; }
+  #curva { width: 100%; height: 190px; display: block; }
+  .controles { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  #deslizador { flex: 1; min-width: 160px; }
+  .editado { color: var(--aviso); font-size: 12px; }
+  .nota { font-size: 12px; color: var(--suave); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Simulador de probabilidad de victoria (PTCG)</h1>
+  <button id="btnVacio" class="principal">Estado nuevo (sin partida)</button>
+  <span class="nota">o</span>
+  <label>Partida <select id="selPartida"></select></label>
+  <button id="btnCargar">Cargar partida</button>
+  <span class="editado" id="editado"></span>
+  <button id="btnRestaurar">Deshacer cambios</button>
+</header>
+<main>
+  <section>
+    <div class="panel" id="panelTurno"></div>
+    <div id="tablero"></div>
+    <div class="panel" id="panelCurva">
+      <div class="linea"><strong>Curva de la partida</strong><span class="sub">Probabilidad de que gane el jugador 0 en cada paso · puntos de giro marcados</span></div>
+      <svg id="curva" viewBox="0 0 1000 190" preserveAspectRatio="none"></svg>
+      <div class="controles">
+        <button id="btnPrev">◀ Paso</button>
+        <input type="range" id="deslizador" min="0" max="0" value="0">
+        <button id="btnSig">Paso ▶</button>
+        <span id="pasoTxt" class="sub"></span>
+      </div>
+    </div>
+  </section>
+  <aside>
+    <div class="panel">
+      <div class="sub">Probabilidad de que gane el <strong style="color:var(--j0)">jugador 0</strong></div>
+      <div id="prob">—</div>
+      <div id="probBarra"><div class="a"></div><div class="b"></div></div>
+      <div class="leyenda"><span style="color:var(--j0)" id="leyenda0">Jugador 0</span><span style="color:var(--j1)" id="leyenda1">Jugador 1</span></div>
+      <div class="sub" id="etapa"></div>
+      <h3>Advertencias</h3>
+      <div id="avisos"></div>
+      <h3>Verificador</h3>
+      <div id="verif" class="verif"></div>
+      <h3>Por qué (contribuciones SHAP)</h3>
+      <div class="sub" style="text-align:left">Puntos porcentuales que cada característica sube (+) o baja (−) la probabilidad del jugador 0. Son asociaciones del modelo, no causas.</div>
+      <div id="shap" class="shap"></div>
+    </div>
+  </aside>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const COLOR = ["var(--j0)", "var(--j1)"];
+const CONDICIONES = [["asleep", "Dormido"], ["burned", "Quemado"], ["confused", "Confundido"], ["paralyzed", "Paralizado"], ["poisoned", "Envenenado"]];
+const st = { obs: null, original: null, partida: null, pasos: [], paso: null, temporizador: null, pedido: 0, catalogo: [], modo: null };
+
+async function api(ruta, cuerpo) {
+  const r = await fetch(ruta, cuerpo === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
+  return r.json();
+}
+const pct = (p) => (100 * p).toFixed(1) + " %";
+const copia = (x) => JSON.parse(JSON.stringify(x));
+const vivos = (lista) => (lista || []).filter((m) => m);
+const html = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ---------- Edicion del estado ----------
+function cambiar(fn) { fn(); st.editado = true; dibujar(); programarEvaluacion(); }
+function largo(lista, n, relleno) {
+  n = Math.max(0, n);
+  while (lista.length < n) lista.push(lista.length ? copia(lista[lista.length - 1]) : relleno);
+  lista.length = n;
+}
+function nombreCarta(c) { return `#${c.id}` + (c.nombre ? ` ${c.nombre}` : "") + (c.maxHp ? ` (${c.maxHp} PV)` : ""); }
+function pokemonDe(id) {
+  const c = st.catalogo.find((x) => x.id === id) || { id, maxHp: 100 };
+  const m = { id: c.id, hp: c.maxHp || 100, maxHp: c.maxHp || 100, energies: [], tools: [], preEvolution: null, appearThisTurn: false };
+  if (c.nombre) m.name = c.nombre;
+  return m;
+}
+function selectorCarta(m) {
+  const opciones = st.catalogo.some((c) => c.id === m.id) ? st.catalogo : [{ id: m.id, maxHp: m.maxHp, nombre: m.name }, ...st.catalogo];
+  return `<select class="cartaSel">${opciones.map((c) => `<option value="${c.id}" ${c.id === m.id ? "selected" : ""}>${html(nombreCarta(c))}</option>`).join("")}</select>`;
+}
+
+function botonera(etiqueta, valor, menos, mas, extra) {
+  const d = document.createElement("div"); d.className = "contador";
+  d.innerHTML = `<div class="et">${etiqueta}</div><div class="linea"><button class="mini">−</button><span class="val">${valor}</span><button class="mini">+</button></div>${extra || ""}`;
+  const [b1, b2] = d.querySelectorAll("button"); b1.onclick = () => cambiar(menos); b2.onclick = () => cambiar(mas);
+  return d;
+}
+
+function cartaPokemon(m, esActivo, j, indiceBanca) {
+  const d = document.createElement("div"); d.className = "carta" + (esActivo ? " activo" : "");
+  const hp = m.hp ?? 0, max = m.maxHp ?? 0, frac = max > 0 ? Math.max(0, Math.min(1, hp / max)) : 0;
+  d.innerHTML = `<div class="titulo-carta">${esActivo ? "Pokémon activo" : "En banca"}</div>${selectorCarta(m)}
+    <div class="barra"><div style="width:${100 * frac}%"></div></div>
+    <div class="linea">PV <span><input type="number" min="0" class="hp" value="${hp}"> / <input type="number" min="0" class="max" value="${max}"></span></div>
+    <div class="linea">Energías <span><button class="mini emenos">−</button> ${(m.energies || []).length} <button class="mini emas">+</button></span></div>
+    <div class="linea">Herramientas <span><button class="mini hmenos">−</button> ${(m.tools || []).length} <button class="mini hmas">+</button></span></div>
+    <div class="marcas"><label class="check"><input type="checkbox" class="evo" ${m.preEvolution ? "checked" : ""}>Evolucionado</label>
+      <label class="check"><input type="checkbox" class="nuevo" ${m.appearThisTurn ? "checked" : ""}>Entró este turno</label></div>
+    ${esActivo ? "" : '<div class="linea"><button class="subir">Pasar a activo</button><button class="quitar">Quitar</button></div>'}`;
+  d.querySelector(".cartaSel").onchange = (e) => cambiar(() => {
+    const nuevo = pokemonDe(+e.target.value);
+    Object.assign(m, { id: nuevo.id, hp: nuevo.hp, maxHp: nuevo.maxHp }); if (nuevo.name) m.name = nuevo.name; else delete m.name;
+  });
+  d.querySelector(".hp").onchange = (e) => cambiar(() => { m.hp = Math.max(0, +e.target.value); });
+  d.querySelector(".max").onchange = (e) => cambiar(() => { m.maxHp = Math.max(0, +e.target.value); });
+  d.querySelector(".emenos").onclick = () => cambiar(() => { m.energies = (m.energies || []).slice(0, -1); });
+  d.querySelector(".emas").onclick = () => cambiar(() => { m.energies = m.energies || []; m.energies.push(m.energies.length ? copia(m.energies[0]) : {}); });
+  d.querySelector(".hmenos").onclick = () => cambiar(() => { m.tools = (m.tools || []).slice(0, -1); });
+  d.querySelector(".hmas").onclick = () => cambiar(() => { m.tools = m.tools || []; m.tools.push(m.tools.length ? copia(m.tools[0]) : {}); });
+  d.querySelector(".evo").onchange = (e) => cambiar(() => { m.preEvolution = e.target.checked ? (m.preEvolution || { id: -1 }) : null; });
+  d.querySelector(".nuevo").onchange = (e) => cambiar(() => { m.appearThisTurn = e.target.checked; });
+  if (!esActivo) {
+    d.querySelector(".quitar").onclick = () => cambiar(() => { j.bench = vivos(j.bench); j.bench.splice(indiceBanca, 1); });
+    d.querySelector(".subir").onclick = () => cambiar(() => {
+      j.bench = vivos(j.bench); const nuevo = j.bench.splice(indiceBanca, 1)[0];
+      const viejo = vivos(j.active)[0]; if (viejo) j.bench.push(viejo); j.active = [nuevo];
+    });
+  }
+  return d;
+}
+
+function panelJugador(k) {
+  const o = st.obs, j = o.players[k];
+  const p = document.createElement("div"); p.className = "panel lado";
+  p.style.setProperty("--color", COLOR[k]);
+  p.innerHTML = `<h2>Jugador ${k} ${o.yourIndex === k ? '<span class="turno">le toca actuar</span>' : ""}</h2>`;
+  const fila = document.createElement("div"); fila.className = "fila";
+  j.prize = j.prize || []; j.discard = j.discard || [];
+  const premios = `<div class="premios">${Array.from({ length: 6 }, (_, i) => `<div class="premio ${i < j.prize.length ? "" : "tomado"}"></div>`).join("")}</div>`;
+  fila.append(
+    botonera("Premios por tomar", j.prize.length, () => largo(j.prize, j.prize.length - 1, null), () => largo(j.prize, Math.min(6, j.prize.length + 1), null), premios),
+    botonera("Cartas en la mano", j.handCount, () => { j.handCount = Math.max(0, j.handCount - 1); }, () => { j.handCount += 1; }),
+    botonera("Cartas en el mazo", j.deckCount, () => { j.deckCount = Math.max(0, j.deckCount - 1); }, () => { j.deckCount += 1; }),
+    botonera("Cartas en el descarte", j.discard.length, () => largo(j.discard, j.discard.length - 1, {}), () => largo(j.discard, j.discard.length + 1, {})),
+  );
+  p.append(fila);
+  const mesa = document.createElement("div"); mesa.className = "fila"; mesa.style.marginTop = "10px";
+  const activo = vivos(j.active)[0];
+  if (activo) mesa.append(cartaPokemon(activo, true, j));
+  else {
+    const v = document.createElement("div"); v.className = "carta activo vacio";
+    v.innerHTML = 'Sin Pokémon activo<br><button>Poner un Pokémon activo</button>';
+    v.querySelector("button").onclick = () => cambiar(() => { j.active = [pokemonDe(st.catalogo[0] ? st.catalogo[0].id : -1)]; });
+    mesa.append(v);
+  }
+  vivos(j.bench).forEach((m, i) => mesa.append(cartaPokemon(m, false, j, i)));
+  if (vivos(j.bench).length < 5) {
+    const b = document.createElement("button"); b.textContent = "+ Pokémon en banca";
+    b.onclick = () => cambiar(() => { j.bench = vivos(j.bench); j.bench.push(pokemonDe((vivos(j.active)[0] || st.catalogo[0] || { id: -1 }).id)); });
+    mesa.append(b);
+  }
+  p.append(mesa);
+  const estados = document.createElement("div"); estados.className = "estados";
+  estados.innerHTML = '<span class="nota">Condiciones del activo: </span>' + CONDICIONES.map(([c, t]) => `<label class="check"><input type="checkbox" data-c="${c}" ${j[c] ? "checked" : ""}>${t}</label>`).join("");
+  estados.querySelectorAll("input").forEach((x) => { x.onchange = () => cambiar(() => { j[x.dataset.c] = x.checked; }); });
+  p.append(estados);
+  return p;
+}
+
+function panelTurno() {
+  const o = st.obs, t = $("panelTurno");
+  const casilla = (campo, texto) => `<label class="check"><input type="checkbox" data-campo="${campo}" ${o[campo] ? "checked" : ""}>${texto}</label>`;
+  t.innerHTML = `<div class="linea" style="flex-wrap:wrap">
+      <span>Turno <input type="number" id="turno" min="0" value="${o.turn}"></span>
+      <span>Le toca actuar al <select id="actuaSel"><option value="0">jugador 0</option><option value="1">jugador 1</option></select></span>
+      <span>Empezó la partida el <select id="primeroSel"><option value="0">jugador 0</option><option value="1">jugador 1</option></select></span>
+      <span>Acciones en este turno <input type="number" id="acciones" min="0" value="${o.turnActionCount}"></span>
+    </div>
+    <div style="margin-top:6px">${casilla("energyAttached", "Ya unió una energía")}${casilla("retreated", "Ya se retiró")}${casilla("supporterPlayed", "Ya jugó un partidario")}${casilla("stadiumPlayed", "Ya jugó un estadio")}
+      <label class="check"><input type="checkbox" id="estadio" ${o.stadium ? "checked" : ""}>Hay un estadio en juego</label></div>
+    <div class="nota">El modelo solo usa cuántas cartas hay en la mano y en los premios, nunca cuáles: por eso se editan como cantidades.</div>`;
+  $("actuaSel").value = o.yourIndex; $("primeroSel").value = o.firstPlayer;
+  $("turno").onchange = (e) => cambiar(() => { o.turn = Math.max(0, +e.target.value); });
+  $("acciones").onchange = (e) => cambiar(() => { o.turnActionCount = Math.max(0, +e.target.value); });
+  $("actuaSel").onchange = (e) => cambiar(() => { o.yourIndex = +e.target.value; });
+  $("primeroSel").onchange = (e) => cambiar(() => { o.firstPlayer = +e.target.value; });
+  $("estadio").onchange = (e) => cambiar(() => { o.stadium = e.target.checked ? (o.stadium || { id: -1 }) : null; });
+  t.querySelectorAll("input[data-campo]").forEach((x) => { x.onchange = () => cambiar(() => { o[x.dataset.campo] = x.checked; }); });
+}
+
+function dibujar() {
+  const t = $("tablero"); t.innerHTML = "";
+  if (!st.obs) { $("panelTurno").innerHTML = '<div class="vacio">Elige "Estado nuevo" o carga una partida.</div>'; return; }
+  panelTurno();
+  t.append(panelJugador(1), panelJugador(0));  // jugador 1 (naranja) arriba, jugador 0 (azul) abajo, siempre
+  $("panelCurva").style.display = st.modo === "partida" ? "" : "none";
+  $("editado").textContent = st.editado ? (st.modo === "partida" ? "Estado editado: es un estado hipotético" : "") : "";
+}
+
+// ---------- Evaluacion en tiempo real ----------
+function programarEvaluacion() { clearTimeout(st.temporizador); st.temporizador = setTimeout(evaluar, 120); }
+async function evaluar() {
+  const pedido = ++st.pedido;
+  const r = await api("/api/evaluar", { observacion: st.obs });
+  if (pedido !== st.pedido) return;  // llego una respuesta vieja: se descarta
+  mostrarResultado(r);
+}
+// Las descripciones del agente hablan del "jugador" (el que actua) y del "rival": se pasan a numeros
+function aJugadores(texto, actua) {
+  return texto.replace(/jugador menos rival|del jugador|del rival/g, (t) =>
+    t === "del jugador" ? `del jugador ${actua}` : t === "del rival" ? `del jugador ${1 - actua}` : `jugador ${actua} menos jugador ${1 - actua}`);
+}
+function mostrarResultado(r) {
+  const avisos = $("avisos"), shap = $("shap");
+  avisos.innerHTML = ""; shap.innerHTML = "";
+  const [a, b] = $("probBarra").children;
+  if (!r.ok) {
+    $("prob").textContent = "—"; $("etapa").textContent = ""; a.style.width = "0"; b.style.width = "0";
+    avisos.innerHTML = `<div class="aviso">Estado inválido: ${html(r.error)}</div>`;
+    $("verif").textContent = "—"; return;
+  }
+  const actua = r.jugador, p = r.probabilidad;
+  const p0 = p === null ? null : (actua === 0 ? p : 1 - p);  // siempre la del jugador 0
+  $("prob").textContent = p0 === null ? "Sin predicción" : pct(p0);
+  $("prob").style.fontSize = p0 === null ? "26px" : "46px";
+  a.style.width = p0 === null ? "0" : `${100 * p0}%`; b.style.width = p0 === null ? "0" : `${100 * (1 - p0)}%`;
+  $("leyenda0").textContent = p0 === null ? "Jugador 0" : `Jugador 0 · ${pct(p0)}`;
+  $("leyenda1").textContent = p0 === null ? "Jugador 1" : `Jugador 1 · ${pct(1 - p0)}`;
+  $("etapa").textContent = (r.etapa ? `Etapa de ${r.etapa} · ` : "") + `turno ${r.turno} · le toca actuar al jugador ${actua}`;
+  (r.advertencias || []).forEach((w) => { const d = document.createElement("div"); d.className = "aviso"; d.textContent = aJugadores(w.mensaje, actua); avisos.append(d); });
+  if (!(r.advertencias || []).length) avisos.innerHTML = '<div class="sub" style="text-align:left">Ninguna.</div>';
+  if (p === null) avisos.insertAdjacentHTML("beforeend", '<div class="nota">Para que el modelo estime: turno 1 o más, al menos un premio por tomar y un Pokémon en juego en cada jugador.</div>');
+  const v = r.verificacion || {};
+  $("verif").innerHTML = v.aprobado ? '<span style="color:var(--bien)">Aprobado</span>: probabilidad, SHAP y advertencias coherentes'
+    : `<span style="color:var(--mal)">No aprobado</span>: ${html((v.problemas || []).join("; "))}`;
+  // El modelo explica la probabilidad del que actua; para el jugador 0 el efecto cambia de signo si actua el 1
+  const signo = actua === 0 ? 1 : -1;
+  const filas = [...(r.a_favor || []), ...(r.en_contra || [])].map((f) => ({ ...f, efecto: signo * f.efecto_puntos }))
+    .sort((x, y) => Math.abs(y.efecto) - Math.abs(x.efecto));
+  const maximo = Math.max(1, ...filas.map((f) => Math.abs(f.efecto)));
+  filas.forEach((f) => {
+    let texto = aJugadores(f.descripcion, actua), valor = f.valor === null ? "" : ` = ${+f.valor.toFixed(2)}`;
+    if (f.caracteristica === "first_player_is_me") { texto = `empezó la partida el jugador ${f.valor ? actua : 1 - actua}`; valor = ""; }
+    const color = f.efecto >= 0 ? "var(--j0)" : "var(--j1)";
+    shap.insertAdjacentHTML("beforeend", `<div>${html(texto)}${valor}</div>
+      <div><div class="b" style="width:${100 * Math.abs(f.efecto) / maximo}%;background:${color}"></div></div>
+      <div style="text-align:right;color:${color}">${f.efecto > 0 ? "+" : ""}${f.efecto.toFixed(1)}</div>`);
+  });
+}
+
+// ---------- Partida: curva y navegacion ----------
+function dibujarCurva() {
+  const svg = $("curva"), c = st.partida ? st.partida.curva : [];
+  if (!c.length) { svg.innerHTML = ""; return; }
+  const n = st.partida.n_pasos - 1 || 1, X = (paso) => 10 + 980 * paso / n, Y = (p) => 175 - 160 * p;
+  let s = `<line x1="10" x2="990" y1="${Y(0.5)}" y2="${Y(0.5)}" stroke="currentColor" opacity=".25" stroke-dasharray="4 4"/>`;
+  s += `<text x="12" y="${Y(1) + 10}" font-size="11" fill="currentColor" opacity=".6">100 %</text><text x="12" y="${Y(0) - 2}" font-size="11" fill="currentColor" opacity=".6">0 %</text>`;
+  s += `<polyline fill="none" stroke="var(--j0)" stroke-width="2" points="${c.map((q) => `${X(q.paso)},${Y(q.p_jugador0)}`).join(" ")}"/>`;
+  (st.partida.puntos_de_giro || []).forEach((g) => { s += `<circle cx="${X(g.paso)}" cy="${Y(g.a)}" r="5" fill="var(--aviso)"><title>Paso ${g.paso}, turno ${g.turno}: ${pct(g.de)} → ${pct(g.a)}</title></circle>`; });
+  if (st.paso !== null) s += `<line x1="${X(st.paso)}" x2="${X(st.paso)}" y1="10" y2="180" stroke="var(--j1)" stroke-width="2"/>`;
+  svg.innerHTML = s;
+}
+$("curva").onclick = (e) => {
+  if (!st.pasos.length) return;
+  const caja = $("curva").getBoundingClientRect(), n = st.partida.n_pasos - 1 || 1;
+  const objetivo = ((e.clientX - caja.left) / caja.width * 1000 - 10) / 980 * n;
+  irAPaso(st.pasos.reduce((a, b) => Math.abs(b - objetivo) < Math.abs(a - objetivo) ? b : a));
+};
+async function irAPaso(paso) {
+  const r = await api(`/api/paso?n=${paso}`);
+  if (r.ok === false) { mostrarResultado(r); return; }
+  st.modo = "partida"; st.paso = r.paso; st.obs = r.observacion; st.original = copia(r.observacion); st.editado = false;
+  $("deslizador").value = st.pasos.indexOf(paso);
+  $("pasoTxt").textContent = `Paso ${paso} de ${st.partida.n_pasos - 1}`;
+  dibujar(); dibujarCurva(); evaluar();
+}
+$("deslizador").oninput = (e) => irAPaso(st.pasos[+e.target.value]);
+$("btnPrev").onclick = () => { const i = st.pasos.indexOf(st.paso); if (i > 0) irAPaso(st.pasos[i - 1]); };
+$("btnSig").onclick = () => { const i = st.pasos.indexOf(st.paso); if (i < st.pasos.length - 1) irAPaso(st.pasos[i + 1]); };
+$("btnRestaurar").onclick = () => { if (st.original) { st.obs = copia(st.original); st.editado = false; dibujar(); evaluar(); } };
+
+function usarPartida(partida) {
+  st.partida = partida; st.pasos = partida.pasos || [];
+  $("deslizador").max = Math.max(0, st.pasos.length - 1);
+}
+$("btnCargar").onclick = async () => {
+  const r = await api("/api/partida", { archivo: $("selPartida").value });
+  if (r.ok === false) { mostrarResultado(r); return; }
+  usarPartida(r); irAPaso(st.pasos[0]);
+};
+function usarEstado(obs, modo) {
+  st.modo = modo; st.paso = null; st.obs = obs; st.original = copia(obs); st.editado = false;
+  dibujar(); evaluar();
+}
+$("btnVacio").onclick = async () => usarEstado((await api("/api/vacio")).observacion, "vacio");
+
+(async function iniciar() {
+  const [r, cat] = await Promise.all([api("/api/inicio"), api("/api/catalogo")]);
+  st.catalogo = cat.cartas || [];
+  (r.ejemplos || []).forEach((e) => { const o = document.createElement("option"); o.value = e; o.textContent = e.split(/[\\/]/).pop(); $("selPartida").append(o); });
+  if (r.partida) {
+    usarPartida(r.partida);
+    const op = [...$("selPartida").options].find((o) => o.textContent === r.partida.archivo); if (op) $("selPartida").value = op.value;
+  }
+  if (r.partida && r.paso !== null && r.paso !== undefined) irAPaso(r.paso);
+  else if (r.observacion) usarEstado(r.observacion, r.partida ? "partida" : "vacio");
+  else dibujar();
+})();
+</script>
+</body>
+</html>
