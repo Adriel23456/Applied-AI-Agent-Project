@@ -1,36 +1,36 @@
 caso,grupo,descripcion,esperado,obtenido,aprobado,excepcion,duracion_ms
-N-01,normales,90 estados de test de A con estimar_probabilidad,probabilidad igual a PredictorVictoria (<= 1e-9) y 90/90 verificados,dif. maxima con PredictorVictoria 0.00e+00; con la tabla 0.00e+00; verificados 90/90,True,False,4195.0
-N-02,normales,los mismos estados con explicar_prediccion,valor base + suma SHAP = logit (<= 1e-3),SHAP que no suma: 0/90,True,False,6846.0
-N-03,normales,estados de inicio,100 % con etapa_inicio,con etapa_inicio: 30/30,True,False,1.0
-N-04,normales,estados de medio y final,ninguno con etapa_inicio ni sin_prediccion,con etapa_inicio o sin_prediccion: 0/60,True,False,0.6
+N-01,normales,90 estados de test de A con estimar_probabilidad,probabilidad igual a PredictorVictoria (<= 1e-9) y 90/90 verificados,dif. maxima con PredictorVictoria 0.00e+00; con la tabla 0.00e+00; verificados 90/90,True,False,5882.5
+N-02,normales,los mismos estados con explicar_prediccion,valor base + suma SHAP = logit (<= 1e-3),SHAP que no suma: 0/90,True,False,8340.6
+N-03,normales,estados de inicio,100 % con etapa_inicio,con etapa_inicio: 30/30,True,False,3.1
+N-04,normales,estados de medio y final,ninguno con etapa_inicio ni sin_prediccion,con etapa_inicio o sin_prediccion: 0/60,True,False,0.9
 N-05,normales,los 90 estados,fuera_de_dominio en <= 5 %,fuera_de_dominio: 0/90,True,False,0.0
-N-06,normales,repeticiones completas de test de A con evaluar_partida,curva igual al predictor (<= 1e-4) y todas verificadas,10 repeticiones; dif. maxima 5.00e-05; verificadas 10/10,True,False,50607.4
+N-06,normales,repeticiones completas de test de A con evaluar_partida,curva igual al predictor (<= 1e-4) y todas verificadas,10 repeticiones; dif. maxima 5.00e-05; verificadas 10/10,True,False,51228.5
 L-01,limite,preparacion: observacion real de turno 0,None y sin_prediccion,"p=None, advertencias=['sin_prediccion']",True,False,0.1
-L-02,limite,A-final-00 con 0 premios por tomar del jugador,None y sin_prediccion,"p=None, advertencias=['sin_prediccion']",True,False,0.4
-L-03,limite,A-final-00 sin Pokemon en juego del jugador,None y sin_prediccion,"p=None, advertencias=['sin_prediccion']",True,False,0.4
-L-04,limite,A-final-00 con la banca propia vacia,probabilidad valida (direccion: registro),41.5 % -> 15.8 % (baja); advertencias=[],True,False,34.7
-L-05,limite,A-final-00 con el mazo propio en 0,probabilidad valida (direccion: registro),41.5 % -> 9.6 % (baja); advertencias=[],True,False,34.8
-L-06,limite,A-final-00 con el mazo del rival en 0,probabilidad valida (direccion: registro),41.5 % -> 98.6 % (sube); advertencias=[],True,False,31.8
-L-07,limite,A-final-00 con un premio por tomar del jugador,probabilidad valida (direccion: registro),41.5 % -> 75.8 % (sube); advertencias=[],True,False,30.2
-L-08,limite,turno 1,etapa_inicio,estado real A-inicio-18: advertencias=['etapa_inicio'],True,False,36.8
-L-09,limite,partida mas larga de test de A con evaluar_partida,verificada y < 30 s,partida 86195831: 1398 pasos con prediccion en 0.9 s; advertencias=[],True,False,864.6
-L-10,limite,"A-final-00 sin activo propio, con banca, en explicar_prediccion",la explicacion no muestra -1 como PV o energias,contribuciones con valor -1: []; texto con '= -1': False,True,False,92.5
-E-01,entradas,archivo con JSON mal formado,ok=False: no es un JSON valido,ok=False; error='mal_formado.json no es un JSON valido: Expecting value: line 1 column 14 (char 13)',True,False,4.1
-E-02,entradas,archivo que no existe,ok=False: no existe,ok=False; error='no existe el archivo C:\\Users\\adrie\\AppData\\Local\\Temp\\ptcg-entradas-f_hxo620\\no_existe.json',True,False,0.1
+L-02,limite,A-final-00 con 0 premios por tomar del jugador,None y sin_prediccion,"p=None, advertencias=['sin_prediccion']",True,False,0.3
+L-03,limite,A-final-00 sin Pokemon en juego del jugador,None y sin_prediccion,"p=None, advertencias=['sin_prediccion']",True,False,0.3
+L-04,limite,A-final-00 con la banca propia vacia,probabilidad valida (direccion: registro),41.5 % -> 15.8 % (baja); advertencias=[],True,False,27.8
+L-05,limite,A-final-00 con el mazo propio en 0,probabilidad valida (direccion: registro),41.5 % -> 9.6 % (baja); advertencias=[],True,False,29.6
+L-06,limite,A-final-00 con el mazo del rival en 0,probabilidad valida (direccion: registro),41.5 % -> 98.6 % (sube); advertencias=[],True,False,32.1
+L-07,limite,A-final-00 con un premio por tomar del jugador,probabilidad valida (direccion: registro),41.5 % -> 75.8 % (sube); advertencias=[],True,False,38.3
+L-08,limite,turno 1,etapa_inicio,estado real A-inicio-18: advertencias=['etapa_inicio'],True,False,33.0
+L-09,limite,partida mas larga de test de A con evaluar_partida,verificada y < 30 s,partida 86195831: 1398 pasos con prediccion en 1.0 s; advertencias=[],True,False,957.0
+L-10,limite,"A-final-00 sin activo propio, con banca, en explicar_prediccion",la explicacion no muestra -1 como PV o energias,contribuciones con valor -1: []; texto con '= -1': False,True,False,81.9
+E-01,entradas,archivo con JSON mal formado,ok=False: no es un JSON valido,ok=False; error='mal_formado.json no es un JSON valido: Expecting value: line 1 column 14 (char 13)',True,False,1.7
+E-02,entradas,archivo que no existe,ok=False: no existe,ok=False; error='no existe el archivo C:\\Users\\adrie\\AppData\\Local\\Temp\\ptcg-entradas-r0etw0ea\\no_existe.json',True,False,0.1
 E-03,entradas,"turn como texto, deckCount negativo, players como objeto",3/3 ok=False con el campo nombrado,"ok=False; error=""'turn' debe ser un entero mayor o igual que 0"" | ok=False; error=""jugador 1: 'deckCount' debe ser un entero no negativo"" | ok=False; error=""'players' debe tener exactamente dos jugadores""",True,False,0.7
 E-04,entradas,sin yourIndex; jugador sin handCount,2/2 ok=False con el campo nombrado,"ok=False; error=""a la observacion le faltan campos: ['yourIndex']"" | ok=False; error=""al jugador 0 le faltan campos: ['handCount']""",True,False,0.4
 E-05,entradas,observacion del jugador que espera (current vacio),ok=False y menciona al jugador que espera,"ok=False; error=""'current' esta vacio: es la vista del jugador que espera, no la del jugador que actua""",True,False,0.0
-E-06,entradas,repeticion con paso fuera de rango y sin paso,2/2 ok=False,"ok=False; error=""'paso' debe estar entre 0 y 174"" | ok=False; error=""es una repeticion completa: indica 'paso' (o usa evaluar_partida)""",True,False,142.1
-E-07,entradas,A-medio-00 con carta activa 999999,fuera_de_dominio con carta nunca vista,advertencias=['fuera_de_dominio'],True,False,34.9
-E-08,entradas,"A-medio-00 con PV 9999, 9 premios y 200 cartas en mano",fuera_de_dominio en 3/3,PV 9999: ['fuera_de_dominio'] | 9 premios: ['fuera_de_dominio'] | 200 cartas en mano: ['fuera_de_dominio'],True,False,102.2
+E-06,entradas,repeticion con paso fuera de rango y sin paso,2/2 ok=False,"ok=False; error=""'paso' debe estar entre 0 y 174"" | ok=False; error=""es una repeticion completa: indica 'paso' (o usa evaluar_partida)""",True,False,132.2
+E-07,entradas,A-medio-00 con carta activa 999999,fuera_de_dominio con carta nunca vista,advertencias=['fuera_de_dominio'],True,False,31.1
+E-08,entradas,"A-medio-00 con PV 9999, 9 premios y 200 cartas en mano",fuera_de_dominio en 3/3,PV 9999: ['fuera_de_dominio'] | 9 premios: ['fuera_de_dominio'] | 200 cartas en mano: ['fuera_de_dominio'],True,False,95.5
 E-09,entradas,argumento que la herramienta no acepta,ok=False sin excepcion,"ok=False; error=""argumentos invalidos para estimar_probabilidad: ejecutar() got an unexpected keyword argument 'color'""",True,False,0.0
-D-01,poblaciones,90 estados de B (partidas de test de A),90/90 verificados; tasas: registro,verificados 90/90; fuera_de_dominio 0.0%; carta no vista 0.0%; alguna advertencia 42.2%; acierto (umbral 0.5) 74.4%,True,False,3085.4
-D-02,poblaciones,90 estados de C (partidas de test de A),90/90 verificados; tasas: registro,verificados 90/90; fuera_de_dominio 0.0%; carta no vista 0.0%; alguna advertencia 38.9%; acierto (umbral 0.5) 71.1%; prediccion 'C no mayor que A' (0.0%): se cumple,True,False,3096.0
-S-01,sinteticos,20 estados con PV del activo x10,fuera_de_dominio en todos,fuera_de_dominio 20/20,True,False,682.6
-S-02,sinteticos,20 estados con 150 cartas en la mano,fuera_de_dominio en todos,fuera_de_dominio 20/20,True,False,662.1
-S-03,sinteticos,20 estados con turno 500,fuera_de_dominio en todos,fuera_de_dominio 20/20,True,False,711.0
-S-04,sinteticos,20 estados con 60 energias en el activo,fuera_de_dominio en todos,fuera_de_dominio 20/20,True,False,707.0
-S-05,sinteticos,20 estados con las cuatro modificaciones juntas,fuera_de_dominio en todos,fuera_de_dominio 20/20; probabilidades extremas (>= 90 % o <= 10 %) 4/20,True,False,700.4
-M-01,errores,"errores muy seguros de inicio (A, B y C)",extrema_temprana en el 100 %,"con extrema_temprana 30/30; casos por subpoblacion {'A': 10, 'B': 10, 'C': 10}",True,False,1.8
+D-01,poblaciones,90 estados de B (partidas de test de A),90/90 verificados; tasas: registro,verificados 90/90; fuera_de_dominio 0.0%; carta no vista 0.0%; alguna advertencia 42.2%; acierto (umbral 0.5) 74.4%,True,False,2798.0
+D-02,poblaciones,90 estados de C (partidas de test de A),90/90 verificados; tasas: registro,verificados 90/90; fuera_de_dominio 0.0%; carta no vista 0.0%; alguna advertencia 38.9%; acierto (umbral 0.5) 71.1%; prediccion 'C no mayor que A' (0.0%): se cumple,True,False,2868.3
+S-01,sinteticos,20 estados con PV del activo x10,fuera_de_dominio en todos,fuera_de_dominio 20/20,True,False,568.1
+S-02,sinteticos,20 estados con 150 cartas en la mano,fuera_de_dominio en todos,fuera_de_dominio 20/20,True,False,490.6
+S-03,sinteticos,20 estados con turno 500,fuera_de_dominio en todos,fuera_de_dominio 20/20,True,False,502.4
+S-04,sinteticos,20 estados con 60 energias en el activo,fuera_de_dominio en todos,fuera_de_dominio 20/20,True,False,540.6
+S-05,sinteticos,20 estados con las cuatro modificaciones juntas,fuera_de_dominio en todos,fuera_de_dominio 20/20; probabilidades extremas (>= 90 % o <= 10 %) 4/20,True,False,526.3
+M-01,errores,"errores muy seguros de inicio (A, B y C)",extrema_temprana en el 100 %,"con extrema_temprana 30/30; casos por subpoblacion {'A': 10, 'B': 10, 'C': 10}",True,False,1.6
 M-02,errores,"errores muy seguros de medio y final (A, B y C)",solo registro: fraccion con alguna advertencia (prediccion: la mayoria sin advertencia),medio: con alguna advertencia 3/30; final: con alguna advertencia 7/30,,False,1.6
 R-01,robustez,toda la bateria N1,0 excepciones sin controlar,0 excepciones en 34 casos,True,False,0.0
