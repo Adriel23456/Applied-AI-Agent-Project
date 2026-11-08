@@ -223,27 +223,27 @@ Validación del agente frente a escenarios normales, casos límite, entradas ine
 
 ### `09EthicsPaperAndDocumentation`
 
-Ética del despliegue, artículo final y documentación completa del repositorio.
+Ética del despliegue, artículo final y documentación completa del repositorio. Ética: `docx/03Evidencia/08-11-26_EticaDelDespliegue.md`.
 
 **Ética, sesgos y privacidad**
-- [ ] Riesgos concretos de despliegue: uso para obtener ventaja en competencias, confianza excesiva en la probabilidad, sesgo hacia el meta de agentes automáticos, mal uso en apuestas
-- [ ] Datos sensibles involucrados: nombres de agentes (seudonimizados), licencia CC0 del corpus, información oculta que el sistema no usa
-- [ ] Mitigaciones aplicadas y verificables en el código: verificador, advertencias, revisión de dominio, sin información oculta, registros
-- [ ] Límites declarados del sistema
+- [x] Riesgos concretos de despliegue: uso para obtener ventaja en competencias, confianza excesiva en la probabilidad, sesgo hacia el meta de agentes automáticos, mal uso en apuestas, lectura causal de SHAP, condiciones especiales ignoradas y datos enviados a Claude (8 riesgos con gravedad y probabilidad)
+- [x] Datos sensibles involucrados: nombres de agentes (seudonimizados), licencia CC0 del corpus, información oculta que el sistema no usa, registros locales y credenciales
+- [x] Mitigaciones aplicadas y verificables en el código: verificador, advertencias, revisión de dominio, sin información oculta, plan validado, defensa ante inyección, integridad SHA-256, registros y uso solo local (cada una con su archivo y su prueba)
+- [x] Límites declarados del sistema (9 límites) y uso aceptable
 
 **Artículo final**
-- [ ] Secciones nuevas: arquitectura del agente y validación del agente, con sus resultados
-- [ ] Sección de ética reescrita con foco en el despliegue
-- [ ] Discusión y conclusiones actualizadas con el agente, conservando los hallazgos de XAI
-- [ ] Introducción y trabajos relacionados pulidos, sin reescribirlos
-- [ ] Resumen, objetivos y contribuciones alineados con el trabajo completo
-- [ ] Revisión completa del documento en formato IEEE: figuras, tablas, referencias, compilación sin errores
+- [x] Secciones nuevas: arquitectura del agente y validación del agente, con sus resultados (`sec/10agente.tex`: arquitectura con figura, protocolo, resultados N1, N2 y validación humana, fragilidad)
+- [x] Sección de ética reescrita con foco en el despliegue (`sec/06etica.tex`)
+- [x] Discusión y conclusiones actualizadas con el agente, conservando los hallazgos de XAI (subsección "El agente: qué aporta y qué no", objetivo 7 y limitaciones nuevas)
+- [X] Introducción y trabajos relacionados pulidos, sin reescribirlos
+- [x] Resumen, objetivos y contribuciones alineados con el trabajo completo (resumen con el agente, objetivo 7, cuarta contribución, estructura del documento)
+- [X] Revisión completa del documento en formato IEEE: figuras, tablas, referencias, compilación sin errores (ya compila sin errores ni advertencias de referencias: 29 páginas, con las figuras del agente en Claude Code y del simulador; falta la revisión de lectura completa)
 
 **Documentación**
-- [ ] `README.md`, `GuiaDeAmbiente.md` y `notebooks/EjecucionDeLosCuadernos.md` con cómo ejecutar el agente, el servidor MCP y el simulador
-- [ ] `HerramientasDeDesarrollo.md`, `ReglasGit.md` (ramas de la Etapa 3) y `Contenido.md` actualizados
-- [ ] Declaración de uso de IA de la Etapa 3 (`docx/03Evidencia/01UsoDeIA/Etapa3UsoDeIA.md`)
-- [ ] Bitácora de trabajo con la Etapa 3
+- [x] `README.md`, `GuiaDeAmbiente.md` y `notebooks/EjecucionDeLosCuadernos.md` con cómo ejecutar el agente, el servidor MCP y el simulador (y `GuiaDelAgente.md` con el uso aceptable)
+- [x] `HerramientasDeDesarrollo.md`, `ReglasGit.md` (ramas de la Etapa 3) y `Contenido.md` actualizados (`02Papers` y `03Evidencia`)
+- [x] Declaración de uso de IA de la Etapa 3 (`docx/03Evidencia/01UsoDeIA/Etapa3UsoDeIA.md`), con la revisión del proceso y del funcionamiento de Daniel y Sebastián
+- [x] Bitácora de trabajo con la Etapa 3 (`sec/04stage3.tex`: ramas 07 a 09, decisiones, bloqueos resueltos, hitos y retrospectiva)
 
 ### `10DefenseAndShowcase`
 

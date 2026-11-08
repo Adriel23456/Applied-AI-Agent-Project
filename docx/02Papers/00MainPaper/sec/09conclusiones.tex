@@ -30,10 +30,19 @@ así que no es una solución general. SHAP mostró que el modelo decide por
 premios, descartes y mazo, sin señales de fuga, e identificó una
 característica que falta: los premios que entrega cada Pok\'emon.
 
-Para la integración con el agente se usará B4 entrenado en el escenario A,
-sin calibrador. Sus probabilidades extremas en los primeros turnos deben
-tomarse con cautela, sobre todo ante agentes o mazos que no aparecen en los
-datos. Como trabajo futuro quedan repetir los experimentos con varias
-semillas, agregar la característica de premios por Pok\'emon, entrenar la
-variante de 64 características y seguir midiendo el desempeño a medida que
-cambie la población de agentes.
+El modelo final, B4 entrenado en el escenario A y sin calibrador, se integró
+en un agente con cuatro roles. Un modelo de lenguaje planifica y redacta,
+pero toda cifra sale del modelo y un verificador determinista revisa cada
+respuesta antes de mostrarla. En la validación, las 31 respuestas finales
+tuvieron cifras trazables, el agente se negó a dar información oculta y no
+siguió instrucciones inyectadas en los datos. Un simulador gráfico permite
+a cualquier persona armar un estado y ver cómo cambia la probabilidad. El
+límite principal es del modelo: en las etapas media y final, la mayoría de
+sus errores muy seguros llegan sin advertencia, así que sus probabilidades
+deben leerse como estimaciones, nunca como certezas.
+
+Como trabajo futuro quedan repetir los experimentos con varias semillas,
+agregar la característica de premios por Pok\'emon, entrenar la variante
+de 64 características, seguir midiendo el desempeño a medida que cambie la
+población de agentes y mostrar junto a cada probabilidad muy segura cuántas
+veces fallan esas predicciones en su etapa.

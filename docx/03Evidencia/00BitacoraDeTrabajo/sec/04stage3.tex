@@ -1,25 +1,39 @@
 % ============================================================
-% sec/04stage3.tex - Etapa 3
+% sec/04stage3.tex - Etapa 3 (07/11 - semana 16)
 % ============================================================
-\section{Etapa 3: agente y art\'iculo final}
+\section{Etapa 3: agente, validaci\'on, \'etica y art\'iculo final}
 \label{sec:stage3}
 
-\notebox[Estado]{No iniciada. Esta secci\'on registra lo que la Etapa 2
-entrega a la Etapa 3 y las condiciones que quedaron fijadas. Las entradas de
-la bit\'acora se agregar\'an a medida que ocurra el trabajo, con las ramas
-numeradas desde \code{07}.}
+\notebox[Objetivo de la etapa]{Convertir el modelo final de la Etapa 2 en un
+componente que una persona pueda usar a trav\'es de un agente, validar ese
+agente con un protocolo escrito antes de ejecutar, declarar la \'etica de su
+despliegue y cerrar el art\'iculo. El modelo no se reentrena ni se recalibra.
+Peso: 25\,\%.}
 
-\subsection{Alcance}
-
-Construir un agente inteligente que consuma el modelo de forma verificable,
-documentar la \'etica de su despliegue e integrar los resultados de la Etapa 2
-en el art\'iculo final. Peso: 25\,\%.
-
-\subsection{Lo que recibe de la Etapa 2}
+\subsection{Resumen de ramas}
 
 \begin{table}[H]
   \centering
-  \caption{Piezas que la Etapa 2 deja listas para el agente.}
+  \caption{Ramas de la Etapa 3 y su resultado.}
+  \label{tab:stage3summary}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{5.0cm} P{1.6cm} P{2.6cm} Y@{}}
+    \toprule
+    \textbf{Rama} & \textbf{Fechas} & \textbf{Responsables} & \textbf{Resultado}\\
+    \midrule
+    \code{07MultiAgentIntegration} & 07/11 & Adriel & Herramientas del modelo, cuatro agentes, registro, servidor MCP, orquestador y subagentes de Claude Code (PR \#13)\\
+    {\scriptsize\code{08AgentValidationAndSimulator}} & 08/11 & Adriel; validaci\'on humana de los tres & Validaci\'on N1 y N2, an\'alisis de fragilidad y simulador gr\'afico (PR \#14)\\
+    {\scriptsize\code{09EthicsPaperAndDocumentation}} & 08/11 & Adriel; revisi\'on de Daniel y Sebasti\'an & \'Etica del despliegue, art\'iculo final, documentaci\'on y uso de IA\\
+    \code{10DefenseAndShowcase} & Semana 16 & Equipo & Pendiente: defensa, video y entrega\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Lo que recibi\'o de la Etapa 2}
+
+\begin{table}[H]
+  \centering
+  \caption{Piezas que la Etapa 2 dej\'o listas para el agente.}
   \label{tab:entregaetapa3}
   \footnotesize
   \begin{tabularx}{\textwidth}{@{}P{4.2cm} Y@{}}
@@ -29,25 +43,262 @@ en el art\'iculo final. Peso: 25\,\%.
     Modelo final & B4 entrenado en el escenario A, sin calibrador. En Kaggle, \code{modelo\_\allowbreak{}final/\allowbreak{}b4\_\allowbreak{}victoria.joblib} con su ficha (origen, SHA-256, versi\'on de scikit-learn y m\'etricas)\\
     Interfaz & \code{ptcg\_\allowbreak{}wp.predictor.PredictorVictoria}: recibe la observaci\'on del jugador que act\'ua y devuelve la probabilidad de que gane. En preparaci\'on y en estados ya resueltos devuelve \code{None}\\
     Garant\'ia de consistencia & \code{tests/\allowbreak{}test\_\allowbreak{}predictor.py} comprueba que la observaci\'on produce las mismas caracter\'isticas, en el mismo orden, que la tabla de entrenamiento\\
-    Explicaciones & SHAP mostr\'o que el modelo decide por premios, descartes y mazo; las explicaciones del agente pueden darse en esos t\'erminos\\
+    Explicaciones & SHAP mostr\'o que el modelo decide por premios, descartes y mazo; las explicaciones del agente se dan en esos t\'erminos\\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\subsection{Condiciones fijadas para la integraci\'on}
+Tambi\'en recibi\'o tres condiciones de uso: desconfiar de las probabilidades
+extremas al inicio de la partida, comprobar que el agente no sobrevalore
+dejar al rival sin mazo y no confiar en la calibraci\'on con datos de otro
+periodo sin volver a medirla. Las tres quedaron como advertencias del agente
+o como l\'imites declarados.
+
+\subsection{C\'omo se construy\'o, parte por parte}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    font=\footnotesize,
+    caja/.style={draw=tecsteel, fill=boxbg, rounded corners=2pt,
+                 text width=3.0cm, align=center, minimum height=1.0cm},
+    rama/.style={font=\scriptsize\itshape, text=labelgray},
+    flecha/.style={-{Stealth[length=2mm]}, thick, tecsteel}]
+    \node[caja] (m) {Modelo final\\(Etapa 2)};
+    \node[caja, right=0.6cm of m] (h) {Herramientas\\y verificador};
+    \node[caja, right=0.6cm of h] (a) {Agentes, MCP\\y orquestador};
+    \node[caja, below=1.0cm of a] (v) {Validaci\'on\\N1 y N2};
+    \node[caja, left=0.6cm of v] (s) {Simulador y\\validaci\'on humana};
+    \node[caja, left=0.6cm of s] (e) {\'Etica, art\'iculo\\y documentaci\'on};
+    \draw[flecha] (m) -- (h);
+    \draw[flecha] (h) -- (a);
+    \draw[flecha] (a) -- (v);
+    \draw[flecha] (v) -- (s);
+    \draw[flecha] (s) -- (e);
+    \node[rama, above=0.05cm of h] {rama 07};
+    \node[rama, below=0.05cm of s] {rama 08};
+    \node[rama, below=0.05cm of e] {rama 09};
+  \end{tikzpicture}
+  \caption{Orden de construcci\'on de la Etapa 3. Cada pieza se prob\'o antes
+  de empezar la siguiente.}
+  \label{fig:flujo3}
+\end{figure}
+
+% ============================================================
+\subsection{Rama 07: integraci\'on del agente}
+\label{subsec:rama07}
+
+\jentry{2026-11-07}{Herramientas, agentes y servidor MCP}%
+       {Adriel}{07MultiAgentIntegration}
+
+Se escribi\'o primero la arquitectura (\code{07-11-26\_\allowbreak{}ArquitecturaDelAgente.md})
+y despu\'es el c\'odigo en \code{src/\allowbreak{}ptcg\_\allowbreak{}agente/}, separado del
+c\'odigo de entrenamiento. Hay seis herramientas del modelo (estimar,
+explicar, evaluar una partida, comparar estados, revisar el dominio y
+describir el modelo), cuatro agentes y un registro JSONL de cada
+invocaci\'on. El agente se usa desde Claude Code o Claude Desktop, con el
+servidor MCP \code{ptcg-victoria}, o desde un orquestador en Python.
+
+\decision{Usar la membres\'ia de Claude del equipo, sin clave de API: Claude
+Code y Claude Desktop con un servidor MCP, y Claude Code sin interfaz
+(\code{claude -p}) para el planificador y el redactor del
+orquestador.}{Una clave de API ser\'ia otra credencial que proteger y otro
+costo. Con la membres\'ia, cada integrante usa su propia cuenta.}{Una clave
+de API de Anthropic o un modelo local m\'as d\'ebil.}
+
+\decision{El planificador y el redactor son dos llamadas separadas a Claude,
+sin herramientas; el ejecutor y el verificador son c\'odigo.}{As\'i el LLM
+nunca calcula una probabilidad: solo decide qu\'e herramientas llamar y
+redacta con resultados ya aprobados. El verificador revisa que cada cifra de
+la respuesta salga de una herramienta, que aparezcan las advertencias
+obligatorias y que no se prometa certeza.}{Un solo agente con todas las
+herramientas, que mezcla decidir, calcular y redactar en la misma llamada.}
+
+\milestone{El agente da la misma probabilidad que el modelo final en 642
+estados de 4 partidas reales (diferencia m\'axima 0.0).}{Parte 3 del cuaderno
+\code{07\_\allowbreak{}agente}; sesi\'on de Claude Code en
+\code{08-11-26\_\allowbreak{}RegistroSesionClaudeCode.jsonl} y \code{.png}, donde el
+verificador rechaz\'o un primer borrador y aprob\'o el corregido.}
+
+\aiuse{Claude}{proponer la arquitectura e implementar las herramientas, los
+agentes, el servidor MCP y sus pruebas}{Adriel ejecut\'o el cuaderno 07,
+instal\'o el agente en su PC y revis\'o cada respuesta guardada como evidencia}
+
+% ============================================================
+\subsection{Rama 08: validaci\'on y simulador}
+\label{subsec:rama08}
+
+\jentry{2026-11-08}{Protocolo y validaci\'on en dos niveles}%
+       {Adriel}{08AgentValidationAndSimulator}
+
+El protocolo (\code{08-11-26\_\allowbreak{}ProtocoloValidacionAgente.md}) fij\'o,
+antes de ejecutar, los escenarios, el comportamiento esperado y el criterio
+de aprobaci\'on de cada caso. La validaci\'on tiene dos niveles: N1 prueba
+las capas deterministas sin LLM (cuaderno 09, en Colab) y N2 prueba el
+agente completo con Claude (cuaderno 10, en la PC).
+
+\blocker{Kaggle respond\'ia 429 (demasiadas solicitudes) al bajar en paralelo
+las 166 repeticiones de los casos.}{La parte 1 del cuaderno 09 fallaba a
+mitad de la descarga.}{Descargas una por una, con espera y reintento, en una
+carpeta que conserva lo ya bajado.}
+
+\blocker{Kaggle respond\'ia 404 al bajar \code{partidas.json.gz}.}{El cuaderno
+10 no encontraba las partidas de validaci\'on.}{Guardar \code{partidas.json}
+sin comprimir y borrar el archivo anterior del dataset.}
+
+\blocker{La herramienta \code{kaggle} 2.0.2 de Colab respond\'ia 400 al crear
+una versi\'on, sin decir el motivo.}{No se pod\'ia publicar el cat\'alogo de
+cartas del simulador.}{Fijar \code{kaggle>=2.2.5} en \code{requirements.txt}
+y, si vuelve a ocurrir, repetir con la API de Python para mostrar el motivo
+sin imprimir el token.}
+
+La primera corrida de N1 dio 32 de 35 casos aprobados, 2 fallidos y 1 de
+registro. Los dos fallos eran de presentaci\'on, no del modelo:
+\begin{itemize}
+  \item \textbf{L-09.} La partida m\'as larga (1398 pasos) tardaba 56.6\,s
+        porque se llamaba al modelo una vez por paso. Ahora se predice toda
+        la partida en una llamada: 0.9\,s, con las mismas probabilidades.
+  \item \textbf{L-10.} Sin Pok\'emon activo, la explicaci\'on mostraba el
+        valor interno $-1$ como si fueran puntos de vida. Ahora dice ``no hay
+        Pok\'emon activo''.
+\end{itemize}
+
+\decision{Reportar la corrida original junto a la corregida, sin cambiar los
+criterios del protocolo.}{Mostrar solo la corrida corregida ocultar\'ia que
+la validaci\'on s\'i encontr\'o defectos reales.}{Ajustar los umbrales de
+L-09 o borrar la primera corrida.}
+
+\milestone{N1 corregido: 34 de 35 casos aprobados y 1 de registro. N2: 31 de
+31 consultas aprobadas, herramienta correcta en 18 de 18, cifras trazables en
+31 de 31, 28 de 31 aprobadas en la primera ronda del redactor, 0 respuestas en
+la plantilla, latencia p95 de 31\,s y costo equivalente de 1.72\,USD.}{%
+\code{08-11-26\_\allowbreak{}ResultadosValidacionAgente.md},
+\code{08-11-26\_\allowbreak{}ValidacionN1Corregida.csv} y
+\code{08-11-26\_\allowbreak{}ValidacionN2.csv}.}
+
+El hallazgo m\'as importante fue de fragilidad: 50 de 60 errores muy seguros
+de medio y final de la partida llegan sin advertencia, y el agente los
+presenta como fiables. El verificador detecta cifras inventadas y
+advertencias omitidas, pero no puede saber cu\'ando el modelo se equivoca con
+seguridad.
+
+\jentry{2026-11-08}{Simulador gr\'afico y validaci\'on humana}%
+       {Adriel; los tres en la validaci\'on humana}%
+       {08AgentValidationAndSimulator}
+
+El simulador (\code{python -m ptcg\_\allowbreak{}agente.simulador}) es una p\'agina web
+local que muestra el tablero de los dos jugadores, deja editar el estado y
+recalcula la probabilidad, las contribuciones SHAP y las advertencias en cada
+cambio. Usa solo la biblioteca est\'andar de Python y JavaScript sin
+librer\'ias. El agente lo abre con la herramienta \code{abrir\_\allowbreak{}simulador}.
+
+\decision{Jugadores fijos en pantalla (el 1 arriba, el 0 abajo) y la cifra
+grande siempre del jugador~0.}{En la primera versi\'on la cifra era del
+jugador que actuaba, as\'i que cambiaba de due\~no al avanzar la partida y
+confund\'ia al usuario.}{Mostrar la probabilidad del jugador que act\'ua, que es
+la salida directa del modelo.}
+
+\decision{Agregar un ``estado nuevo'' vac\'io (turno 0, sin cartas ni
+Pok\'emon) y un cat\'alogo con los PV m\'aximos de las 362 cartas vistas como
+activo.}{Permite armar un estado desde cero, sin depender de una partida, y
+elegir cualquier carta con sus PV reales.}{Solo editar estados de partidas
+reales.}
+
+\decision{En la validaci\'on humana, 5 pruebas distintas por integrante (15 en
+total) con la direcci\'on esperada fijada antes.}{Una primera versi\'on
+repet\'ia las mismas pruebas para los tres y no a\~nad\'ia
+informaci\'on.}{Tres sesiones id\'enticas.}
+
+\milestone{El simulador funcion\'o en las tres computadoras y 10 de 15 pruebas
+tuvieron la direcci\'on esperada: todas las de premios, mazo, PV y banca. Las
+condiciones especiales casi no movieron la probabilidad, y m\'as energ\'ias en
+el activo la bajaron (asociaci\'on, no causa).}{%
+\code{08-11-26\_\allowbreak{}ValidacionHumanaSimulador.md} y las capturas
+\code{08-11-26\_\allowbreak{}Simulador*.png}.}
+
+\aiuse{Claude}{implementar la bater\'ia, los cuadernos 09 y 10 y el simulador,
+y diagnosticar los errores de Kaggle}{Adriel ejecut\'o N1 y N2 y revis\'o a mano
+Q-01, Q-02 y Q-07; cada integrante hizo sus propias pruebas con el simulador}
+
+% ============================================================
+\subsection{Rama 09: \'etica, art\'iculo y documentaci\'on}
+\label{subsec:rama09}
+
+\jentry{2026-11-08}{\'Etica del despliegue y art\'iculo final}%
+       {Adriel; revisi\'on de Daniel y Sebasti\'an}{09EthicsPaperAndDocumentation}
+
+La \'etica (\code{08-11-26\_\allowbreak{}EticaDelDespliegue.md}) declara 8 riesgos
+con su gravedad y probabilidad, los datos sensibles, una mitigaci\'on con su
+archivo y su prueba para cada riesgo, 9 l\'imites y el uso aceptable. El
+art\'iculo sum\'o la secci\'on del agente (arquitectura, protocolo, resultados
+y fragilidad), con la consulta real en Claude Code y el simulador como
+figuras; la \'etica se reescribi\'o con foco en el despliegue; y la discusi\'on
+y las conclusiones incluyen el agente y el objetivo~7.
+
+\decision{No ofrecer el sistema como servicio p\'ublico: todo corre en la
+computadora del usuario.}{El sistema no puede impedir por s\'i mismo el uso en
+partidas en curso o en apuestas; sin un servicio p\'ublico, ese uso es menos
+f\'acil y el uso aceptable queda declarado.}{Publicar el simulador en la
+web.}
+
+\decision{Declarar como l\'imite, y no ocultar, que la mayor\'ia de los errores
+muy seguros no traen advertencia.}{Es el riesgo m\'as grave (confianza
+excesiva) y el lector debe conocerlo. La mejora propuesta, mostrar con qu\'e
+frecuencia fallan las predicciones muy seguras, queda como trabajo
+futuro.}{Agregar una advertencia nueva sin validarla con un protocolo.}
+
+\milestone{Art\'iculo final de 29 p\'aginas que compila sin errores, con los
+siete objetivos cumplidos; documentaci\'on del repositorio actualizada para
+ejecutar el modelo, el agente y el simulador.}{Commits de la rama
+\code{09EthicsPaperAndDocumentation}.}
+
+Daniel y Sebasti\'an revisaron, con apoyo de Claude, que el desarrollo de la
+etapa siguiera el plan y las reglas del equipo y que todo funcionara bien
+seg\'un su propia evaluaci\'on humana, adem\'as de hacer sus pruebas de la
+validaci\'on humana (\code{01UsoDeIA/\allowbreak{}Etapa3UsoDeIA.md}).
+
+% ============================================================
+\subsection{C\'omo aseguramos que el agente fuera confiable}
+\label{subsec:verificacion3}
 
 \begin{itemize}
-  \item Las probabilidades extremas en los primeros turnos merecen menos
-        confianza, sobre todo ante agentes o mazos que no aparecen en el
-        corpus: al inicio de B, solo el 80\,\% de las predicciones muy seguras
-        acert\'o.
-  \item El evaluador tiende a valorar mucho dejar al rival sin mazo. Es una
-        estrategia v\'alida, pero hay que comprobar que el agente no la
-        sobrevalore.
-  \item Bajo cambio de poblaci\'on el modelo se vuelve algo sobreconfiado.
-        Si el agente se usa con datos de otro periodo, conviene volver a
-        medir la calibraci\'on antes de confiar en las probabilidades.
+  \item \textbf{Mismo modelo, comprobado.} El agente solo arranca si el modelo
+        y sus archivos coinciden por SHA-256 con los publicados, y con la
+        misma versi\'on de scikit-learn.
+  \item \textbf{Ninguna cifra inventada.} Toda probabilidad sale de una
+        herramienta y queda en el registro; el verificador rechaza las
+        respuestas con cifras que no salieron de una herramienta.
+  \item \textbf{Sin informaci\'on oculta.} Ni el modelo ni el agente usan la
+        mano del rival ni el contenido de los premios; una prueba lo comprueba.
+  \item \textbf{Pruebas autom\'aticas.} Pasaron de 109 al cerrar la Etapa 2 a
+        145, con las del agente, el orquestador (con un LLM de prueba), el
+        servidor MCP, la validaci\'on y el simulador. Corren como segunda
+        celda de los cuadernos 07 a 10.
+  \item \textbf{Protocolo antes de ejecutar.} Los criterios de aprobaci\'on se
+        fijaron por escrito y no cambiaron al ver los resultados.
+  \item \textbf{Evaluaci\'on humana.} Cada integrante prob\'o el simulador en su
+        computadora y revis\'o el funcionamiento por su cuenta.
 \end{itemize}
+
+% ============================================================
+\subsection{Retrospectiva}
+
+\begin{table}[H]
+  \centering
+  \caption{Retrospectiva de la Etapa 3.}
+  \label{tab:stage3retro}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}P{4.0cm} Y@{}}
+    \toprule
+    \textbf{Pregunta} & \textbf{Respuesta}\\
+    \midrule
+    ¿Qu\'e funcion\'o? & Separar decidir y redactar (LLM) de calcular y verificar (c\'odigo). Partir de un predictor ya probado. Escribir el protocolo antes de ejecutar. Mantener Kaggle como almac\'en \'unico tambi\'en para los archivos del agente.\\
+    ¿Qu\'e nos bloque\'o? & Los l\'imites y cambios de Kaggle (429, archivos \code{.gz} y el error 400 de la herramienta vieja) y la espera mientras Kaggle procesa cada versi\'on.\\
+    ¿Qu\'e estimamos mal? & El costo de evaluar una partida paso a paso (L-09) y la claridad del simulador: la primera versi\'on, con la cifra del jugador que act\'ua, confund\'ia.\\
+    ¿Qu\'e queda abierto? & Advertir cu\'ando una predicci\'on muy segura suele fallar, que el modelo use mejor las condiciones especiales y la defensa con el video demostrativo (rama 10).\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
 
 \subsection{Trabajo pendiente heredado}
 

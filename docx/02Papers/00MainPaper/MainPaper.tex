@@ -1,5 +1,5 @@
 % ============================================================
-% MainPaper.tex — Artículo IEEE, Etapa 1 (preliminar)
+% MainPaper.tex — Artículo IEEE, Etapa 3 (final)
 % IC-6200 Inteligencia Artificial · II Semestre 2026
 % Build: latexmk -pdf MainPaper.tex
 % ============================================================
@@ -12,7 +12,7 @@
 \title{Estimación de la Probabilidad de Victoria a partir del Estado de
 Juego en el Pok\'emon Trading Card Game: un Estudio de Clasificación
 Tabular con Control Explícito de Fuga de Información\\
-{\footnotesize \textit{Etapa 2: modelado, explicabilidad y evaluación ---
+{\footnotesize \textit{Etapa 3: modelo, agente y validación ---
 Curso IC-6200 Inteligencia Artificial, II Semestre 2026}}}
 
 \author{
@@ -67,12 +67,19 @@ identidad de los Pok\'emon activos dentro de la población conocida, pero sí
 fuera de ella. Bajo cambio temporal, contra lo esperado, el ordenamiento se
 degrada más que la calibración. El análisis SHAP muestra que el modelo
 evalúa la posición por balance de recursos: premios, descartes y mazo.
+Finalmente, el modelo se integra en un agente con cuatro roles
+(planificador, ejecutor, verificador y redactor) en el que toda cifra
+sale del modelo y pasa por un verificador determinista. En una validación
+con 35 casos automáticos y 31 consultas al agente completo, todas las
+respuestas finales tuvieron cifras trazables; el límite principal es que
+la mayoría de los errores muy seguros de las etapas media y final llegan
+al usuario sin advertencia.
 \end{abstract}
 
 \begin{IEEEkeywords}
 estimación de probabilidad de victoria, juegos de cartas coleccionables,
 aprendizaje automático tabular, fuga de datos, validación cruzada agrupada,
-calibración de clasificadores, machine learning
+calibración de clasificadores, agentes con herramientas, machine learning
 \end{IEEEkeywords}
 
 \safeinput{sec/01introduccion}
@@ -81,6 +88,7 @@ calibración de clasificadores, machine learning
 \safeinput{sec/04metodologia}
 \safeinput{sec/05analisis_tecnico}
 \safeinput{sec/07resultados}
+\safeinput{sec/10agente}
 \safeinput{sec/08discusion}
 \safeinput{sec/06etica}
 \safeinput{sec/09conclusiones}

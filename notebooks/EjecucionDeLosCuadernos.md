@@ -2,7 +2,7 @@
 
 Qué hace cada cuaderno, dónde se ejecuta, en qué orden, cuánto tarda y cómo obtener las cifras del artículo. Para preparar el ambiente (Kaggle, Colab, token y dependencias), ver primero [`GuiaDeAmbiente.md`](../GuiaDeAmbiente.md). Para el agente en la PC (Claude Code, servidor MCP y orquestador), ver [`GuiaDelAgente.md`](../docx/05AmbienteDeDesarrollo/GuiaDelAgente.md).
 
-Rama actual de trabajo: `08AgentValidationAndSimulator` (Etapa 3).
+Rama actual de trabajo: `09EthicsPaperAndDocumentation` (Etapa 3). Los cuadernos no cambian en esta rama: siguen clonando las ramas de la tabla de la sección 2.
 
 ---
 
@@ -91,15 +91,6 @@ El protocolo de `09` y `10` está en [`docx/03Evidencia/08-11-26_ProtocoloValida
 | 3 | `PARTE 3 - VERIFICACION CON PARTIDAS REALES` | Nada: comprueba que el agente da la misma probabilidad que el modelo final en cada estado |
 | 4 | `PARTE 4 - DEMOSTRACION DE LAS HERRAMIENTAS` | Nada: salida de cada herramienta y casos límite |
 
-### Cuaderno 10 por partes
-
-| Parte | Celda | Produce |
-|---|---|---|
-| 1 | `PARTE 1 - MODELO, EJEMPLOS Y CASOS DE VALIDACION` | Baja de Kaggle lo que falte y lo verifica |
-| 2 | `PARTE 2 - BATERIA N1 CON LAS CORRECCIONES` | `docx/03Evidencia/DD-MM-AA_ValidacionN1Corregida.csv` y la comparación con la corrida del cuaderno 09 |
-| 3 | `PARTE 3 - NIVEL N2 CON CLAUDE` | `docx/03Evidencia/DD-MM-AA_ValidacionN2.csv` y `.jsonl` |
-| 4 | `PARTE 4 - METRICAS DEL AGENTE Y REVISION HUMANA` | Nada: métricas y respuestas para revisar a mano |
-
 ### Cuaderno 09 por partes
 
 | Parte | Celda | Produce |
@@ -109,6 +100,15 @@ El protocolo de `09` y `10` está en [`docx/03Evidencia/08-11-26_ProtocoloValida
 | 3 | `PARTE 3 - ANALISIS` | Nada: tablas por población, errores muy seguros y dirección de los cambios |
 | 4 | `PARTE 4 - CATALOGO DE CARTAS PARA EL SIMULADOR` | `agente/cartas.json`: PV máximos de cada carta vista como activo en el train de A |
 
+### Cuaderno 10 por partes
+
+| Parte | Celda | Produce |
+|---|---|---|
+| 1 | `PARTE 1 - MODELO, EJEMPLOS Y CASOS DE VALIDACION` | Baja de Kaggle lo que falte y lo verifica |
+| 2 | `PARTE 2 - BATERIA N1 CON LAS CORRECCIONES` | `docx/03Evidencia/DD-MM-AA_ValidacionN1Corregida.csv` y la comparación con la corrida del cuaderno 09 |
+| 3 | `PARTE 3 - NIVEL N2 CON CLAUDE` | `docx/03Evidencia/DD-MM-AA_ValidacionN2.csv` y `.jsonl` |
+| 4 | `PARTE 4 - METRICAS DEL AGENTE Y REVISION HUMANA` | Nada: métricas y respuestas para revisar a mano |
+
 ---
 
 ## 4. Cuadernos de la PC (08 y 10)
@@ -117,7 +117,7 @@ El protocolo de `09` y `10` está en [`docx/03Evidencia/08-11-26_ProtocoloValida
 2. Abre el cuaderno y elige el kernel: **Select Kernel → Python Environments → `.venv`**. Si `.venv` no aparece: **Enter interpreter path... → Find...** y elige `.venv\Scripts\python.exe` (en Linux o macOS, `.venv/bin/python`).
 3. Haz clic en **Run All**.
 
-La primera celda comprueba que Claude Code está instalado. Las consultas usan la membresía: si se agota el límite, la celda falla con `Claude respondio con error` y basta con esperar a que se renueve. Pasos completos y errores frecuentes: `GuiaDelAgente.md`, secciones 7 y 9.
+La primera celda comprueba que Claude Code está instalado. Las consultas usan la membresía: si se agota el límite, la celda falla con `Claude respondio con error` y basta con esperar a que se renueve. Pasos completos y errores frecuentes: `GuiaDelAgente.md`, secciones 7 y 10.
 
 ---
 
@@ -176,6 +176,8 @@ Si dos personas publican al mismo tiempo, la versión que termina después puede
 | "El índice dice que X existe, pero no se pudo bajar" | Versión muy reciente | Esperar unos minutos y volver a ejecutar |
 | `Kaggle pidio esperar (429)` en `09` | Kaggle limita cuántas descargas se hacen seguidas | Nada: la celda espera y reintenta sola |
 | `no se pudo bajar la partida ...` en `09` | Fallo de red, o Kaggle siguió respondiendo 429 tras varios reintentos | Esperar unos minutos y volver a ejecutar la celda: las partidas ya bajadas en esa sesión no se repiten |
+| `400 Bad Request` al publicar | La herramienta `kaggle` de Colab (2.0.2) no puede crear versiones | La primera celda instala `kaggle>=2.2.5` de `requirements.txt`; si el servidor ya tenía la vieja, reiniciar el runtime y volver a ejecutar desde arriba. La celda muestra el motivo que da Kaggle |
+| `Kaggle todavia no muestra todos los casos de validacion` en `10` | La parte 1 de `09` se publicó hace poco y Kaggle aún procesa la versión | Esperar unos minutos y volver a ejecutar la celda |
 | `ModuleNotFoundError: ptcg_wp` o `ptcg_agente` | `src/` no está en el path | Ejecutar la primera celda |
 | El repo en Colab no tiene mis cambios | Falta el push | `git push` desde la PC y volver a ejecutar la primera celda |
 | Aviso de versión de scikit-learn distinta | El servidor traía otra versión | Reiniciar el runtime y volver a ejecutar la primera celda |

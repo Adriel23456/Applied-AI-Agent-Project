@@ -1,6 +1,8 @@
 # Guía del agente
 
-Cómo usar el modelo de probabilidad de victoria desde Claude Desktop o Claude Code. La arquitectura está en `docx/03Evidencia/07-11-26_ArquitecturaDelAgente.md`.
+Cómo usar el modelo de probabilidad de victoria desde Claude Code, Claude Desktop, el orquestador en Python o el simulador gráfico. La arquitectura está en `docx/03Evidencia/07-11-26_ArquitecturaDelAgente.md`, y cómo se validó, en `docx/03Evidencia/08-11-26_ResultadosValidacionAgente.md`.
+
+**Antes de usarlo.** El agente estima quién va ganando; no recomienda jugadas ni da certezas. Sus cifras valen para partidas entre agentes automáticos del certamen de 2026, no para personas ni para otros mazos. Al inicio de la partida distingue poco, y en medio y final la mayoría de sus errores muy seguros no traen advertencia. Úsalo para analizar partidas terminadas, explorar estados hipotéticos y estudiar el modelo; no para obtener ayuda durante una partida en curso donde las reglas lo prohíban ni para apostar. Tus preguntas y los resultados de las herramientas viajan a Claude para que responda: no incluyas datos personales. Riesgos y límites completos: `docx/03Evidencia/08-11-26_EticaDelDespliegue.md`.
 
 ---
 
@@ -91,7 +93,7 @@ La primera vez se abre el navegador para iniciar sesión con la cuenta de Claude
 1. La primera vez aparece el aviso **"New MCP server found in this project: ptcg-victoria"** con tres opciones. Elige la primera, **"Use this MCP server"**, y presiona Enter. Aprueba solo este servidor, que es el del proyecto (`.mcp.json`).
    - No elijas "Use this and all future MCP servers in this project": aprobaría también cualquier servidor que se agregue después al repositorio, sin revisarlo.
    - "Continue without using this MCP server" deja el agente sin herramientas.
-2. Escribe `/mcp`: debe aparecer `ptcg-victoria` conectado, con 7 herramientas.
+2. Escribe `/mcp`: debe aparecer `ptcg-victoria` conectado, con 8 herramientas: las seis del modelo, `abrir_simulador` y `verificar_respuesta`.
 3. Cada vez que Claude llame a una herramienta, Claude Code pide permiso. Revisa el nombre de la herramienta y aprueba. Si eliges permitirla siempre para este proyecto, no vuelve a preguntar por esa herramienta.
 
 Si elegiste mal o quieres revisar la decisión, ejecuta `claude mcp reset-project-choices` en la raíz del repositorio y vuelve a abrir `claude`.
@@ -235,7 +237,7 @@ El panel derecho muestra la probabilidad del jugador 0 y del jugador 1, las adve
 
 ## 9. Registros (evidencia)
 
-Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl` (fecha UTC). El campo `agente` dice quién actuó: `planificador`, `ejecutor`, `redactor` o `verificador`. Para guardar una sesión de Claude Code o Claude Desktop como evidencia, copia el archivo a `docx/03Evidencia/` con un nombre descriptivo y agrega una captura de la conversación. El cuaderno local copia la sesión del orquestador por su cuenta.
+Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl` (fecha UTC). El campo `agente` dice quién actuó: `planificador`, `ejecutor`, `redactor` o `verificador`; el simulador escribe `simulador` y la batería de validación, `validacion`. Para guardar una sesión de Claude Code o Claude Desktop como evidencia, copia el archivo a `docx/03Evidencia/` con un nombre descriptivo y agrega una captura de la conversación. El cuaderno local copia la sesión del orquestador por su cuenta.
 
 ---
 
