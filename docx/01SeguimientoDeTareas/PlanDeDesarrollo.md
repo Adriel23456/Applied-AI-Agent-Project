@@ -169,7 +169,7 @@ Integración del modelo en una arquitectura multiagente con *tool calling*, cons
 - [x] `comparar_estados`: probabilidad de dos o más estados alternativos de la misma posición (por ejemplo, después de dos jugadas posibles)
 - [x] `revisar_dominio`: detecta entradas fuera del dominio de entrenamiento (cartas no vistas, valores fuera de rango, formato inválido, preparación o estado resuelto)
 - [x] `describir_modelo`: ficha del modelo, métricas en `test` y límites declarados
-- [ ] Perfil del dominio (`agente/dominio.json`) y repeticiones de ejemplo publicados en Kaggle (partes 1 y 2 del cuaderno `07_agente`)
+- [x] Perfil del dominio (`agente/dominio.json`) y repeticiones de ejemplo publicados en Kaggle (partes 1 y 2 del cuaderno `07_agente`): 4 357 908 filas `train` de A, 33 066 partidas, cortes de etapa [5, 9] y 362 cartas activas; 4 partidas de `test` de A del 22 de julio
 
 **Arquitectura multiagente** (`src/ptcg_agente/agentes/`)
 - [ ] **Planificador:** interpreta la consulta del usuario y decide qué herramientas llamar y en qué orden (en Claude: instrucciones del servidor MCP; falta el orquestador)
@@ -181,14 +181,15 @@ Integración del modelo en una arquitectura multiagente con *tool calling*, cons
 **Exposición**
 - [x] Servidor MCP del proyecto (`servidor_mcp.py`), registrado para Claude Code en `.mcp.json` y documentado para Claude Desktop
 - [ ] Orquestador en Python con *tool calling* (planificador, ejecutor, verificador y redactor), ejecutable desde terminal y desde un cuaderno
-- [ ] Cuaderno `07_agente` ejecutado en Colab con sus salidas (dominio, ejemplos y verificación con partidas reales)
+- [x] Cuaderno `07_agente` ejecutado en Colab con sus salidas (dominio, ejemplos y verificación con partidas reales)
 
 **Verificación**
 - [x] Pruebas de cada herramienta con observaciones sintéticas: misma probabilidad que `PredictorVictoria` (`tests/test_agente.py`)
-- [ ] Misma probabilidad que `PredictorVictoria` en cada estado de partidas reales (parte 3 del cuaderno `07_agente`)
+- [x] Misma probabilidad que `PredictorVictoria` en cada estado de partidas reales (parte 3 del cuaderno `07_agente`): 642 estados de 4 partidas, diferencia máxima 0.0 y 642/642 resultados verificados
 - [x] Pruebas del verificador: detecta probabilidades fuera de rango, SHAP que no suma, cifras inventadas, advertencias omitidas y promesas de certeza
 - [x] Prueba del servidor MCP de punta a punta con un cliente MCP real por stdio
-- [ ] Evidencia del flujo completo: registros de invocaciones y capturas de Claude usando las herramientas
+- [x] Evidencia del flujo completo con Claude Code: `docx/03Evidencia/08-11-26_RegistroSesionClaudeCode.jsonl` y `.png` (consulta sobre la partida 87406956; el verificador rechazó un primer borrador y aprobó el corregido)
+- [ ] Evidencia del orquestador en Python (registro de una corrida con planificador, ejecutor, verificador y redactor)
 
 ### `08AgentValidationAndSimulator`
 
