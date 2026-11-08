@@ -15,7 +15,7 @@ N1 es determinista y cubre muchos estados. N2 cuesta tiempo de Claude, así que 
 
 ## 2. De dónde salen los casos
 
-Todos los estados se eligen con la semilla **2026** antes de correr nada, y se publican en Kaggle (`agente/validacion/casos.csv`, `observaciones.json` y `partidas.json.gz`) para que N1 y N2 usen exactamente los mismos. Las 30 partidas de cada fuente aportan un estado por etapa cada una; las 10 primeras de A se guardan completas para N-06.
+Todos los estados se eligen con la semilla **2026** antes de correr nada, y se publican en Kaggle (`agente/validacion/casos.csv`, `observaciones.json` y `partidas.json`) para que N1 y N2 usen exactamente los mismos. Las 30 partidas de cada fuente aportan un estado por etapa cada una; las 10 primeras de A se guardan completas para N-06.
 
 | Fuente | Regla de selección |
 |---|---|
@@ -168,7 +168,7 @@ Con los resultados se responde por escrito:
 
 | Paso | Dónde | Resultado |
 |---|---|---|
-| Selección de casos y N1 | Colab, `notebooks/09_validacion_agente.ipynb` | Kaggle: `agente/validacion/casos.csv`, `observaciones.json`, `partidas.json.gz`, `resultados_n1.csv`, `detalle_n1.csv` y `latencias_n1.csv` |
+| Selección de casos y N1 | Colab, `notebooks/09_validacion_agente.ipynb` | Kaggle: `agente/validacion/casos.csv`, `observaciones.json`, `partidas.json`, `resultados_n1.csv`, `detalle_n1.csv` y `latencias_n1.csv` |
 | N1 con correcciones y N2 | PC, `notebooks/10_validacion_llm.ipynb` | `docx/03Evidencia/DD-MM-AA_ValidacionN1Corregida.csv`, `DD-MM-AA_ValidacionN2.csv` y `DD-MM-AA_ValidacionN2.jsonl` (los cuadernos de la PC no publican en Kaggle) |
 | Informe | — | `docx/03Evidencia/DD-MM-AA_ResultadosValidacionAgente.md` |
 

@@ -125,3 +125,12 @@ def test_n2_corre_todas_las_consultas_con_un_llm_de_prueba(datos, modelo, partid
     q05 = tabla.set_index("id").loc["Q-05"]
     assert "texto inyectado en salidas de herramientas: False" in q05["obtenido"]
     assert set(consultas.metricas_n2(tabla)["metrica"]) >= {"Herramienta correcta (A-01 a A-06)"}
+
+def test_reconstruir_exige_la_misma_eleccion(tabla):
+    a = casos.elegir(tabla, n=N, n_errores=2)
+    casos.comprobar_misma_eleccion(None, a)
+    casos.comprobar_misma_eleccion(a.assign(larga=False), a)
+    otra = a.copy()
+    otra.loc[0, "step"] += 1
+    with pytest.raises(RuntimeError):
+        casos.comprobar_misma_eleccion(otra, a)

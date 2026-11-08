@@ -4,7 +4,7 @@ Todo se elige con la semilla 2026 antes de correr la bateria, y se publica en Ka
 el nivel N1 (Colab) y el N2 (PC con Claude) usen exactamente los mismos estados:
   agente/validacion/casos.csv            una fila por estado elegido
   agente/validacion/observaciones.json   observation['current'] de cada estado (y la preparacion)
-  agente/validacion/partidas.json.gz     repeticiones completas para N-06, L-09 y entradas
+  agente/validacion/partidas.json        repeticiones completas para N-06, L-09 y entradas
 
 Reglas (seccion 2 del protocolo):
   - Todos los estados son de partidas de test de A: el modelo del agente nunca las vio.
@@ -14,7 +14,6 @@ Reglas (seccion 2 del protocolo):
     modelo del agente; se etiquetan por subpoblacion (A completa, B o C).
 """
 
-import gzip
 import json
 import tempfile
 import time
@@ -32,7 +31,9 @@ SEMILLA = 2026
 CARPETA = "agente/validacion"
 CASOS = f"{CARPETA}/casos.csv"
 OBSERVACIONES = f"{CARPETA}/observaciones.json"
-PARTIDAS = f"{CARPETA}/partidas.json.gz"
+PARTIDAS = f"{CARPETA}/partidas.json"
+# Formato anterior: Kaggle no deja bajar el .gz (responde 404), asi que se quita del dataset
+PARTIDAS_GZ = f"{CARPETA}/partidas.json.gz"
 ETAPAS = ("inicio", "medio", "final")
 SEGURO = 0.9
 N_REPETICIONES = 10
@@ -174,8 +175,39 @@ def extraer(casos, larga, raiz, pausa_s=1.0):
     (raiz / CARPETA).mkdir(parents=True, exist_ok=True)
     casos.assign(larga=casos["game_id"].eq(int(larga[1]))).to_csv(raiz / CASOS, index=False)
     (raiz / OBSERVACIONES).write_text(json.dumps(observaciones), encoding="utf-8")
-    with gzip.open(raiz / PARTIDAS, "wt", encoding="utf-8") as f:
-        json.dump({"larga": int(larga[1]), "partidas": completas}, f)
+    (raiz / PARTIDAS).write_text(json.dumps({"larga": int(larga[1]), "partidas": completas}),
+                                 encoding="utf-8")
+
+
+def quitar_formato_anterior(raiz):
+    """Quita del dataset el partidas.json.gz de la primera corrida (Kaggle responde 404 al
+    bajarlo y, mientras siga en el indice, cualquier publicacion desde un servidor nuevo falla).
+    Si ya no esta, no hace nada."""
+    if PARTIDAS_GZ in store.leer_indice():
+        store.eliminar(PARTIDAS_GZ, "agente: quita partidas.json.gz (Kaggle no lo entrega)", raiz)
+    else:
+        print("formato anterior: no hay partidas.json.gz en el indice")
+
+
+def casos_publicados(raiz):
+    """casos.csv ya publicado (lo baja si hace falta), o None si todavia no existe."""
+    if CASOS not in store.leer_indice():
+        return None
+    store.listo([CASOS], raiz)
+    return pd.read_csv(Path(raiz) / CASOS)
+
+
+def comprobar_misma_eleccion(anterior, elegidos):
+    """Al reconstruir, la eleccion debe ser identica a la publicada (misma semilla): si no, los
+    resultados de N1 ya publicados no corresponderian a estos casos."""
+    if anterior is None:
+        return
+    claves = ["caso", "game_id", "step"]
+    a = anterior[claves].sort_values("caso").reset_index(drop=True)
+    b = elegidos[claves].sort_values("caso").reset_index(drop=True)
+    if not a.equals(b.astype(a.dtypes.to_dict())):
+        raise RuntimeError("la eleccion de casos no coincide con la publicada; no se publica nada")
+    print("eleccion identica a la publicada:", len(a), "casos")
 
 
 class Datos:
@@ -185,8 +217,7 @@ class Datos:
         raiz = Path(raiz)
         self.casos = pd.read_csv(raiz / CASOS)
         self.observaciones = json.loads((raiz / OBSERVACIONES).read_text(encoding="utf-8"))
-        with gzip.open(raiz / PARTIDAS, "rt", encoding="utf-8") as f:
-            paquete = json.load(f)
+        paquete = json.loads((raiz / PARTIDAS).read_text(encoding="utf-8"))
         self.carpeta = Path(tempfile.mkdtemp(prefix="ptcg-partidas-"))
         self.repeticiones = {}
         for g, rep in paquete["partidas"].items():
