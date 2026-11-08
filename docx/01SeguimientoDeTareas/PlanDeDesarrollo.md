@@ -191,7 +191,7 @@ Integración del modelo en una arquitectura multiagente con *tool calling*, cons
 - [x] Pruebas del verificador: detecta probabilidades fuera de rango, SHAP que no suma, cifras inventadas, advertencias omitidas y promesas de certeza
 - [x] Prueba del servidor MCP de punta a punta con un cliente MCP real por stdio
 - [x] Evidencia del flujo completo con Claude Code: `docx/03Evidencia/08-11-26_RegistroSesionClaudeCode.jsonl` y `.png` (consulta sobre la partida 87406956; el verificador rechazó un primer borrador y aprobó el corregido)
-- [ ] Evidencia del orquestador en Python (registro de una corrida con planificador, ejecutor, verificador y redactor)
+- [x] Evidencia del orquestador en Python (registro de una corrida con planificador, ejecutor, verificador y redactor)
 
 ### `08AgentValidationAndSimulator`
 
