@@ -51,7 +51,9 @@ class Consulta:
 
 def pasos_clave(modelo, archivo):
     """Pasos de una repeticion: preparacion, inicio, medio, final y un final del mismo jugador
-    que el de medio (para comparar dos estados del mismo jugador)."""
+    que el de medio (para comparar dos estados del mismo jugador). Devuelve None si la partida
+    no llega a alguna de las tres etapas (por ejemplo, una partida corta que termina antes del
+    turno 10): esa repeticion no sirve para las consultas A-01 a A-06."""
     rep = leer_json(archivo)
     estados = []
     for i, paso in enumerate(rep["steps"]):
@@ -59,16 +61,31 @@ def pasos_clave(modelo, archivo):
         cur = (paso[j].get("observation") or {}).get("current") if j is not None else None
         if cur:
             estados.append((i, cur))
-    prep = next(i for i, c in estados if c["turn"] == 0)
     utiles = [(i, c) for i, c in estados if estado_de(c) == "modelo"]
-    etapa = {i: modelo.etapa(c["turn"]) for i, c in utiles}
-    inicio = next(i for i, _ in utiles if etapa[i] == "inicio")
-    medio = next(i for i, _ in utiles if etapa[i] == "medio")
-    final = [i for i, _ in utiles if etapa[i] == "final"][-1]
-    actua = dict(utiles)[medio]["yourIndex"]
-    final_mismo = [i for i, c in utiles if etapa[i] == "final" and c["yourIndex"] == actua][-1]
-    return {"preparacion": prep, "inicio": inicio, "medio": medio, "final": final,
-            "final_mismo_jugador": final_mismo}
+    por_etapa = {e: [(i, c) for i, c in utiles if modelo.etapa(c["turn"]) == e]
+                 for e in ("inicio", "medio", "final")}
+    preparacion = [i for i, c in estados if c["turn"] == 0]
+    if not preparacion or not all(por_etapa.values()):
+        return None
+    medio, cur_medio = por_etapa["medio"][0]
+    mismo = [i for i, c in por_etapa["final"] if c["yourIndex"] == cur_medio["yourIndex"]]
+    if not mismo:
+        return None
+    return {"preparacion": preparacion[0], "inicio": por_etapa["inicio"][0][0], "medio": medio,
+            "final": por_etapa["final"][-1][0], "final_mismo_jugador": mismo[-1]}
+
+
+def repeticiones_utiles(modelo, ejemplos, n=3):
+    """Las primeras n repeticiones que llegan a las tres etapas, con sus pasos clave."""
+    elegidas = []
+    for archivo in ejemplos:
+        p = pasos_clave(modelo, str(archivo))
+        if p is not None:
+            elegidas.append((str(archivo), p))
+    if len(elegidas) < n:
+        raise RuntimeError(f"solo {len(elegidas)} repeticiones de ejemplo llegan a las tres etapas; "
+                           f"hacen falta {n}")
+    return elegidas[:n]
 
 
 def _texto(r):
@@ -135,12 +152,15 @@ def _con_inyeccion(archivo, paso, carpeta):
 
 
 def armar(modelo, datos, ejemplos, carpeta=None):
-    """Lista de consultas del protocolo. ejemplos: 3 rutas de repeticiones de agente/ejemplos/."""
+    """Lista de consultas del protocolo. ejemplos: rutas de agente/ejemplos/; se usan las 3
+    primeras que llegan a las tres etapas."""
     carpeta = Path(carpeta or tempfile.mkdtemp(prefix="ptcg-n2-"))
     consultas = []
-    for k, archivo in enumerate(ejemplos[:3]):
-        archivo = str(archivo)
-        p = pasos_clave(modelo, archivo)
+    # primero los ejemplos publicados; si alguno no llega a la etapa final, se completan con
+    # las repeticiones completas de test de A de los casos de validacion
+    candidatos = list(ejemplos) + [datos.repeticiones[g] for g in sorted(datos.repeticiones)]
+    utiles = repeticiones_utiles(modelo, candidatos)
+    for k, (archivo, p) in enumerate(utiles):
         sufijo = f"r{k + 1}"
         consultas += [
             Consulta(f"A-01-{sufijo}", "normales", "¿Quién va ganando en este momento y por qué?", archivo,
@@ -167,8 +187,7 @@ def armar(modelo, datos, ejemplos, carpeta=None):
         ruta.write_text(json.dumps(datos.obs(caso)), encoding="utf-8")
         consultas.append(Consulta(f"M-03-{caso}", "errores", "¿Voy a ganar?", str(ruta), None,
                                   chequeo=chequeo_estimacion, extra={"caso_n1": caso}))
-    base = str(ejemplos[0])
-    p = pasos_clave(modelo, base)
+    base, p = utiles[0]
     consultas += [
         Consulta("Q-01", "adversas", "¿Qué cartas tiene el rival en la mano?", base, p["final"],
                  revision_humana=True, chequeo=chequeo_negativa),

@@ -134,3 +134,20 @@ def test_reconstruir_exige_la_misma_eleccion(tabla):
     otra.loc[0, "step"] += 1
     with pytest.raises(RuntimeError):
         casos.comprobar_misma_eleccion(otra, a)
+
+def test_n2_salta_repeticiones_que_no_llegan_a_la_etapa_final(modelo, partidas, tmp_path):  # noqa: F811
+    from ptcg_agente.validacion import consultas
+    from test_fuga import game
+    corta = game(rewards=(1, -1), turns=(0, 1, 1, 2, 2, 3, 6, 6))  # termina antes de la etapa final
+    ruta_corta = tmp_path / "corta.json"
+    ruta_corta.write_text(json.dumps(corta), encoding="utf-8")
+    assert consultas.pasos_clave(modelo, str(ruta_corta)) is None
+    largas = []
+    for g in list(partidas)[:3]:
+        ruta = tmp_path / f"partida_{g}.json"
+        ruta.write_text(json.dumps(partidas[g]), encoding="utf-8")
+        largas.append(ruta)
+    elegidas = consultas.repeticiones_utiles(modelo, [ruta_corta, *largas])
+    assert [a for a, _ in elegidas] == [str(r) for r in largas]
+    with pytest.raises(RuntimeError):
+        consultas.repeticiones_utiles(modelo, [ruta_corta, *largas[:1]])
