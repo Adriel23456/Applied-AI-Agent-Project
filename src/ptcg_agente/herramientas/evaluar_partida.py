@@ -9,10 +9,13 @@ momentos en que la curva cruza 50 %. Si la repeticion trae el resultado, se info
 ganador real (es un analisis posterior a la partida, no una prediccion).
 """
 
+import numpy as np
+
+from ptcg_agente import dominio
 from ptcg_agente.entradas import resolver_repeticion, validar_current, EntradaInvalida
-from ptcg_agente.herramientas.comun import revision_dominio
 from ptcg_agente.lenguaje import porcentaje
-from ptcg_wp.features import acting_player
+from ptcg_wp.features import acting_player, extract_features
+from ptcg_wp.predictor import estado_de
 
 NOMBRE = "evaluar_partida"
 DESCRIPCION = ("Recorre una repeticion completa y devuelve la probabilidad de victoria del jugador 0 "
@@ -24,7 +27,9 @@ MAX_GIROS = 5
 
 def ejecutar(modelo, repeticion=None, archivo=None):
     datos, origen = resolver_repeticion(repeticion, archivo)
-    curva, fuera, saltados = [], 0, 0
+    features = list(modelo.features)
+    revisadas = features + list(dominio.CARTAS)
+    puntos, filas, fuera, saltados = [], [], 0, 0
     for i, paso in enumerate(datos["steps"]):
         j = acting_player(paso)
         cur = (paso[j].get("observation") or {}).get("current") if j is not None else None
@@ -36,14 +41,22 @@ def ejecutar(modelo, repeticion=None, archivo=None):
         except EntradaInvalida:
             saltados += 1
             continue
-        ev = modelo.predictor.evaluar(cur)
-        if ev["probabilidad"] is None:
+        if estado_de(cur) != "modelo":
             continue
-        p0 = ev["probabilidad"] if ev["jugador"] == 0 else 1 - ev["probabilidad"]
-        if not revision_dominio(modelo, cur)["dentro_del_dominio"]:
-            fuera += 1
-        curva.append({"paso": i, "turno": ev["turno"], "actua": ev["jugador"],
-                      "etapa": modelo.etapa(ev["turno"]), "p_jugador0": round(p0, 4)})
+        fila = extract_features(cur)
+        hallazgos = dominio.revisar_fila(fila, modelo.perfil, revisadas)
+        fuera += any(h["severidad"] == "fuera" for h in hallazgos)
+        filas.append([fila[f] for f in features])
+        puntos.append({"paso": i, "turno": cur["turn"], "actua": cur["yourIndex"],
+                       "etapa": modelo.etapa(cur["turn"])})
+    # Una sola llamada al modelo para toda la partida: llamarlo estado por estado es lento
+    # (cada llamada tiene un costo fijo) y da exactamente las mismas probabilidades.
+    curva = []
+    if filas:
+        p = modelo.predictor.model.predict_proba(np.asarray(filas, dtype=np.float32))[:, 1]
+        for punto, pi in zip(puntos, p):
+            p0 = float(pi) if punto["actua"] == 0 else 1 - float(pi)
+            curva.append({**punto, "p_jugador0": round(p0, 4)})
     if not curva:
         raise EntradaInvalida("la repeticion no tiene ningun estado con prediccion")
     por_turno = {}

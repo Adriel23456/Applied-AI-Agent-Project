@@ -43,7 +43,11 @@ def etapa(turno, cortes):
 
 def revisar(cur, perfil, features):
     """Hallazgos de una observacion ya validada frente al perfil. Lista de diccionarios."""
-    fila = extract_features(cur)
+    return revisar_fila(extract_features(cur), perfil, features)
+
+
+def revisar_fila(fila, perfil, features):
+    """Lo mismo que revisar, con las caracteristicas ya calculadas (evita extraerlas dos veces)."""
     hallazgos = []
     for f in features:
         r = perfil["rangos"].get(f)

@@ -80,7 +80,7 @@ def test_bateria_n1_completa_sin_excepciones(datos, modelo):  # noqa: F811
     por_caso = resultados.set_index("caso")
     assert not resultados["excepcion"].any(), resultados[resultados["excepcion"]]["obtenido"].tolist()
     deben_aprobar = ["N-01", "N-02", "N-03", "N-04", "N-06", "L-01", "L-02", "L-03", "L-04", "L-05",
-                     "L-06", "L-07", "L-08", "L-09", "E-01", "E-02", "E-03", "E-04", "E-05", "E-06",
+                     "L-06", "L-07", "L-08", "L-09", "L-10", "E-01", "E-02", "E-03", "E-04", "E-05", "E-06",
                      "E-07", "E-08", "E-09", "S-02", "S-03", "S-04", "S-05", "D-01", "D-02", "R-01"]
     fallidos = {c: por_caso.loc[c, "obtenido"] for c in deben_aprobar if por_caso.loc[c, "aprobado"] is not True}
     assert not fallidos, fallidos
@@ -102,3 +102,26 @@ def test_bajar_partida_reintenta_si_kaggle_pide_esperar(tmp_path, monkeypatch):
     monkeypatch.setattr(casos.store, "_bajar_archivo", falsa)
     monkeypatch.setattr(casos.time, "sleep", lambda s: None)
     assert casos.bajar_partida("d", 7, tmp_path).exists()
+
+def test_n2_corre_todas_las_consultas_con_un_llm_de_prueba(datos, modelo, partidas, tmp_path):  # noqa: F811
+    from ptcg_agente.registro import Registro
+    from ptcg_agente.validacion import consultas
+    from test_agente import LLMFalso
+
+    ejemplos = []
+    for g in list(partidas)[:3]:
+        ruta = tmp_path / f"partida_{g}.json"
+        ruta.write_text(json.dumps(partidas[g]), encoding="utf-8")
+        ejemplos.append(ruta)
+    lista = consultas.armar(modelo, datos, ejemplos, tmp_path)
+    ids = [c.id for c in lista]
+    assert sum(i.startswith("A-") for i in ids) == 18 and {"Q-01", "Q-05", "Q-07"} <= set(ids)
+    sin_plan = {"objetivo": "", "pasos": []}  # plan invalido: el orquestador usa el plan por defecto
+    llm = LLMFalso([sin_plan] * 200, ["Es una estimacion. No tengo acceso a la mano del rival."] * 200)
+    tabla = consultas.correr_n2(modelo, datos, ejemplos, Registro("n2", carpeta=tmp_path / "reg"),
+                                llm=llm, consultas=lista, avance=None)
+    assert len(tabla) == len(lista) and not tabla["excepcion"].any(), tabla[tabla["excepcion"]]["obtenido"].tolist()
+    assert tabla["verificada"].all()
+    q05 = tabla.set_index("id").loc["Q-05"]
+    assert "texto inyectado en salidas de herramientas: False" in q05["obtenido"]
+    assert set(consultas.metricas_n2(tabla)["metrica"]) >= {"Herramienta correcta (A-01 a A-06)"}

@@ -169,7 +169,16 @@ Con los resultados se responde por escrito:
 | Paso | Dónde | Resultado |
 |---|---|---|
 | Selección de casos y N1 | Colab, `notebooks/09_validacion_agente.ipynb` | Kaggle: `agente/validacion/casos.csv`, `observaciones.json`, `partidas.json.gz`, `resultados_n1.csv`, `detalle_n1.csv` y `latencias_n1.csv` |
-| N2 | PC, `notebooks/10_validacion_llm.ipynb` | `docx/03Evidencia/DD-MM-AA_ValidacionLLM.jsonl` y `agente/validacion/resultados_n2.csv` |
+| N1 con correcciones y N2 | PC, `notebooks/10_validacion_llm.ipynb` | `docx/03Evidencia/DD-MM-AA_ValidacionN1Corregida.csv`, `DD-MM-AA_ValidacionN2.csv` y `DD-MM-AA_ValidacionN2.jsonl` (los cuadernos de la PC no publican en Kaggle) |
 | Informe | — | `docx/03Evidencia/DD-MM-AA_ResultadosValidacionAgente.md` |
 
 Código de la batería: `src/ptcg_agente/validacion/` (un archivo por grupo de casos), con pruebas en `tests/`. Cada caso queda como una fila con: ID, entrada resumida, salida resumida, esperado, obtenido, aprobado (sí, no o solo registro) y duración.
+
+## 8. Qué se hace con los casos que fallan
+
+El criterio de un caso no cambia después de ver su resultado. Si un caso falla:
+1. La corrida original queda como evidencia (`resultados_n1.csv` del cuaderno 09) y se reporta como falla.
+2. Se corrige el código en esta rama.
+3. Se repite la batería N1 completa con el código corregido (parte 2 del cuaderno 10) y se reportan las dos corridas. Un caso que cambia de estado sin una corrección que lo explique se investiga.
+
+Primera corrida de N1 (8 de noviembre): fallaron **L-09** (la partida más larga, 1398 pasos, tardó 56.6 s contra 30 s del criterio) y **L-10** (fallo predicho: la explicación mostraba el valor interno −1 de los campos del activo). Correcciones: `evaluar_partida` predice toda la partida en una sola llamada al modelo, y `explicar_prediccion` describe esos campos como "no hay Pokémon activo".

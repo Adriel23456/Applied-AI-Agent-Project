@@ -64,6 +64,8 @@ def advertencias(modelo, evaluacion, revision):
 def _detalle(h):
     if h["tipo"] == "carta_no_vista":
         return f"carta activa {h['valor']} nunca vista ({'propia' if h['caracteristica'].startswith('own') else 'del rival'})"
+    if "active_" in h["caracteristica"] and h["valor"] == -1:
+        return f"{frase(h['caracteristica'])}: no hay Pokemon activo"
     return f"{frase(h['caracteristica'])} = {h['valor']:g}"
 
 

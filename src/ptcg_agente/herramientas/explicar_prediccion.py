@@ -12,6 +12,7 @@ from ptcg_agente.entradas import resolver
 from ptcg_agente.herramientas.comun import evaluar
 from ptcg_agente.lenguaje import familia, frase, porcentaje
 from ptcg_agente.modelo import sigmoide
+from ptcg_wp.features import SENTINEL
 
 NOMBRE = "explicar_prediccion"
 DESCRIPCION = ("Explica la probabilidad con SHAP: las caracteristicas que mas la suben y la bajan, "
@@ -31,8 +32,11 @@ def ejecutar(modelo, observacion=None, archivo=None, paso=None, top=5):
     p = salida["probabilidad"]
     filas = []
     for nombre, valor, aporte in zip(modelo.features, x[0], valores):
-        filas.append({"caracteristica": nombre, "descripcion": frase(nombre),
-                      "familia": familia(nombre), "valor": float(valor), "shap": float(aporte),
+        sin_activo = es_sin_activo(nombre, valor)
+        filas.append({"caracteristica": nombre,
+                      "descripcion": f"{frase(nombre)} (no hay Pokemon activo)" if sin_activo else frase(nombre),
+                      "familia": familia(nombre), "valor": None if sin_activo else float(valor),
+                      "shap": float(aporte),
                       "efecto_puntos": round(100 * (p - sigmoide(logit - float(aporte))), 1)})
     a_favor = sorted((f for f in filas if f["shap"] > 0), key=lambda f: -f["shap"])[:top]
     en_contra = sorted((f for f in filas if f["shap"] < 0), key=lambda f: f["shap"])[:top]
@@ -47,9 +51,19 @@ def ejecutar(modelo, observacion=None, archivo=None, paso=None, top=5):
             "texto": texto}
 
 
+def es_sin_activo(nombre, valor):
+    """El extractor pone -1 (centinela) en los campos del activo cuando no hay Pokemon activo.
+    Ese -1 no es un dato del juego: se explica como 'no hay Pokemon activo' (caso L-10)."""
+    return "active_" in nombre and not nombre.endswith("active_present") and float(valor) == SENTINEL
+
+
+def _contribucion(f):
+    valor = "" if f["valor"] is None else f" = {f['valor']:g}"
+    return f"{f['descripcion']}{valor} ({f['efecto_puntos']:+.1f} puntos)"
+
+
 def _texto(p, a_favor, en_contra):
     def lista(filas):
-        return "; ".join(f"{f['descripcion']} = {f['valor']:g} ({f['efecto_puntos']:+.1f} puntos)"
-                         for f in filas) or "ninguna"
+        return "; ".join(_contribucion(f) for f in filas) or "ninguna"
     return (f"Probabilidad de victoria: {porcentaje(p)}. "
             f"Lo que mas la sube: {lista(a_favor)}. Lo que mas la baja: {lista(en_contra)}.")

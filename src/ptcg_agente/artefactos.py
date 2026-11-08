@@ -84,6 +84,25 @@ def preparar_ejemplos(raiz=None):
     return [raiz / r for r in rutas]
 
 
+def preparar_validacion(raiz=None):
+    """Baja (verificando SHA-256) los casos de validacion que publico el cuaderno 09."""
+    from ptcg_agente.validacion import casos
+    raiz = Path(raiz or ARTEFACTOS_DIR)
+    rutas = [casos.CASOS, casos.OBSERVACIONES, casos.PARTIDAS]
+    if not store.listo(rutas, raiz):
+        raise RuntimeError("faltan los casos de validacion en Kaggle: ejecuta la parte 1 del "
+                           "cuaderno 09_validacion_agente en Colab")
+    return raiz
+
+
+def configurar_kaggle():
+    """Token de Kaggle desde la variable KAGGLE_API_TOKEN o desde secrets.txt en la raiz del
+    repo (mismo formato de los cuadernos); si no esta, lo pide sin mostrarlo."""
+    if not (os.environ.get("KAGGLE_API_TOKEN") or os.environ.get("KAGGLE_KEY")):
+        from ptcg_wp.colab import _configure_kaggle, read_secret
+        _configure_kaggle(read_secret("KAGGLE_API_TOKEN", path=str(REPO_DIR / "secrets.txt")))
+
+
 def verificar(raiz=None, rutas=REQUERIDOS):
     """Comprueba SHA-256 contra el manifiesto y la version de scikit-learn contra la ficha.
     Devuelve el manifiesto. Lanza RuntimeError con un mensaje claro si algo no coincide."""
@@ -121,9 +140,7 @@ def main():
     parser = argparse.ArgumentParser(description="Baja y verifica los archivos del agente")
     parser.add_argument("--raiz", default=None)
     args = parser.parse_args()
-    if not (os.environ.get("KAGGLE_API_TOKEN") or os.environ.get("KAGGLE_KEY")):
-        from ptcg_wp.colab import _configure_kaggle, read_secret
-        _configure_kaggle(read_secret("KAGGLE_API_TOKEN", path=str(REPO_DIR / "secrets.txt")))
+    configurar_kaggle()
     manifiesto = preparar(args.raiz)
     print(f"Listo: {len(manifiesto['archivos'])} archivos verificados en "
           f"{Path(args.raiz or ARTEFACTOS_DIR).resolve()}")

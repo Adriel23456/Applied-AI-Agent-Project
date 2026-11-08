@@ -199,15 +199,15 @@ Validación del agente frente a escenarios normales, casos límite, entradas ine
 
 **Protocolo de validación** (escrito antes de ejecutar)
 - [x] Protocolo en `docx/03Evidencia/`: escenarios, entradas, comportamiento esperado y criterio de aprobación de cada uno (`08-11-26_ProtocoloValidacionAgente.md`)
-- [ ] Escenarios normales: estados de partidas de `test` de A en inicio, medio y final
-- [ ] Casos límite: preparación, estado resuelto, banca vacía, mazo en cero, un premio por tomar, turno 1, partidas muy largas
-- [ ] Entradas inesperadas: JSON mal formado, tipos incorrectos, campos faltantes, cartas no vistas, valores imposibles, observación del jugador que espera
-- [ ] Datos fuera del dominio de entrenamiento: estados de B (días posteriores) y C (arquetipos reservados), y estados sintéticos alejados de la distribución
-- [ ] Errores del modelo: predicciones muy seguras y equivocadas del análisis de errores de la Etapa 2; qué dice el agente y si advierte la incertidumbre
-- [ ] Consultas adversas al LLM: pedir la mano rival, pedir certeza absoluta, instrucciones inyectadas dentro de los datos de la partida
+- [x] Escenarios normales: estados de partidas de `test` de A en inicio, medio y final
+- [x] Casos límite: preparación, estado resuelto, banca vacía, mazo en cero, un premio por tomar, turno 1, partidas muy largas
+- [x] Entradas inesperadas: JSON mal formado, tipos incorrectos, campos faltantes, cartas no vistas, valores imposibles, observación del jugador que espera
+- [x] Datos fuera del dominio de entrenamiento: estados de B (días posteriores) y C (arquetipos reservados), y estados sintéticos alejados de la distribución
+- [x] Errores del modelo: predicciones muy seguras y equivocadas del análisis de errores de la Etapa 2; qué dice el agente y si advierte la incertidumbre
+- [x] Consultas adversas al LLM: pedir la mano rival, pedir certeza absoluta, instrucciones inyectadas dentro de los datos de la partida
 
 **Ejecución y análisis**
-- [ ] Batería automática de escenarios con resultados guardados (aprobado o fallido por caso): código del nivel N1 en `src/ptcg_agente/validacion/` con pruebas (`tests/test_validacion.py`) y cuaderno `09_validacion_agente` (Colab); falta ejecutarlo, y el nivel N2 con Claude (`10_validacion_llm`)
+- [x] Batería automática de escenarios con resultados guardados (aprobado o fallido por caso): nivel N1 en `src/ptcg_agente/validacion/` y cuaderno `09_validacion_agente` (Kaggle `agente/validacion/`): 34 casos, 31 aprobados, 2 fallidos (L-09 y L-10) y 1 de registro (M-02); nivel N2 (`validacion/consultas.py`, cuaderno `10_validacion_llm`) listo para ejecutar
 - [ ] Métricas del agente: herramienta correcta por consulta, cifras de la respuesta iguales a las herramientas, advertencias emitidas cuando corresponden, rechazos correctos fuera de dominio y latencia
 - [ ] Análisis de fragilidad: qué pasa cuando el modelo se equivoca y el agente confía en él, qué detecta el verificador y qué no
 - [ ] Resultados documentados en `docx/03Evidencia/`

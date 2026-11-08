@@ -12,5 +12,6 @@ Protocolo: docx/03Evidencia/08-11-26_ProtocoloValidacionAgente.md (escrito antes
   sinteticos.py   S-01 a S-05: estados alejados del dominio de entrenamiento.
   errores.py      M-01 y M-02: errores muy seguros del modelo.
   bateria.py      Corre todo el nivel N1 y devuelve resultados, detalle y latencias.
-  resumen.py      Metricas del agente (seccion 5 del protocolo).
+  resumen.py      Metricas del agente (seccion 5 del protocolo) del nivel N1.
+  consultas.py    Nivel N2: el agente completo con Claude (cuaderno 10, en la PC).
 """

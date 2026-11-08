@@ -62,8 +62,8 @@ En `05`, la Parte 2 usa la configuración elegida en la Parte 1 (ensayo 20). El 
 |---|---|---|---|---|---|
 | `07_agente` | Colab | Perfil del dominio de entrenamiento, repeticiones reales de ejemplo, verificación del agente con partidas reales y demostración de las herramientas | `agente/dominio.json`, `agente/ejemplos/` | ~5 min | ~15 min |
 | `08_agente_orquestador` | PC | Pruebas, tres consultas con el orquestador multiagente (planificador y redactor con Claude) y copia del registro como evidencia | Nada (escribe `docx/03Evidencia/DD-MM-AA_RegistroOrquestador.jsonl`) | — | ~1 min por consulta |
-| `09_validacion_agente` | Colab | Nivel N1 del protocolo de validación: elige los casos, extrae sus observaciones y corre la batería sin LLM | `agente/validacion/` | ~5 min | ~30 min (la mayor parte es bajar unas 200 repeticiones del corpus público) |
-| `10_validacion_llm` | PC | Nivel N2: el agente completo con Claude sobre los mismos casos, consultas adversas y métricas del agente | `agente/validacion/` | — | *En preparación* |
+| `09_validacion_agente` | Colab | Nivel N1 del protocolo de validación: elige los casos, extrae sus observaciones y corre la batería sin LLM | `agente/validacion/` | ~5 min | ~20 min (bajar 166 repeticiones del corpus público tarda unos 7) |
+| `10_validacion_llm` | PC | Repite N1 con las correcciones de la rama y corre el nivel N2: 31 consultas al orquestador con Claude (normales, errores del modelo y adversas) | Nada (escribe `docx/03Evidencia/DD-MM-AA_ValidacionN1Corregida.csv`, `_ValidacionN2.csv` y `_ValidacionN2.jsonl`) | — | ~20–30 min |
 
 El protocolo de `09` y `10` está en [`docx/03Evidencia/08-11-26_ProtocoloValidacionAgente.md`](../docx/03Evidencia/08-11-26_ProtocoloValidacionAgente.md), escrito antes de ejecutar.
 
@@ -90,6 +90,15 @@ El protocolo de `09` y `10` está en [`docx/03Evidencia/08-11-26_ProtocoloValida
 | 2 | `PARTE 2 - EJEMPLOS REALES` | `agente/ejemplos/partida_<id>.json`: 4 partidas de `test` de A del 22 de julio |
 | 3 | `PARTE 3 - VERIFICACION CON PARTIDAS REALES` | Nada: comprueba que el agente da la misma probabilidad que el modelo final en cada estado |
 | 4 | `PARTE 4 - DEMOSTRACION DE LAS HERRAMIENTAS` | Nada: salida de cada herramienta y casos límite |
+
+### Cuaderno 10 por partes
+
+| Parte | Celda | Produce |
+|---|---|---|
+| 1 | `PARTE 1 - MODELO, EJEMPLOS Y CASOS DE VALIDACION` | Baja de Kaggle lo que falte y lo verifica |
+| 2 | `PARTE 2 - BATERIA N1 CON LAS CORRECCIONES` | `docx/03Evidencia/DD-MM-AA_ValidacionN1Corregida.csv` y la comparación con la corrida del cuaderno 09 |
+| 3 | `PARTE 3 - NIVEL N2 CON CLAUDE` | `docx/03Evidencia/DD-MM-AA_ValidacionN2.csv` y `.jsonl` |
+| 4 | `PARTE 4 - METRICAS DEL AGENTE Y REVISION HUMANA` | Nada: métricas y respuestas para revisar a mano |
 
 ### Cuaderno 09 por partes
 
