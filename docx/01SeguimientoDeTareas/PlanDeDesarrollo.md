@@ -9,9 +9,9 @@ Inteligencia Artificial (IC-6200) - Instituto Tecnológico de Costa Rica
 
 | Etapa | Rama principal | Peso | Estado |
 |---|---|---|---|
-| Etapa 1 - Estado del arte y diseño | `stage1` | 30 % | Completa |
-| Etapa 2 - Modelado y evaluación | `Stage2` | 45 % | En curso |
-| Etapa 3 - Agente y artículo final | `stage3` | 25 % | No iniciada |
+| Etapa 1 - Estado del arte y diseño | `Stage1` | 30 % | Completa (`v1.0.0`, `v1.0.1`) |
+| Etapa 2 - Modelado y evaluación | `Stage2` | 45 % | Completa (`v2.0.0`) |
+| Etapa 3 - Agente y artículo final | `Stage3` | 25 % | En curso |
 
 ---
 
@@ -45,7 +45,7 @@ Inteligencia Artificial (IC-6200) - Instituto Tecnológico de Costa Rica
 
 ---
 
-## Etapa 2 - En curso
+## Etapa 2 - Completa
 
 Contexto obligatorio para trabajar: `docx/05AmbienteDeDesarrollo/DiccionarioDeDatos.md`
 (sobre todo la sección 10, "Contrato para modelar").
@@ -66,7 +66,7 @@ Contexto obligatorio para trabajar: `docx/05AmbienteDeDesarrollo/DiccionarioDeDa
 - [x] Pruebas automáticas de los invariantes de fuga (24)
 - [x] `load_scenario` para cargar X, y, partición y etapa en los cuadernos de modelado
 
-### `04MainAIModelTrainingAndDevelopment`
+### `04MainAIModelTrainingAndDevelopment` - Completa
 
 La auditoría de cumplimiento de B0–B3 frente a la sección 10 y el estado de las etapas 04–06 está en `docx/03Evidencia/29-10-26_AuditoriaBaselinesB0B3.md`. Cerrar B0–B3 no cierra la evaluación final en test ni los entregables del artículo.
 
@@ -88,7 +88,7 @@ una pregunta; **B4 es el modelo principal** (potenciación del gradiente, estado
 - [x] Evaluación de B0 a B4 en `val` en cada escenario (A, B y C), conservando sus particiones y reportando cada escenario por separado; los hiperparámetros comunes no implican mezclar los datos de `train`. AUC `val` B0/B1/B2/B3/B4: A 0.500/0.677/0.761/0.803/0.835, B 0.500/0.668/0.728/0.761/0.786, C 0.500/0.671/0.760/0.806/0.836. Cada peldaño supera al anterior en los tres escenarios.
 - [x] Modelo final exportado, con una función que convierte una observación del juego en probabilidad (para la Etapa 3). Modelo: B4 ajustado con el `train` de A (población más amplia y reciente; B y C miden generalización). `ptcg_wp.predictor.PredictorVictoria` recibe `observation["current"]` del jugador que actúa y devuelve la probabilidad de que gane, con las mismas características y el mismo orden del entrenamiento (`features.extract_features`); en preparación y estados ya decididos devuelve `None`. Exportado en Kaggle como `results/modelo_final/` (`b4_victoria.joblib` y `ficha.json` con origen, SHA-256, versión de scikit-learn y métricas de `val`), sin reentrenar. Verificado: reproduce las métricas de `val` de B4 en A (celda 17 de `05_baseline_B4`) y `tests/test_predictor.py` comprueba que la observación da las mismas características que la tabla de entrenamiento. La calibración y la evaluación en `test` son de `05FinalModelChecks`.
 
-### `05FinalModelChecks`
+### `05FinalModelChecks` - Completa
 
 Cuaderno: `06_evaluacion_final`. Protocolo: `docx/03Evidencia/02-11-26_ProtocoloEvaluacionFinal.md`. Diagnóstico: `docx/03Evidencia/02-11-26_DiagnosticoFinalModelChecks.md`. Resultados e interpretación: `docx/03Evidencia/04-11-26_ResultadosEvaluacionFinal.md`.
 
@@ -105,7 +105,7 @@ Ejecutado en Colab (CPU + RAM alta) el 2 y 3 de noviembre de 2026, con el protoc
 - [x] Veredicto sobre H1, H2 y H3. **H1 sostenida** en A, B y C: el AUC en inicio supera claramente 0.5 y, en la cohorte de partidas que llegan a las tres etapas, sube unos 0.32 hasta final. **H2 no sostenida en general:** refutada en A, donde en inicio B4 (0.684) y el modelo de solo turno e identidad de los activos (0.682) no se distinguen, y sostenida en B (+0.041) y C (+0.088); el estado completo aporta cuando cambia la población. **H3 refutada:** bajo cambio temporal el ordenamiento se degrada más que la calibración. Archivo `evaluacion_final/veredicto.json`.
 - [x] README de reproducción, cuaderno final con salidas y declaración de uso de IA. Sección de reproducción en `README.md`, `notebooks/06_evaluacion_final.ipynb` con salidas e interpretación, y `docx/03Evidencia/01UsoDeIA/Etapa2UsoDeIA.md` completa.
 
-### `06PendientesDelArticulo`
+### `06PendientesDelArticulo` - Completa
 
 Las instrucciones exigen que al cerrar la Etapa 2 el artículo tenga escritas la metodología definitiva y los experimentos y resultados.
 
@@ -124,15 +124,138 @@ Las instrucciones exigen que al cerrar la Etapa 2 el artículo tenga escritas la
 - [x] Poner la URL real del dataset en `ptcg_dataset_2026`
 - [x] Revisar las entradas del Eje C marcadas como VERIFICAR
 - [x] Corregir erratas menores de la Introducción
-- [ ] Entrega en TecDigital
+- [x] Entrega en TecDigital
 
 ---
 
-## Etapa 3 - No iniciada
+## Etapa 3 - En curso
 
-Se detalla al cerrar la Etapa 2.
+Entrega: fin de la semana 16. Objetivo: convertir el modelo en un componente que alguien pueda usar a través de un agente, validar ese agente y cerrar el artículo.
 
-- [ ] Agente que consume el modelo como evaluador de posiciones de forma verificable
-- [ ] Ética del despliegue
-- [ ] Artículo final con los resultados de la Etapa 2
-- [ ] Demostración funcional
+Contexto obligatorio para trabajar: el modelo final es B4 entrenado en A, expuesto en `ptcg_wp.predictor.PredictorVictoria` y publicado en Kaggle como `results/modelo_final/` (`b4_victoria.joblib` y `ficha.json`). Las condiciones de uso que dejó la Etapa 2 están en la sección 4 de la bitácora (`docx/03Evidencia/00BitacoraDeTrabajo/`) y en `docx/03Evidencia/04-11-26_ResultadosEvaluacionFinal.md`.
+
+### Cómo se cubre la rúbrica
+
+| Criterio | Puntos | Rama |
+|---|---|---|
+| Integración del agente (consumo verificable, registros o demostración) | 8 | `07MultiAgentIntegration` |
+| Validación del agente (escenarios, casos límite, errores del modelo) | 5 | `08AgentValidationAndSimulator` |
+| Ética, sesgos y privacidad (riesgos de despliegue, mitigaciones, límites) | 3 | `09EthicsPaperAndDocumentation` |
+| Artículo científico (estructura completa, discusión con XAI, conclusiones) | 5 | `09EthicsPaperAndDocumentation` |
+| Defensa individual | 4 | `10DefenseAndShowcase` |
+
+### Reglas de la etapa
+
+- El modelo no se reentrena ni se recalibra. El agente consume el modelo final tal como quedó en la Etapa 2, verificado por SHA-256 contra `ficha.json`.
+- El agente nunca recibe ni pide información oculta (mano rival, contenido de los premios). Solo usa la observación pública del jugador que actúa, igual que el modelo.
+- Toda cifra que el agente dé al usuario sale de una herramienta y queda en el registro de invocaciones. El agente no inventa probabilidades.
+- La lógica vive en `src/ptcg_wp/` y se prueba con `pytest`; los cuadernos y las interfaces solo la ejecutan.
+- Las claves de API se tratan igual que el token de Kaggle: nunca en cuadernos, archivos versionados ni conversaciones.
+- Una decisión de diseño o un protocolo de validación se escribe en `docx/03Evidencia/` antes de ejecutarse.
+
+### `07MultiAgentIntegration`
+
+Integración del modelo en una arquitectura multiagente con *tool calling*, consumible desde Claude (Claude Desktop o Claude Code) y desde un orquestador propio en Python.
+
+**Diseño**
+- [ ] Documento de arquitectura en `docx/03Evidencia/`: roles, herramientas, flujo de una consulta, formato de los registros y cómo se verifica cada respuesta
+- [ ] Decisión del proveedor del LLM y del costo asumido (API de Claude con clave propia, o Claude Desktop vía MCP sin costo adicional), con un modo sin LLM para pruebas y reproducción
+
+**Capa de herramientas** (`src/ptcg_wp/agent/herramientas.py`, independiente del LLM)
+- [ ] Carga del modelo final desde Kaggle con verificación de SHA-256 y versión de scikit-learn contra `ficha.json`
+- [ ] `estimar_probabilidad`: observación pública → probabilidad de victoria, etapa de la partida y advertencias (o `None` en preparación y estados resueltos)
+- [ ] `explicar_prediccion`: contribuciones SHAP del estado (las más fuertes a favor y en contra), traducidas a lenguaje natural en términos de premios, descartes, mazo y tablero
+- [ ] `evaluar_partida`: recorre una repetición completa y devuelve la curva de probabilidad por turno con sus puntos de giro
+- [ ] `comparar_estados`: probabilidad de dos o más estados alternativos de la misma posición (por ejemplo, después de dos jugadas posibles)
+- [ ] `revisar_dominio`: detecta entradas fuera del dominio de entrenamiento (cartas no vistas, valores fuera de rango, formato inválido, preparación o estado resuelto)
+- [ ] `describir_modelo`: ficha del modelo, métricas en `test` y límites declarados
+
+**Arquitectura multiagente** (`src/ptcg_wp/agent/`)
+- [ ] **Planificador:** interpreta la consulta del usuario y decide qué herramientas llamar y en qué orden
+- [ ] **Ejecutor:** invoca las herramientas con entradas validadas y devuelve resultados estructurados
+- [ ] **Verificador:** comprueba la coherencia antes de responder: probabilidad en [0, 1], suma de SHAP igual al logit, cifras de la respuesta iguales a las de las herramientas, advertencia obligatoria en turnos tempranos y fuera de dominio; si falla, devuelve el caso al planificador o responde que no puede afirmar nada
+- [ ] **Redactor:** respuesta final para un usuario no técnico, con la probabilidad, su explicación y sus límites
+- [ ] Registro de invocaciones en JSONL: fecha, agente, herramienta, entrada resumida, salida, duración, SHA-256 del modelo y commit
+
+**Exposición**
+- [ ] Servidor MCP del proyecto, para que Claude Desktop o Claude Code usen las herramientas directamente
+- [ ] Orquestador en Python con *tool calling* (planificador, ejecutor, verificador y redactor), ejecutable desde terminal y desde un cuaderno
+- [ ] Cuaderno `07_agente` con consultas de ejemplo y sus registros
+
+**Verificación**
+- [ ] Pruebas de cada herramienta con observaciones sintéticas y reales: misma probabilidad que `PredictorVictoria`
+- [ ] Pruebas del verificador: detecta probabilidades fuera de rango, cifras inventadas y ausencia de advertencias
+- [ ] Pruebas del flujo completo con un LLM simulado (sin API ni costo)
+- [ ] Evidencia del flujo completo: registros de invocaciones y capturas de Claude usando las herramientas
+
+### `08AgentValidationAndSimulator`
+
+Validación del agente frente a escenarios normales, casos límite, entradas inesperadas y errores del modelo, y un simulador gráfico que el agente puede abrir para que un humano manipule un estado y vea la probabilidad cambiar en tiempo real.
+
+**Protocolo de validación** (escrito antes de ejecutar)
+- [ ] Protocolo en `docx/03Evidencia/`: escenarios, entradas, comportamiento esperado y criterio de aprobación de cada uno
+- [ ] Escenarios normales: estados de partidas de `test` de A en inicio, medio y final
+- [ ] Casos límite: preparación, estado resuelto, banca vacía, mazo en cero, un premio por tomar, turno 1, partidas muy largas
+- [ ] Entradas inesperadas: JSON mal formado, tipos incorrectos, campos faltantes, cartas no vistas, valores imposibles, observación del jugador que espera
+- [ ] Datos fuera del dominio de entrenamiento: estados de B (días posteriores) y C (arquetipos reservados), y estados sintéticos alejados de la distribución
+- [ ] Errores del modelo: predicciones muy seguras y equivocadas del análisis de errores de la Etapa 2; qué dice el agente y si advierte la incertidumbre
+- [ ] Consultas adversas al LLM: pedir la mano rival, pedir certeza absoluta, instrucciones inyectadas dentro de los datos de la partida
+
+**Ejecución y análisis**
+- [ ] Batería automática de escenarios con resultados guardados (aprobado o fallido por caso)
+- [ ] Métricas del agente: herramienta correcta por consulta, cifras de la respuesta iguales a las herramientas, advertencias emitidas cuando corresponden, rechazos correctos fuera de dominio y latencia
+- [ ] Análisis de fragilidad: qué pasa cuando el modelo se equivoca y el agente confía en él, qué detecta el verificador y qué no
+- [ ] Resultados documentados en `docx/03Evidencia/`
+
+**Simulador gráfico** (`src/ptcg_wp/simulador/`)
+- [ ] Aplicación web local que muestra un estado de partida de forma gráfica: activos, banca, premios, mano, mazo, descartes y energías de ambos jugadores
+- [ ] Edición del estado por el usuario (premios, PV, banca, cartas en mazo y descarte, energías) con la probabilidad de victoria actualizada en tiempo real por el modelo final
+- [ ] Reproducción de partidas reales del corpus turno a turno, con la curva de probabilidad y los puntos de giro
+- [ ] Panel con las contribuciones SHAP del estado actual y las advertencias del verificador
+- [ ] Herramienta del agente `abrir_simulador` para lanzarlo con un estado o una partida dados
+- [ ] Validación humana: sesiones de cada integrante con el simulador, registrando si la dirección de los cambios de probabilidad tiene sentido de juego
+- [ ] Pruebas del simulador (la probabilidad mostrada coincide con la del predictor) y capturas o grabación como evidencia
+
+### `09EthicsPaperAndDocumentation`
+
+Ética del despliegue, artículo final y documentación completa del repositorio.
+
+**Ética, sesgos y privacidad**
+- [ ] Riesgos concretos de despliegue: uso para obtener ventaja en competencias, confianza excesiva en la probabilidad, sesgo hacia el meta de agentes automáticos, mal uso en apuestas
+- [ ] Datos sensibles involucrados: nombres de agentes (seudonimizados), licencia CC0 del corpus, información oculta que el sistema no usa
+- [ ] Mitigaciones aplicadas y verificables en el código: verificador, advertencias, revisión de dominio, sin información oculta, registros
+- [ ] Límites declarados del sistema
+
+**Artículo final**
+- [ ] Secciones nuevas: arquitectura del agente y validación del agente, con sus resultados
+- [ ] Sección de ética reescrita con foco en el despliegue
+- [ ] Discusión y conclusiones actualizadas con el agente, conservando los hallazgos de XAI
+- [ ] Introducción y trabajos relacionados pulidos, sin reescribirlos
+- [ ] Resumen, objetivos y contribuciones alineados con el trabajo completo
+- [ ] Revisión completa del documento en formato IEEE: figuras, tablas, referencias, compilación sin errores
+
+**Documentación**
+- [ ] `README.md`, `GuiaDeAmbiente.md` y `notebooks/EjecucionDeLosCuadernos.md` con cómo ejecutar el agente, el servidor MCP y el simulador
+- [ ] `HerramientasDeDesarrollo.md`, `ReglasGit.md` (ramas de la Etapa 3) y `Contenido.md` actualizados
+- [ ] Declaración de uso de IA de la Etapa 3 (`docx/03Evidencia/01UsoDeIA/Etapa3UsoDeIA.md`)
+- [ ] Bitácora de trabajo con la Etapa 3
+
+### `10DefenseAndShowcase`
+
+Preparación de la defensa individual, video demostrativo y entrega final.
+
+**Defensa**
+- [ ] Guía de defensa en `docx/`: respuestas a las tres preguntas garantizadas (por qué este dataset y qué limitaciones se asumieron; cómo se previno la fuga; qué significa el resultado frente al baseline de literatura)
+- [ ] Preguntas probables por cada parte del proyecto (datos, baselines, B4, evaluación, calibración, SHAP, agente, validación, ética), para que cada integrante pueda responder sobre todo
+- [ ] Ensayo de la defensa con los tres integrantes
+
+**Video**
+- [ ] Guion y orden de escenas: problema, datos, prevención de fuga, resultados principales, SHAP, agente en ejecución, simulador y límites
+- [ ] Grabación de la demostración en ejecución (consulta al agente, registros, simulador)
+- [ ] Video editado y enlazado desde el `README.md`
+
+**Entrega**
+- [ ] Prueba de clon limpio siguiendo solo el `README.md`
+- [ ] Historial con commits de los tres integrantes en la Etapa 3
+- [ ] PR `Stage3` → `master` con 1 aprobación, etiqueta `v3.0.0` y release
+- [ ] Entrega en TecDigital
