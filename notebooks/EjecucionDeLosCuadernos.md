@@ -164,7 +164,8 @@ Si dos personas publican al mismo tiempo, la versión que termina después puede
 | Kaggle 403 o "no está en Kaggle" en todas las tablas | Tu usuario no tiene acceso al dataset | Adriel lo agrega en el dataset > Settings > Sharing |
 | La publicación falla | Error de red o de Kaggle | Los archivos quedan en `/content/resultados`; volver a ejecutar la celda los publica sin recalcular |
 | "El índice dice que X existe, pero no se pudo bajar" | Versión muy reciente | Esperar unos minutos y volver a ejecutar |
-| `no se pudo bajar la partida ...` en `09` | Fallo de red al bajar una repetición del corpus público | Volver a ejecutar la celda: las partidas ya bajadas en esa sesión no se repiten |
+| `Kaggle pidio esperar (429)` en `09` | Kaggle limita cuántas descargas se hacen seguidas | Nada: la celda espera y reintenta sola |
+| `no se pudo bajar la partida ...` en `09` | Fallo de red, o Kaggle siguió respondiendo 429 tras varios reintentos | Esperar unos minutos y volver a ejecutar la celda: las partidas ya bajadas en esa sesión no se repiten |
 | `ModuleNotFoundError: ptcg_wp` o `ptcg_agente` | `src/` no está en el path | Ejecutar la primera celda |
 | El repo en Colab no tiene mis cambios | Falta el push | `git push` desde la PC y volver a ejecutar la primera celda |
 | Aviso de versión de scikit-learn distinta | El servidor traía otra versión | Reiniciar el runtime y volver a ejecutar la primera celda |

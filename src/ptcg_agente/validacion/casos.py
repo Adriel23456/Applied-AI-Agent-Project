@@ -17,7 +17,7 @@ Reglas (seccion 2 del protocolo):
 import gzip
 import json
 import tempfile
-from concurrent.futures import ThreadPoolExecutor
+import time
 from pathlib import Path
 
 import numpy as np
@@ -104,16 +104,29 @@ def partida_mas_larga(data_dir, tabla):
     return str(dias.loc[g]), g
 
 
-def bajar_partida(dia, game_id, carpeta):
-    """JSON de una partida del dataset publico de ese dia."""
+def _limite_de_kaggle(texto):
+    return "429" in texto or "Too Many Requests" in texto
+
+
+def bajar_partida(dia, game_id, carpeta, intentos=6, espera_s=20):
+    """JSON de una partida del dataset publico de ese dia. Si Kaggle responde 429 (demasiadas
+    peticiones), espera y reintenta: 20 s, 40 s, 80 s... hasta 'intentos' veces."""
     destino = Path(carpeta) / f"{int(game_id)}.json"
     if destino.exists():
         return destino
     texto = ""
-    for nombre in (f"{int(game_id)}.json", f"episodes/{int(game_id)}.json"):
-        ok, texto = store._bajar_archivo(SLUG.format(day=dia), nombre, destino)
-        if ok:
-            return destino
+    for intento in range(intentos):
+        for nombre in (f"{int(game_id)}.json", f"episodes/{int(game_id)}.json"):
+            ok, texto = store._bajar_archivo(SLUG.format(day=dia), nombre, destino)
+            if ok:
+                return destino
+            if _limite_de_kaggle(texto):
+                break
+        if not _limite_de_kaggle(texto):
+            break
+        espera = espera_s * 2 ** intento
+        print(f"   Kaggle pidio esperar (429) en la partida {game_id}: reintento en {espera} s")
+        time.sleep(espera)
     raise RuntimeError(f"no se pudo bajar la partida {game_id} del {dia}:\n{texto}")
 
 
@@ -132,17 +145,23 @@ def preparacion(repeticion):
     raise RuntimeError("la repeticion no tiene una observacion de preparacion")
 
 
-def extraer(casos, larga, raiz, hilos=8):
+def extraer(casos, larga, raiz, pausa_s=1.0):
     """Baja cada partida una vez, guarda la observacion de cada caso y las repeticiones completas.
-    larga = (dia, game_id) de la partida mas larga. Escribe los tres archivos bajo raiz."""
+    larga = (dia, game_id) de la partida mas larga. Escribe los tres archivos bajo raiz.
+    Las descargas van una por una, con una pausa corta, para no pasar el limite de Kaggle."""
     raiz = Path(raiz)
     pedidos = casos.drop_duplicates("game_id")[["day", "game_id"]].values.tolist() + [list(larga)]
     # carpeta fija: si una descarga falla, al reintentar no se bajan otra vez las que ya estan
     carpeta = Path(store.TRABAJO_DIR) / "ptcg-validacion-partidas"
     carpeta.mkdir(parents=True, exist_ok=True)
-    with ThreadPoolExecutor(hilos) as ex:
-        rutas = dict(zip([int(g) for _, g in pedidos],
-                         ex.map(lambda dg: bajar_partida(dg[0], dg[1], carpeta), pedidos)))
+    rutas = {}
+    for k, (dia, g) in enumerate(pedidos, 1):
+        ya_estaba = (carpeta / f"{int(g)}.json").exists()
+        rutas[int(g)] = bajar_partida(dia, g, carpeta)
+        if not ya_estaba:
+            time.sleep(pausa_s)
+        if k % 20 == 0 or k == len(pedidos):
+            print(f"   partidas listas: {k}/{len(pedidos)}")
     observaciones, completas = {}, {}
     for g, ruta in rutas.items():
         rep = json.loads(Path(ruta).read_text(encoding="utf-8"))

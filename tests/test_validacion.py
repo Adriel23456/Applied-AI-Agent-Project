@@ -48,7 +48,7 @@ def datos(tabla, partidas, tmp_path_factory):
 
     casos.bajar_partida = falsa
     try:
-        casos.extraer(elegidos, ("d", int(elegidos["game_id"].iloc[0])), raiz_v)
+        casos.extraer(elegidos, ("d", int(elegidos["game_id"].iloc[0])), raiz_v, pausa_s=0)
     finally:
         casos.bajar_partida = original
     return casos.Datos(raiz_v)
@@ -89,3 +89,16 @@ def test_bateria_n1_completa_sin_excepciones(datos, modelo):  # noqa: F811
     m = resumen.metricas(resultados, latencias)
     assert {"Advertencias cuando corresponden", "Rechazos correctos", "Robustez"} <= set(m["metrica"])
     assert set(resumen.por_grupo(resultados).index) >= {"normales", "limite", "entradas", "errores"}
+
+def test_bajar_partida_reintenta_si_kaggle_pide_esperar(tmp_path, monkeypatch):
+    respuestas = iter([(False, "429 Client Error: Too Many Requests"), (False, "404"), (True, "")])
+
+    def falsa(dataset, nombre, destino):
+        ok, texto = next(respuestas)
+        if ok:
+            Path(destino).write_text("{}", encoding="utf-8")
+        return ok, texto
+
+    monkeypatch.setattr(casos.store, "_bajar_archivo", falsa)
+    monkeypatch.setattr(casos.time, "sleep", lambda s: None)
+    assert casos.bajar_partida("d", 7, tmp_path).exists()
