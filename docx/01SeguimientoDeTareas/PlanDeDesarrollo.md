@@ -155,38 +155,43 @@ Contexto obligatorio para trabajar: el modelo final es B4 entrenado en A, expues
 
 ### `07MultiAgentIntegration`
 
-Integración del modelo en una arquitectura multiagente con *tool calling*, consumible desde Claude (Claude Desktop o Claude Code) y desde un orquestador propio en Python.
+Integración del modelo en una arquitectura multiagente con *tool calling*, consumible desde Claude Desktop y Claude Code y desde un orquestador propio en Python. Código en `src/ptcg_agente/` (separado del código de entrenamiento de `src/ptcg_wp/`). Arquitectura: `docx/03Evidencia/07-11-26_ArquitecturaDelAgente.md`. Instalación y uso: `docx/05AmbienteDeDesarrollo/GuiaDelAgente.md`.
 
 **Diseño**
-- [ ] Documento de arquitectura en `docx/03Evidencia/`: roles, herramientas, flujo de una consulta, formato de los registros y cómo se verifica cada respuesta
-- [ ] Decisión del proveedor del LLM y del costo asumido (API de Claude con clave propia, o Claude Desktop vía MCP sin costo adicional), con un modo sin LLM para pruebas y reproducción
+- [x] Documento de arquitectura en `docx/03Evidencia/`: roles, herramientas, flujo de una consulta, formato de los registros y cómo se verifica cada respuesta
+- [x] Decisión del LLM: Claude con la membresía del equipo, sin clave de API: Claude Desktop y Claude Code a través de un servidor MCP, y Claude Code sin interfaz (`claude -p`) en el orquestador; el LLM de prueba solo existe en `tests/`
 
-**Capa de herramientas** (`src/ptcg_wp/agent/herramientas.py`, independiente del LLM)
-- [ ] Carga del modelo final desde Kaggle con verificación de SHA-256 y versión de scikit-learn contra `ficha.json`
-- [ ] `estimar_probabilidad`: observación pública → probabilidad de victoria, etapa de la partida y advertencias (o `None` en preparación y estados resueltos)
-- [ ] `explicar_prediccion`: contribuciones SHAP del estado (las más fuertes a favor y en contra), traducidas a lenguaje natural en términos de premios, descartes, mazo y tablero
-- [ ] `evaluar_partida`: recorre una repetición completa y devuelve la curva de probabilidad por turno con sus puntos de giro
-- [ ] `comparar_estados`: probabilidad de dos o más estados alternativos de la misma posición (por ejemplo, después de dos jugadas posibles)
-- [ ] `revisar_dominio`: detecta entradas fuera del dominio de entrenamiento (cartas no vistas, valores fuera de rango, formato inválido, preparación o estado resuelto)
-- [ ] `describir_modelo`: ficha del modelo, métricas en `test` y límites declarados
+**Capa de herramientas** (`src/ptcg_agente/herramientas/`, un archivo por herramienta, independiente del LLM)
+- [x] Carga del modelo final desde Kaggle con verificación de SHA-256 (índice del dataset) y de la versión de scikit-learn contra `ficha.json` (`artefactos.py`, `modelo.py`)
+- [x] `estimar_probabilidad`: observación pública → probabilidad de victoria, etapa de la partida y advertencias (o `None` en preparación y estados resueltos)
+- [x] `explicar_prediccion`: contribuciones SHAP del estado (las más fuertes a favor y en contra), traducidas a lenguaje natural en términos de premios, descartes, mazo y tablero
+- [x] `evaluar_partida`: recorre una repetición completa y devuelve la curva de probabilidad por turno con sus puntos de giro
+- [x] `comparar_estados`: probabilidad de dos o más estados alternativos de la misma posición (por ejemplo, después de dos jugadas posibles)
+- [x] `revisar_dominio`: detecta entradas fuera del dominio de entrenamiento (cartas no vistas, valores fuera de rango, formato inválido, preparación o estado resuelto)
+- [x] `describir_modelo`: ficha del modelo, métricas en `test` y límites declarados
+- [x] Perfil del dominio (`agente/dominio.json`) y repeticiones de ejemplo publicados en Kaggle (partes 1 y 2 del cuaderno `07_agente`): 4 357 908 filas `train` de A, 33 066 partidas, cortes de etapa [5, 9] y 362 cartas activas; 4 partidas de `test` de A del 22 de julio
 
-**Arquitectura multiagente** (`src/ptcg_wp/agent/`)
-- [ ] **Planificador:** interpreta la consulta del usuario y decide qué herramientas llamar y en qué orden
-- [ ] **Ejecutor:** invoca las herramientas con entradas validadas y devuelve resultados estructurados
-- [ ] **Verificador:** comprueba la coherencia antes de responder: probabilidad en [0, 1], suma de SHAP igual al logit, cifras de la respuesta iguales a las de las herramientas, advertencia obligatoria en turnos tempranos y fuera de dominio; si falla, devuelve el caso al planificador o responde que no puede afirmar nada
-- [ ] **Redactor:** respuesta final para un usuario no técnico, con la probabilidad, su explicación y sus límites
-- [ ] Registro de invocaciones en JSONL: fecha, agente, herramienta, entrada resumida, salida, duración, SHA-256 del modelo y commit
+**Arquitectura multiagente** (`src/ptcg_agente/agentes/`)
+- [x] **Planificador:** interpreta la consulta del usuario y decide qué herramientas llamar y en qué orden; llamada propia a Claude sin herramientas, plan JSON con esquema y validado por Python (`agentes/planificador.py`, subagente `planificador-ptcg`)
+- [x] **Ejecutor:** invoca las herramientas con entradas validadas y devuelve resultados estructurados (`herramientas.llamar`)
+- [x] **Verificador:** comprueba la coherencia antes de responder: probabilidad en [0, 1], suma de SHAP igual al logit, cifras de la respuesta iguales a las de las herramientas, advertencia obligatoria en turnos tempranos y fuera de dominio (`agentes/verificador.py` y herramienta `verificar_respuesta`)
+- [x] **Redactor:** respuesta final para un usuario no técnico, con la probabilidad, su explicación y sus límites; llamada propia a Claude que solo ve resultados aprobados, con reintento ante problemas del verificador y plantilla de respaldo (`agentes/redactor.py`, subagente `redactor-ptcg`)
+- [x] Registro de invocaciones en JSONL: fecha, agente, herramienta, entrada resumida, salida, duración, SHA-256 del modelo y commit (`registro.py`)
 
 **Exposición**
-- [ ] Servidor MCP del proyecto, para que Claude Desktop o Claude Code usen las herramientas directamente
-- [ ] Orquestador en Python con *tool calling* (planificador, ejecutor, verificador y redactor), ejecutable desde terminal y desde un cuaderno
-- [ ] Cuaderno `07_agente` con consultas de ejemplo y sus registros
+- [x] Servidor MCP del proyecto (`servidor_mcp.py`), registrado para Claude Code en `.mcp.json` y documentado para Claude Desktop
+- [x] Orquestador en Python con *tool calling* (planificador, ejecutor, verificador y redactor), ejecutable desde terminal (`python -m ptcg_agente.orquestador`) y desde un cuaderno (`08_agente_orquestador`)
+- [x] Subagentes de Claude Code (`.claude/agents/`) y comando `/consulta-ptcg` que los encadena
+- [x] Pruebas del orquestador con un LLM de prueba: validación del plan, reintento del redactor, plan por defecto, plantilla y registro de los cuatro agentes
+- [x] Cuaderno `07_agente` ejecutado en Colab con sus salidas (dominio, ejemplos y verificación con partidas reales)
 
 **Verificación**
-- [ ] Pruebas de cada herramienta con observaciones sintéticas y reales: misma probabilidad que `PredictorVictoria`
-- [ ] Pruebas del verificador: detecta probabilidades fuera de rango, cifras inventadas y ausencia de advertencias
-- [ ] Pruebas del flujo completo con un LLM simulado (sin API ni costo)
-- [ ] Evidencia del flujo completo: registros de invocaciones y capturas de Claude usando las herramientas
+- [x] Pruebas de cada herramienta con observaciones sintéticas: misma probabilidad que `PredictorVictoria` (`tests/test_agente.py`)
+- [x] Misma probabilidad que `PredictorVictoria` en cada estado de partidas reales (parte 3 del cuaderno `07_agente`): 642 estados de 4 partidas, diferencia máxima 0.0 y 642/642 resultados verificados
+- [x] Pruebas del verificador: detecta probabilidades fuera de rango, SHAP que no suma, cifras inventadas, advertencias omitidas y promesas de certeza
+- [x] Prueba del servidor MCP de punta a punta con un cliente MCP real por stdio
+- [x] Evidencia del flujo completo con Claude Code: `docx/03Evidencia/08-11-26_RegistroSesionClaudeCode.jsonl` y `.png` (consulta sobre la partida 87406956; el verificador rechazó un primer borrador y aprobó el corregido)
+- [x] Evidencia del orquestador en Python (registro de una corrida con planificador, ejecutor, verificador y redactor)
 
 ### `08AgentValidationAndSimulator`
 
