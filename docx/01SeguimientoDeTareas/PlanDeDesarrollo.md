@@ -210,7 +210,7 @@ Validación del agente frente a escenarios normales, casos límite, entradas ine
 - [x] Batería automática de escenarios con resultados guardados (aprobado o fallido por caso): nivel N1 en `src/ptcg_agente/validacion/` y cuaderno `09_validacion_agente` (Kaggle `agente/validacion/`): 35 casos, 32 aprobados, 2 fallidos (L-09 y L-10) y 1 de registro (M-02); tras corregir, 34 aprobados y 1 de registro (cuaderno `10_validacion_llm`, parte 2). Nivel N2 con Claude: 31 consultas, 31 aprobadas
 - [x] Métricas del agente: herramienta correcta 18/18, cifras trazables 31/31, advertencias 13/13 casos, rechazos 7/7 casos, 0 excepciones; latencia p95 de una consulta 31 s y de `evaluar_partida` 0.5 s tras la corrección (34 s antes)
 - [x] Análisis de fragilidad: 50 de 60 errores muy seguros de medio y final llegan sin advertencia y el agente los presenta como fiables; el verificador detecta cifras inventadas, advertencias omitidas, porcentajes sin predicción y promesas de certeza, pero no interpretaciones equivocadas de cifras reales
-- [x] Resultados documentados en `docx/03Evidencia/08-11-26_ResultadosValidacionAgente.md` (falta la revisión humana de Q-01, Q-02 y Q-07, sección 4.4)
+- [x] Resultados documentados en `docx/03Evidencia/08-11-26_ResultadosValidacionAgente.md`, con la revisión humana de Q-01, Q-02 y Q-07
 
 **Simulador gráfico** (`src/ptcg_agente/simulador/`)
 - [x] Aplicación web local que muestra un estado de partida de forma gráfica: activos, banca, premios, mano, mazo, descartes y energías de ambos jugadores (`python -m ptcg_agente.simulador`; servidor de la biblioteca estándar, sin dependencias nuevas). La mano se muestra solo como cantidad: el modelo no usa su contenido
@@ -218,7 +218,7 @@ Validación del agente frente a escenarios normales, casos límite, entradas ine
 - [x] Reproducción de partidas reales del corpus paso a paso, con la curva de probabilidad y los puntos de giro
 - [x] Panel con las contribuciones SHAP del estado actual y las advertencias del verificador
 - [x] Herramienta del agente `abrir_simulador` para lanzarlo con un estado o una partida dados (servidor MCP)
-- [ ] Validación humana: sesiones de cada integrante con el simulador, registrando si la dirección de los cambios de probabilidad tiene sentido de juego (procedimiento y tablas en `docx/03Evidencia/08-11-26_ValidacionHumanaSimulador.md`)
+- [x] Validación humana: sesiones de cada integrante con el simulador (`docx/03Evidencia/08-11-26_ValidacionHumanaSimulador.md`): 15 pruebas distintas, 10 con la dirección esperada (todas las de premios, mazo, PV y banca); las condiciones especiales casi no mueven la probabilidad y las energías en el activo la bajan (asociación no causal)
 - [x] Pruebas del simulador (la probabilidad mostrada coincide con la del predictor, ediciones, navegación, estado nuevo, catálogo de cartas y `abrir_simulador`: `tests/test_simulador.py`, 8 pruebas) y capturas como evidencia con el modelo final: `docx/03Evidencia/08-11-26_SimuladorEstadoPersonalizado.png` (estado armado desde cero) y `08-11-26_SimuladorPartida87363568.png` (paso 34 de la partida 87363568)
 
 ### `09EthicsPaperAndDocumentation`
