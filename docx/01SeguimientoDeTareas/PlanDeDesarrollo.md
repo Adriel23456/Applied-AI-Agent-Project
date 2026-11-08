@@ -159,7 +159,7 @@ Integración del modelo en una arquitectura multiagente con *tool calling*, cons
 
 **Diseño**
 - [x] Documento de arquitectura en `docx/03Evidencia/`: roles, herramientas, flujo de una consulta, formato de los registros y cómo se verifica cada respuesta
-- [x] Decisión del LLM: Claude Desktop y Claude Code con la membresía del equipo, a través de un servidor MCP; sin clave de API y sin LLM simulado (herramientas, verificador y servidor se prueban sin LLM)
+- [x] Decisión del LLM: Claude con la membresía del equipo, sin clave de API: Claude Desktop y Claude Code a través de un servidor MCP, y Claude Code sin interfaz (`claude -p`) en el orquestador; el LLM de prueba solo existe en `tests/`
 
 **Capa de herramientas** (`src/ptcg_agente/herramientas/`, un archivo por herramienta, independiente del LLM)
 - [x] Carga del modelo final desde Kaggle con verificación de SHA-256 (índice del dataset) y de la versión de scikit-learn contra `ficha.json` (`artefactos.py`, `modelo.py`)
@@ -172,15 +172,17 @@ Integración del modelo en una arquitectura multiagente con *tool calling*, cons
 - [x] Perfil del dominio (`agente/dominio.json`) y repeticiones de ejemplo publicados en Kaggle (partes 1 y 2 del cuaderno `07_agente`): 4 357 908 filas `train` de A, 33 066 partidas, cortes de etapa [5, 9] y 362 cartas activas; 4 partidas de `test` de A del 22 de julio
 
 **Arquitectura multiagente** (`src/ptcg_agente/agentes/`)
-- [ ] **Planificador:** interpreta la consulta del usuario y decide qué herramientas llamar y en qué orden (en Claude: instrucciones del servidor MCP; falta el orquestador)
+- [x] **Planificador:** interpreta la consulta del usuario y decide qué herramientas llamar y en qué orden; llamada propia a Claude sin herramientas, plan JSON con esquema y validado por Python (`agentes/planificador.py`, subagente `planificador-ptcg`)
 - [x] **Ejecutor:** invoca las herramientas con entradas validadas y devuelve resultados estructurados (`herramientas.llamar`)
 - [x] **Verificador:** comprueba la coherencia antes de responder: probabilidad en [0, 1], suma de SHAP igual al logit, cifras de la respuesta iguales a las de las herramientas, advertencia obligatoria en turnos tempranos y fuera de dominio (`agentes/verificador.py` y herramienta `verificar_respuesta`)
-- [ ] **Redactor:** respuesta final para un usuario no técnico, con la probabilidad, su explicación y sus límites (en Claude: instrucciones del servidor MCP; falta el orquestador)
+- [x] **Redactor:** respuesta final para un usuario no técnico, con la probabilidad, su explicación y sus límites; llamada propia a Claude que solo ve resultados aprobados, con reintento ante problemas del verificador y plantilla de respaldo (`agentes/redactor.py`, subagente `redactor-ptcg`)
 - [x] Registro de invocaciones en JSONL: fecha, agente, herramienta, entrada resumida, salida, duración, SHA-256 del modelo y commit (`registro.py`)
 
 **Exposición**
 - [x] Servidor MCP del proyecto (`servidor_mcp.py`), registrado para Claude Code en `.mcp.json` y documentado para Claude Desktop
-- [ ] Orquestador en Python con *tool calling* (planificador, ejecutor, verificador y redactor), ejecutable desde terminal y desde un cuaderno
+- [x] Orquestador en Python con *tool calling* (planificador, ejecutor, verificador y redactor), ejecutable desde terminal (`python -m ptcg_agente.orquestador`) y desde un cuaderno (`08_agente_orquestador`)
+- [x] Subagentes de Claude Code (`.claude/agents/`) y comando `/consulta-ptcg` que los encadena
+- [x] Pruebas del orquestador con un LLM de prueba: validación del plan, reintento del redactor, plan por defecto, plantilla y registro de los cuatro agentes
 - [x] Cuaderno `07_agente` ejecutado en Colab con sus salidas (dominio, ejemplos y verificación con partidas reales)
 
 **Verificación**

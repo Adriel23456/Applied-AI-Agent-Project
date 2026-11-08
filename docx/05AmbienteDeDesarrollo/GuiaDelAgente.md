@@ -132,13 +132,70 @@ El servidor también ofrece el prompt `consulta_ptcg`, que pide a Claude seguir 
 
 ---
 
-## 6. Registros (evidencia)
+## 6. Subagentes en Claude Code
 
-Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl`. Para guardar una sesión como evidencia, copia el archivo a `docx/03Evidencia/` con un nombre descriptivo y agrega una captura de la conversación.
+El repositorio trae cuatro subagentes en `.claude/agents/` y el comando `/consulta-ptcg` en `.claude/commands/`. Claude Code los carga solo al abrirse en la raíz del repositorio.
+
+| Subagente | Herramientas que puede usar |
+|---|---|
+| `planificador-ptcg` | solo `describir_modelo` |
+| `ejecutor-ptcg` | las seis herramientas del modelo |
+| `redactor-ptcg` | ninguna del modelo |
+| `verificador-ptcg` | solo `verificar_respuesta` |
+
+Uso, dentro de `claude` (con `.venv` activo, como en la sección 3.2):
+
+```text
+/consulta-ptcg artefactos_agente/agente/ejemplos/partida_XXXX.json 120 ¿Quién va ganando y por qué?
+```
+
+Para ver los subagentes cargados escribe `/agents`. Claude Code pide permiso la primera vez que cada subagente usa una herramienta: aprueba las de `ptcg-victoria`.
 
 ---
 
-## 7. Si algo falla
+## 7. Orquestador multiagente (terminal o cuaderno)
+
+El orquestador hace que el planificador y el redactor sean **dos llamadas separadas a Claude**, cada una sin herramientas, y que el ejecutor y el verificador sean código. Usa Claude Code sin interfaz (`claude -p`), así que corre con la membresía: no hace falta clave de API.
+
+**Requisito previo:** haber abierto `claude` al menos una vez e iniciado sesión (sección 3.1).
+
+**Desde la terminal** (raíz del repositorio, `.venv` activo):
+
+```powershell
+# Windows (PowerShell)
+$env:PYTHONPATH = "src"
+python -m ptcg_agente.orquestador "¿Quién va ganando y por qué?" --archivo artefactos_agente\agente\ejemplos\partida_XXXX.json --paso 120
+```
+
+```bash
+# Linux o macOS
+PYTHONPATH=src python -m ptcg_agente.orquestador "¿Quién va ganando y por qué?" --archivo artefactos_agente/agente/ejemplos/partida_XXXX.json --paso 120
+```
+
+Salida: el plan que decidió el planificador, la respuesta, cuántas rondas necesitó el redactor y el resultado del verificador. Opciones:
+- Sin `--paso`, con una repetición completa: analiza la partida entera.
+- `--json`: imprime el recorrido completo (plan, resultados, rondas, verificación).
+- `--modelo-claude haiku`: usa un modelo más rápido para planificador y redactor.
+
+**Desde un cuaderno** (`notebooks/08_agente_orquestador.ipynb`, en VS Code):
+
+1. Instala en VS Code las extensiones **Python** y **Jupyter** (de Microsoft).
+2. En la terminal, con `.venv` activo, instala el kernel una sola vez: `pip install ipykernel`.
+3. Abre `notebooks/08_agente_orquestador.ipynb`. Arriba a la derecha haz clic en **Select Kernel**.
+4. Elige **Python Environments...** y luego `.venv`. Si `.venv` no aparece, elige **Enter interpreter path... → Find...**, entra a la carpeta `.venv\Scripts\` del repositorio y selecciona `python.exe` (en Linux o macOS: `.venv/bin/python`).
+5. Arriba a la derecha debe decir `.venv (Python 3.12...)`. Haz clic en **Run All**.
+
+El cuaderno corre las pruebas, hace tres consultas (estado final, partida completa y confiabilidad al inicio) y guarda la evidencia en `docx/03Evidencia/DD-MM-AA_RegistroOrquestador.jsonl`.
+
+---
+
+## 8. Registros (evidencia)
+
+Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl` (fecha UTC). El campo `agente` dice quién actuó: `planificador`, `ejecutor`, `redactor` o `verificador`. Para guardar una sesión de Claude Code o Claude Desktop como evidencia, copia el archivo a `docx/03Evidencia/` con un nombre descriptivo y agrega una captura de la conversación. El cuaderno local copia la sesión del orquestador por su cuenta.
+
+---
+
+## 9. Si algo falla
 
 | Síntoma | Causa | Solución |
 |---|---|---|
@@ -151,4 +208,7 @@ Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl`. Para guardar una 
 | El servidor no aparece en Claude Code | `.venv` no estaba activo o Claude Code no se abrió en la raíz | Activar `.venv` y abrir `claude` desde la raíz |
 | El servidor no aparece en Claude Desktop | Rutas relativas o barras sin escapar en el JSON | Usar rutas absolutas con `\\` en Windows y reiniciar |
 | `Failed to build 'scikit-learn'` al instalar | La versión de Python es demasiado nueva y no hay paquete precompilado | Borrar `.venv` y crearlo con Python 3.12 (sección 2) |
-| Pruebas | — | `python -m pytest -q tests/test_agente.py` |
+| `no se encontro 'claude'` en el orquestador | Claude Code no está instalado o VS Code se abrió antes de instalarlo | Instalarlo (sección 3.1) y reiniciar VS Code |
+| `Claude respondio con error` en el orquestador | No se inició sesión en Claude Code o se agotó el límite de la membresía | Abrir `claude` una vez e iniciar sesión; si es el límite, esperar a que se renueve |
+| `/consulta-ptcg` no existe | Claude Code no se abrió en la raíz del repositorio | Cerrar y abrir `claude` desde la raíz |
+| Pruebas | — | Primera celda de pruebas de `notebooks/08_agente_orquestador.ipynb` (o `python -m pytest -q tests/test_agente.py`) |

@@ -91,6 +91,8 @@ def _numeros(valor, salida=None):
         salida.add(float(valor))
         if -1.0 <= valor <= 1.0:
             salida.add(round(100 * float(valor), 6))
+        if 0.0 <= valor <= 1.0:
+            salida.add(round(100 * (1 - float(valor)), 6))  # la del rival: 100 % menos la del jugador
     elif isinstance(valor, str):
         for m in NUMERO_EN_SALIDA.finditer(valor):
             salida.add(float(m.group(0).replace(",", ".")))

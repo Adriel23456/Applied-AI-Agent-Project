@@ -308,3 +308,112 @@ def test_verificador_acepta_ids_de_archivo_signos_y_promesas_negadas(modelo, tmp
     assert r["aprobado"], r["problemas"]
     assert not verificar_texto("Esto garantiza la victoria.", [s])["aprobado"]
     assert not verificar_texto("Cambia −99.9 puntos.", [s])["aprobado"]
+
+# ---------- Orquestador multiagente (con un LLM falso: solo para pruebas) ----------
+
+class LLMFalso:
+    """Imita la firma de llamar_claude: (prompt, sistema, esquema) -> (texto, estructurado, meta)."""
+
+    def __init__(self, planes, textos):
+        self.planes, self.textos, self.llamadas = list(planes), list(textos), []
+
+    def __call__(self, prompt, sistema, esquema=None):
+        self.llamadas.append({"prompt": prompt, "sistema": sistema, "esquema": esquema})
+        if esquema is not None:
+            return "", self.planes.pop(0), {"modelo": "falso"}
+        texto = self.textos.pop(0)
+        return (texto(prompt) if callable(texto) else texto), None, {"modelo": "falso"}
+
+
+def _repeticion(tmp_path):
+    g = _partidas(1)[0]
+    rep = tmp_path / "partida.json"
+    rep.write_text(json.dumps(g), encoding="utf-8")
+    paso = next(i for i, p in enumerate(g["steps"])
+                if next(e for e in p if e["status"] == "ACTIVE")["observation"]["current"]["turn"] >= 11)
+    return rep, paso
+
+
+def _texto_con_cifra(prompt):
+    import re
+    p = re.search(r'"probabilidad_texto": "([^"]+)"', prompt).group(1)
+    return f"El jugador que actua tiene {p} de ganar. Es una estimacion; revisa las advertencias si las hay."
+
+
+def test_planificador_valida_y_fuerza_el_archivo_del_usuario():
+    from ptcg_agente.agentes import planificador
+    plan = {"objetivo": "x", "pasos": [
+        {"herramienta": "estimar_probabilidad", "argumentos": {"archivo": "otro.json", "paso": 3}, "motivo": ""},
+        {"herramienta": "borrar_disco", "argumentos": {}, "motivo": ""},
+        {"herramienta": "describir_modelo", "argumentos": {"ruta": "x"}, "motivo": ""}]}
+    limpio, problemas = planificador.validar(plan, archivo="mio.json")
+    assert [p["herramienta"] for p in limpio["pasos"]] == ["estimar_probabilidad"]
+    assert limpio["pasos"][0]["argumentos"]["archivo"] == "mio.json"
+    assert len(problemas) == 2
+    assert planificador.validar({"pasos": []})[0] is None
+
+
+def test_orquestador_reintenta_redactor_y_registra_los_cuatro_agentes(modelo, tmp_path):
+    from ptcg_agente import orquestador
+    rep, paso = _repeticion(tmp_path)
+    plan = {"objetivo": "probabilidad y por que", "pasos": [
+        {"herramienta": "estimar_probabilidad", "argumentos": {"archivo": str(rep), "paso": paso}, "motivo": "p"},
+        {"herramienta": "explicar_prediccion", "argumentos": {"archivo": str(rep), "paso": paso}, "motivo": "e"}]}
+    llm = LLMFalso([plan], ["Gana con 97.3 % seguro, sin duda.", _texto_con_cifra])
+    registro = Registro("orquestador", carpeta=tmp_path / "reg")
+    r = orquestador.consultar("¿Quien va ganando?", str(rep), paso, modelo=modelo, llm=llm, registro=registro)
+    assert r["fuente_plan"] == "planificador" and r["fuente_respuesta"] == "redactor"
+    assert len(r["rondas_redactor"]) == 2 and not r["rondas_redactor"][0]["verificacion"]["aprobado"]
+    assert r["verificacion"]["aprobado"]
+    assert "NO paso la verificacion" in llm.llamadas[2]["prompt"]   # el redactor recibio los problemas
+    assert '"curva"' not in llm.llamadas[1]["prompt"]                 # y solo resultados resumidos
+    lineas = [json.loads(x) for x in registro.archivo.read_text(encoding="utf-8").splitlines()]
+    assert {l["agente"] for l in lineas} == {"planificador", "ejecutor", "redactor", "verificador"}
+
+
+def test_orquestador_usa_plan_por_defecto_y_plantilla_si_el_llm_falla(modelo, tmp_path):
+    from ptcg_agente import orquestador
+    rep, _ = _repeticion(tmp_path)
+    llm = LLMFalso([{"pasos": [{"herramienta": "nada"}]}] * 2, ["Gana con 12.3 %."] * 2)
+    r = orquestador.consultar("¿Como fue la partida?", str(rep), modelo=modelo, llm=llm,
+                              registro=Registro("orquestador", carpeta=tmp_path / "reg"))
+    assert r["fuente_plan"] == "por_defecto" and r["plan"]["pasos"][0]["herramienta"] == "evaluar_partida"
+    assert r["fuente_respuesta"] == "plantilla" and r["verificacion"]["aprobado"], r["verificacion"]
+
+
+def test_orquestador_sin_claude_instalado_no_se_cae(modelo, tmp_path):
+    from ptcg_agente import orquestador
+    from ptcg_agente.agentes.llm import ErrorLLM
+    rep, paso = _repeticion(tmp_path)
+
+    def sin_claude(prompt, sistema, esquema=None):
+        raise ErrorLLM("no se encontro 'claude'")
+
+    r = orquestador.consultar("¿Quien gana?", str(rep), paso, modelo=modelo, llm=sin_claude,
+                              registro=Registro("orquestador", carpeta=tmp_path / "reg"))
+    assert r["fuente_plan"] == "por_defecto" and r["fuente_respuesta"] == "plantilla"
+    assert r["verificacion"]["aprobado"], r["verificacion"]
+
+
+def test_planificador_completa_el_archivo_si_falta():
+    from ptcg_agente.agentes import planificador
+    plan = {"objetivo": "", "pasos": [{"herramienta": "evaluar_partida", "argumentos": {}, "motivo": ""},
+                                      {"herramienta": "describir_modelo", "argumentos": {}, "motivo": ""}]}
+    limpio, problemas = planificador.validar(plan, archivo="mio.json")
+    assert not problemas and limpio["pasos"][0]["argumentos"] == {"archivo": "mio.json"}
+    assert limpio["pasos"][1]["argumentos"] == {}
+
+
+def test_planificador_no_puede_pasar_observaciones_propias():
+    from ptcg_agente.agentes import planificador
+    plan = {"objetivo": "", "pasos": [{"herramienta": "evaluar_partida",
+                                       "argumentos": {"repeticion": "mio.json", "archivo": "mio.json"}, "motivo": ""}]}
+    limpio, problemas = planificador.validar(plan, archivo="mio.json")
+    assert not problemas and limpio["pasos"][0]["argumentos"] == {"archivo": "mio.json"}
+    assert "- evaluar_partida(archivo):" in planificador.SISTEMA
+
+
+def test_verificador_acepta_la_probabilidad_del_rival(modelo):
+    s = hz.llamar(modelo, "estimar_probabilidad", {"observacion": _estados("final", modelo)[0]})
+    rival = f"{100 - 100 * s['probabilidad']:.1f} %"
+    assert verificar_texto(f"El rival tiene {rival} de ganar. Es una estimacion.", [s])["aprobado"]
