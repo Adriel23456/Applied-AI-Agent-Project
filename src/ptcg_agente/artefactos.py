@@ -90,8 +90,10 @@ def preparar_validacion(raiz=None):
     raiz = Path(raiz or ARTEFACTOS_DIR)
     rutas = [casos.CASOS, casos.OBSERVACIONES, casos.PARTIDAS]
     if not store.listo(rutas, raiz):
-        raise RuntimeError("faltan los casos de validacion en Kaggle: ejecuta la parte 1 del "
-                           "cuaderno 09_validacion_agente en Colab")
+        raise RuntimeError("Kaggle todavia no muestra todos los casos de validacion. Si la parte 1 "
+                           "del cuaderno 09 se publico hace poco, espera unos minutos a que Kaggle "
+                           "termine de procesar la version nueva y vuelve a ejecutar esta celda; "
+                           "si no se ha ejecutado, ejecutala en Colab")
     return raiz
 
 
