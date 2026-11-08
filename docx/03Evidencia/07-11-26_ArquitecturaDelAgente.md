@@ -44,6 +44,7 @@ El verificador es código, no un LLM: sus decisiones son reproducibles y tienen 
 | `revisar_dominio` | Igual que `estimar_probabilidad` | Si el modelo aplica y si la entrada está dentro del dominio de entrenamiento |
 | `describir_modelo` | Nada | Ficha del modelo, métricas de prueba por escenario y etapa, veredicto de H1 a H3 y límites |
 | `verificar_respuesta` | Borrador del texto final | Si el texto es coherente con los resultados de la sesión |
+| `abrir_simulador` | Observación, repetición + `paso`, o nada | Abre el simulador gráfico en el navegador y devuelve su dirección. Solo en el servidor MCP: no está en el catálogo del planificador del orquestador, porque abrir un navegador no responde una pregunta |
 
 Cada herramienta está en su propio archivo de `src/ptcg_agente/herramientas/`.
 
@@ -150,6 +151,8 @@ Si algo no coincide, el servidor no responde con el modelo y explica el motivo.
 | `src/ptcg_agente/agentes/redactor.py` | Redactor y plantilla de respaldo |
 | `src/ptcg_agente/agentes/llm.py` | Llamada aislada a Claude Code (`claude -p`) |
 | `src/ptcg_agente/orquestador.py` | Orquestador multiagente (terminal y cuaderno) |
+| `src/ptcg_agente/simulador/` | Simulador gráfico: servidor local (`servidor.py`) y página (`web/index.html`) |
+| `src/ptcg_agente/validacion/` | Batería de validación del agente (rama 08) |
 | `.claude/agents/*.md` | Subagentes de Claude Code (planificador, ejecutor, redactor, verificador) |
 | `.claude/commands/consulta-ptcg.md` | Comando `/consulta-ptcg` que encadena los subagentes |
 | `src/ptcg_agente/servidor_mcp.py` | Servidor MCP |

@@ -189,13 +189,50 @@ El cuaderno corre las pruebas, hace tres consultas (estado final, partida comple
 
 ---
 
-## 8. Registros (evidencia)
+## 8. Simulador gráfico
+
+Página web local para ver un estado de partida, editarlo y ver cómo cambia la probabilidad de victoria en tiempo real. Toda cifra sale de las mismas herramientas del agente, así que pasa por la revisión de dominio y el verificador.
+
+**Abrirlo desde la terminal** (raíz del repositorio, `.venv` activo):
+
+```powershell
+# Windows (PowerShell)
+$env:PYTHONPATH = "src"
+python -m ptcg_agente.simulador
+```
+
+```bash
+# Linux o macOS
+PYTHONPATH=src python -m ptcg_agente.simulador
+```
+
+Se abre el navegador en `http://127.0.0.1:8765/` con el primer ejemplo de `artefactos_agente/agente/ejemplos/`. Para cerrarlo, presiona Ctrl+C en la terminal. Opciones:
+- `--archivo RUTA --paso N`: abre una repetición concreta en un paso.
+- `--puerto 8770`: usa otro puerto si el 8765 está ocupado.
+- `--sin-navegador`: no abre el navegador (útil si ya está abierto).
+
+**Abrirlo desde Claude** (Claude Code o Claude Desktop con el servidor `ptcg-victoria`): pide, por ejemplo, *"Abre el simulador con la partida artefactos_agente/agente/ejemplos/partida_XXXX.json en el paso 120"*. Claude llama a la herramienta `abrir_simulador` y responde con la dirección. El simulador sigue activo mientras Claude esté abierto.
+
+**Qué se puede hacer:**
+
+| Zona | Qué muestra | Qué se puede editar |
+|---|---|---|
+| Tablero (rival arriba, jugador que actúa abajo) | Premios, cartas en la mano (solo cuántas), mazo, descarte, Pokémon activo y banca con PV y energías | Premios, mano, mazo y descarte con − y +; PV, PV máximos y energías de cada Pokémon; agregar, quitar o pasar a activo un Pokémon de la banca; el turno |
+| Probabilidad (derecha) | Probabilidad del jugador que actúa, etapa, advertencias y resultado del verificador | Se actualiza sola después de cada cambio |
+| Por qué (derecha) | Las contribuciones SHAP más fuertes, en puntos porcentuales | — |
+| Curva de la partida (abajo) | Probabilidad del jugador 0 en cada paso y los puntos de giro | Clic en la curva, el deslizador o los botones de paso para moverse; **Restaurar el estado del paso** deshace las ediciones |
+
+Cuando el estado está editado, arriba aparece *"Estado editado: la probabilidad es de un estado hipotético"*. Cada evaluación queda en `registros/agente_AAAA-MM-DD.jsonl` con el agente `simulador`.
+
+---
+
+## 9. Registros (evidencia)
 
 Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl` (fecha UTC). El campo `agente` dice quién actuó: `planificador`, `ejecutor`, `redactor` o `verificador`. Para guardar una sesión de Claude Code o Claude Desktop como evidencia, copia el archivo a `docx/03Evidencia/` con un nombre descriptivo y agrega una captura de la conversación. El cuaderno local copia la sesión del orquestador por su cuenta.
 
 ---
 
-## 9. Si algo falla
+## 10. Si algo falla
 
 | Síntoma | Causa | Solución |
 |---|---|---|
@@ -210,5 +247,6 @@ Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl` (fecha UTC). El ca
 | `Failed to build 'scikit-learn'` al instalar | La versión de Python es demasiado nueva y no hay paquete precompilado | Borrar `.venv` y crearlo con Python 3.12 (sección 2) |
 | `no se encontro 'claude'` en el orquestador | Claude Code no está instalado o VS Code se abrió antes de instalarlo | Instalarlo (sección 3.1) y reiniciar VS Code |
 | `Claude respondio con error` en el orquestador | No se inició sesión en Claude Code o se agotó el límite de la membresía | Abrir `claude` una vez e iniciar sesión; si es el límite, esperar a que se renueve |
+| `Address already in use` al abrir el simulador | El puerto 8765 está ocupado (quizá por otro simulador abierto) | Cerrar el otro o usar `--puerto 8770` |
 | `/consulta-ptcg` no existe | Claude Code no se abrió en la raíz del repositorio | Cerrar y abrir `claude` desde la raíz |
 | Pruebas | — | Primera celda de pruebas de `notebooks/08_agente_orquestador.ipynb` (o `python -m pytest -q tests/test_agente.py`) |
