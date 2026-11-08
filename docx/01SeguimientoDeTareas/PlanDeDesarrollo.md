@@ -219,7 +219,7 @@ Validación del agente frente a escenarios normales, casos límite, entradas ine
 - [x] Panel con las contribuciones SHAP del estado actual y las advertencias del verificador
 - [x] Herramienta del agente `abrir_simulador` para lanzarlo con un estado o una partida dados (servidor MCP)
 - [ ] Validación humana: sesiones de cada integrante con el simulador, registrando si la dirección de los cambios de probabilidad tiene sentido de juego (procedimiento y tablas en `docx/03Evidencia/08-11-26_ValidacionHumanaSimulador.md`)
-- [ ] Pruebas del simulador (la probabilidad mostrada coincide con la del predictor: `tests/test_simulador.py`, 5 pruebas) y capturas o grabación como evidencia (falta)
+- [x] Pruebas del simulador (la probabilidad mostrada coincide con la del predictor, ediciones, navegación, estado nuevo, catálogo de cartas y `abrir_simulador`: `tests/test_simulador.py`, 8 pruebas) y capturas como evidencia con el modelo final: `docx/03Evidencia/08-11-26_SimuladorEstadoPersonalizado.png` (estado armado desde cero) y `08-11-26_SimuladorPartida87363568.png` (paso 34 de la partida 87363568)
 
 ### `09EthicsPaperAndDocumentation`
 

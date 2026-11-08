@@ -4,7 +4,7 @@ pyarrow
 pyyaml
 scikit-learn==1.7.2
 optuna==4.6.0
-kaggle>=2.0
+kaggle>=2.2.5  # con 2.0.2 (la de Colab) Kaggle rechazo crear versiones con un 400 sin motivo
 six  # kaggle 2.2.x lo importa sin declararlo; sin el, la herramienta kaggle falla en un entorno nuevo
 pytest
 shap==0.54.1
