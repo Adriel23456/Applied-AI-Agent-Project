@@ -8,7 +8,7 @@ Cómo usar el modelo de probabilidad de victoria desde Claude Desktop o Claude C
 
 | Requisito | Para qué |
 |---|---|
-| Python 3.11 o superior | Correr el servidor MCP y el modelo |
+| **Python 3.12** (la misma versión de Colab) | Correr el servidor MCP y el modelo. Con versiones muy nuevas (3.15) no hay paquetes precompilados de `scikit-learn==1.7.2` y la instalación intenta compilarlo y falla |
 | Dependencias de `requirements.txt` | Incluyen `scikit-learn==1.7.2` (la versión del modelo), `shap` y `mcp` |
 | Token de Kaggle con acceso al dataset del equipo | Bajar el modelo final una sola vez |
 | Claude Desktop o Claude Code con la membresía del equipo | Usar el agente |
@@ -21,11 +21,12 @@ Antes de la primera instalación, alguien del equipo debe haber ejecutado en Col
 
 Desde la raíz del repositorio.
 
-**Windows (PowerShell):**
+**Windows (PowerShell):** primero confirma que tienes Python 3.12 con `py -0`. Si no aparece, instálalo con `winget install Python.Python.3.12` (o desde python.org) y abre una terminal nueva.
 
 ```powershell
-python -m venv .venv
+py -3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
+python --version   # debe decir 3.12
 pip install -r requirements.txt
 $env:PYTHONPATH = "src"
 python -m ptcg_agente.artefactos
@@ -34,7 +35,7 @@ python -m ptcg_agente.artefactos
 **Linux o macOS:**
 
 ```bash
-python -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 PYTHONPATH=src python -m ptcg_agente.artefactos
@@ -109,4 +110,5 @@ Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl`. Para guardar una 
 | `faltan archivos del agente en Kaggle` | No se ejecutaron las partes 1 y 2 del cuaderno 07 | Ejecutarlas en Colab |
 | El servidor no aparece en Claude Code | `.venv` no estaba activo o Claude Code no se abrió en la raíz | Activar `.venv` y abrir `claude` desde la raíz |
 | El servidor no aparece en Claude Desktop | Rutas relativas o barras sin escapar en el JSON | Usar rutas absolutas con `\\` en Windows y reiniciar |
-| Pruebas | — | `PYTHONPATH=src python -m pytest -q tests/test_agente.py` |
+| `Failed to build 'scikit-learn'` al instalar | La versión de Python es demasiado nueva y no hay paquete precompilado | Borrar `.venv` y crearlo con Python 3.12 (sección 2) |
+| Pruebas | — | `python -m pytest -q tests/test_agente.py` |
