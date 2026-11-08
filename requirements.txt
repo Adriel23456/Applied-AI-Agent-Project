@@ -8,3 +8,4 @@ kaggle>=2.0
 pytest
 shap==0.54.1
 matplotlib
+mcp==2.3.0

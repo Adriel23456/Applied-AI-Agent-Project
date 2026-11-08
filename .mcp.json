@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ptcg-victoria": {
+      "command": "python",
+      "args": ["src/ptcg_agente/servidor_mcp.py"]
+    }
+  }
+}
