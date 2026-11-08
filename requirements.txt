@@ -5,6 +5,7 @@ pyyaml
 scikit-learn==1.7.2
 optuna==4.6.0
 kaggle>=2.0
+six  # kaggle 2.2.x lo importa sin declararlo; sin el, la herramienta kaggle falla en un entorno nuevo
 pytest
 shap==0.54.1
 matplotlib

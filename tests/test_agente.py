@@ -291,3 +291,20 @@ def test_servidor_mcp_expone_y_ejecuta_las_herramientas(modelo, tmp_path):
     v = verif.structured_content if hasattr(verif, "structured_content") else None
     v = v or json.loads(verif.content[0].text)
     assert v.get("result", v)["aprobado"]
+
+
+def test_verificador_acepta_ids_de_archivo_signos_y_promesas_negadas(modelo, tmp_path):
+    """Falsos positivos vistos con Claude: id de partida, menos tipografico y 'no garantiza'."""
+    g = _partidas(1)[0]
+    rep = tmp_path / "partida_87406956.json"
+    rep.write_text(json.dumps(g), encoding="utf-8")
+    s = hz.llamar(modelo, "evaluar_partida", {"archivo": str(rep)})
+    giro = s["puntos_de_giro"][0]
+    cambio = round(100 * giro["cambio"], 1)
+    texto = (f"Partida 87406956: en el paso {giro['paso']} la probabilidad cambia "
+             f"−{abs(cambio)} puntos; luego cae {abs(cambio)} puntos. Es una estimacion que "
+             "no garantiza el resultado.")
+    r = verificar_texto(texto, [s])
+    assert r["aprobado"], r["problemas"]
+    assert not verificar_texto("Esto garantiza la victoria.", [s])["aprobado"]
+    assert not verificar_texto("Cambia −99.9 puntos.", [s])["aprobado"]

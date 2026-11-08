@@ -25,7 +25,12 @@ PALABRAS_CAUTELA = ("confianza", "advertencia", "incierto", "incertidumbre", "fu
 PALABRAS_SIN_PREDICCION = ("no hay probabilidad", "no aplica", "no se puede", "no puede estimar",
                            "no da una probabilidad", "sin probabilidad")
 PROMESAS = ("garantiza", "con certeza", "seguro que gana", "seguro que pierde", "sin duda")
-NUMERO = re.compile(r"(?<![\w.])(-?\d+(?:[.,]\d+)?)\s*(%|por ciento)?")
+# Una promesa negada ("no garantiza", "ni es seguro que gana") es justamente un limite bien dicho
+NEGACION = re.compile(r"\b(no|ni|nunca|jamas|tampoco)\b[^.;:]{0,25}$")
+# Signo opcional: guion, menos tipografico o raya, que los LLM usan indistintamente
+NUMERO = re.compile(r"(?<![\w.])([-\u2212\u2013]?\d+(?:[.,]\d+)?)\s*(%|por ciento)?")
+# En las salidas de herramientas los numeros pueden venir pegados a texto (partida_87406956.json)
+NUMERO_EN_SALIDA = re.compile(r"-?\d+(?:[.,]\d+)?")
 
 
 def _probabilidades(salida):
@@ -87,8 +92,8 @@ def _numeros(valor, salida=None):
         if -1.0 <= valor <= 1.0:
             salida.add(round(100 * float(valor), 6))
     elif isinstance(valor, str):
-        for m in NUMERO.finditer(valor):
-            salida.add(float(m.group(1).replace(",", ".")))
+        for m in NUMERO_EN_SALIDA.finditer(valor):
+            salida.add(float(m.group(0).replace(",", ".")))
     elif isinstance(valor, dict):
         for v in valor.values():
             _numeros(v, salida)
@@ -99,8 +104,20 @@ def _numeros(valor, salida=None):
 
 
 def _coincide(numero, decimales, permitidos):
+    """El signo no se exige: "cae 16.6 puntos" y "-16.6 puntos" citan el mismo cambio."""
     tolerancia = 0.5 * 10 ** (-decimales) + 1e-9
-    return any(abs(numero - a) <= tolerancia for a in permitidos)
+    return any(abs(abs(numero) - abs(a)) <= tolerancia for a in permitidos)
+
+
+def _promesas(texto_bajo):
+    """Promesas de certeza que no estan negadas."""
+    encontradas = []
+    for p in PROMESAS:
+        for m in re.finditer(re.escape(p), texto_bajo):
+            if not NEGACION.search(texto_bajo[:m.start()]):
+                encontradas.append(p)
+                break
+    return encontradas
 
 
 def verificar_texto(texto, salidas):
@@ -111,7 +128,7 @@ def verificar_texto(texto, salidas):
         _numeros(s, permitidos)
     revisadas = 0
     for m in NUMERO.finditer(texto):
-        bruto, es_porcentaje = m.group(1), bool(m.group(2))
+        bruto, es_porcentaje = m.group(1).lstrip("-\u2212\u2013"), bool(m.group(2))
         numero = float(bruto.replace(",", "."))
         decimales = len(bruto.split(".")[-1].split(",")[-1]) if ("." in bruto or "," in bruto) else 0
         if not es_porcentaje and decimales == 0 and 0 <= numero <= 10:
@@ -131,7 +148,7 @@ def verificar_texto(texto, salidas):
             problemas.append("el modelo no aplica y el texto no lo dice")
         if re.search(r"\d\s*(%|por ciento)", texto):
             problemas.append("el modelo no aplica y el texto da un porcentaje")
-    promesas = [p for p in PROMESAS if p in bajo]
+    promesas = _promesas(bajo)
     if promesas:
         problemas.append(f"el texto promete certeza: {promesas}")
     return {"aprobado": not problemas, "problemas": problemas, "cifras_revisadas": revisadas}

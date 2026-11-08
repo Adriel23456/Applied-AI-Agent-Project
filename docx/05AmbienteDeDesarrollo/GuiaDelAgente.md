@@ -11,7 +11,7 @@ Cómo usar el modelo de probabilidad de victoria desde Claude Desktop o Claude C
 | **Python 3.12** (la misma versión de Colab) | Correr el servidor MCP y el modelo. Con versiones muy nuevas (3.15) no hay paquetes precompilados de `scikit-learn==1.7.2` y la instalación intenta compilarlo y falla |
 | Dependencias de `requirements.txt` | Incluyen `scikit-learn==1.7.2` (la versión del modelo), `shap` y `mcp` |
 | Token de Kaggle con acceso al dataset del equipo | Bajar el modelo final una sola vez |
-| Claude Desktop o Claude Code con la membresía del equipo | Usar el agente |
+| Claude Code (se instala aparte, sección 3.1) o Claude Desktop, con la membresía del equipo | Usar el agente |
 
 Antes de la primera instalación, alguien del equipo debe haber ejecutado en Colab las partes 1 y 2 de `notebooks/07_agente.ipynb`, que publican `agente/dominio.json` y los ejemplos en Kaggle.
 
@@ -51,14 +51,52 @@ Resultado esperado: `Listo: 7 archivos verificados en ...` y una línea por ejem
 
 ## 3. Claude Code
 
-1. Activa el entorno virtual y abre Claude Code en la raíz del repositorio:
-   ```bash
-   claude
-   ```
-2. El archivo `.mcp.json` registra el servidor `ptcg-victoria`. La primera vez, Claude Code pide aprobarlo.
-3. Comprueba la conexión con `/mcp`: debe aparecer `ptcg-victoria` conectado con 7 herramientas.
+Claude Code es un programa aparte de Claude Desktop y de `requirements.txt`: hay que instalarlo una vez en la PC. Si `claude` responde "is not recognized", es que falta este paso.
 
-El servidor se lanza con el `python` del entorno activo; por eso hay que activar `.venv` antes de abrir Claude Code.
+**3.1 Instalar Claude Code (una vez)**
+
+Windows (PowerShell, sin permisos de administrador):
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+Linux o macOS:
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+Cierra la terminal y abre una nueva (el instalador agrega `claude` al PATH, y solo las terminales nuevas lo ven). Comprueba:
+
+```powershell
+claude --version
+```
+
+Se recomienda tener Git for Windows instalado; si no está, Claude Code usa PowerShell. No hace falta Node.js. Si algo falla, `claude doctor` muestra un diagnóstico.
+
+**3.2 Abrir Claude Code en el repositorio**
+
+En la terminal nueva, desde la raíz del repositorio, activa el entorno y abre Claude Code:
+
+```powershell
+.venv\Scripts\Activate.ps1
+claude
+```
+
+La primera vez se abre el navegador para iniciar sesión con la cuenta de Claude del equipo (plan Pro o superior). Si no se abre, presiona `c` en la terminal para copiar el enlace.
+
+**3.3 Aprobar y comprobar el servidor**
+
+1. La primera vez aparece el aviso **"New MCP server found in this project: ptcg-victoria"** con tres opciones. Elige la primera, **"Use this MCP server"**, y presiona Enter. Aprueba solo este servidor, que es el del proyecto (`.mcp.json`).
+   - No elijas "Use this and all future MCP servers in this project": aprobaría también cualquier servidor que se agregue después al repositorio, sin revisarlo.
+   - "Continue without using this MCP server" deja el agente sin herramientas.
+2. Escribe `/mcp`: debe aparecer `ptcg-victoria` conectado, con 7 herramientas.
+3. Cada vez que Claude llame a una herramienta, Claude Code pide permiso. Revisa el nombre de la herramienta y aprueba. Si eliges permitirla siempre para este proyecto, no vuelve a preguntar por esa herramienta.
+
+Si elegiste mal o quieres revisar la decisión, ejecuta `claude mcp reset-project-choices` en la raíz del repositorio y vuelve a abrir `claude`.
+
+El servidor se lanza con el `python` del entorno activo; por eso hay que activar `.venv` **antes** de escribir `claude`. No hace falta `PYTHONPATH`: el servidor agrega `src/` por su cuenta.
 
 ---
 
@@ -108,6 +146,8 @@ Cada invocación queda en `registros/agente_AAAA-MM-DD.jsonl`. Para guardar una 
 | `el SHA-256 no coincide` | Un archivo local cambió o quedó incompleto | Borrar `artefactos_agente/` y volver a bajarlo |
 | `el modelo se guardo con scikit-learn 1.7.2 y hay ...` | Otra versión instalada | `pip install -r requirements.txt` en el entorno del servidor |
 | `faltan archivos del agente en Kaggle` | No se ejecutaron las partes 1 y 2 del cuaderno 07 | Ejecutarlas en Colab |
+| `/mcp` no muestra `ptcg-victoria` o aparece deshabilitado | Se eligió "Continue without using this MCP server" | `claude mcp reset-project-choices`, volver a abrir `claude` y elegir "Use this MCP server" |
+| `claude : The term 'claude' is not recognized` | Claude Code no está instalado, o la terminal se abrió antes de instalarlo | Instalarlo (sección 3.1) y abrir una terminal nueva |
 | El servidor no aparece en Claude Code | `.venv` no estaba activo o Claude Code no se abrió en la raíz | Activar `.venv` y abrir `claude` desde la raíz |
 | El servidor no aparece en Claude Desktop | Rutas relativas o barras sin escapar en el JSON | Usar rutas absolutas con `\\` en Windows y reiniciar |
 | `Failed to build 'scikit-learn'` al instalar | La versión de Python es demasiado nueva y no hay paquete precompilado | Borrar `.venv` y crearlo con Python 3.12 (sección 2) |

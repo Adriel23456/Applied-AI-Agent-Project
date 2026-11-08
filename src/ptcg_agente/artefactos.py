@@ -34,6 +34,23 @@ VEREDICTO = "evaluacion_final/veredicto.json"
 REQUERIDOS = [MODELO_EXPORTADO, FICHA_EXPORTADA, DOMINIO, *METRICAS_TEST, VEREDICTO]
 
 
+def probar_kaggle():
+    """Intenta bajar el indice UNA vez y, si falla, muestra el mensaje exacto de kaggle.
+    Evita los reintentos de 10 minutos de store.leer_indice cuando el problema es local
+    (herramienta kaggle ausente, token o permisos), que es lo normal en una PC nueva."""
+    import tempfile
+    dataset = store.load_dataset_id()
+    try:
+        with tempfile.TemporaryDirectory(prefix="kaggle-prueba-") as tmp:
+            ok, texto = store._bajar_archivo(dataset, store.INDICE, Path(tmp) / store.INDICE)
+    except FileNotFoundError as e:
+        raise RuntimeError("no se encontro la herramienta 'kaggle': activa .venv e instala "
+                           "requirements.txt") from e
+    if not ok:
+        raise RuntimeError(f"Kaggle no entrego {store.INDICE} de {dataset}. Mensaje de kaggle:\n"
+                           f"{texto.strip() or '(vacio)'}")
+
+
 def preparar(raiz=None, rutas=REQUERIDOS):
     """Baja de Kaggle lo que falte (verificando SHA-256) y escribe el manifiesto.
 
@@ -42,6 +59,7 @@ def preparar(raiz=None, rutas=REQUERIDOS):
     """
     raiz = Path(raiz or ARTEFACTOS_DIR)
     raiz.mkdir(parents=True, exist_ok=True)
+    probar_kaggle()
     if not store.listo(list(rutas), raiz):
         raise RuntimeError("faltan archivos del agente en Kaggle; si falta agente/dominio.json, "
                            "ejecuta la celda de dominio del cuaderno 07_agente")
