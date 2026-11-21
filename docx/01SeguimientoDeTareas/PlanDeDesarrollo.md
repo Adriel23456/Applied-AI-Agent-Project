@@ -235,9 +235,9 @@ Validación del agente frente a escenarios normales, casos límite, entradas ine
 - [x] Secciones nuevas: arquitectura del agente y validación del agente, con sus resultados (`sec/10agente.tex`: arquitectura con figura, protocolo, resultados N1, N2 y validación humana, fragilidad)
 - [x] Sección de ética reescrita con foco en el despliegue (`sec/06etica.tex`)
 - [x] Discusión y conclusiones actualizadas con el agente, conservando los hallazgos de XAI (subsección "El agente: qué aporta y qué no", objetivo 7 y limitaciones nuevas)
-- [X] Introducción y trabajos relacionados pulidos, sin reescribirlos
+- [ ] Introducción y trabajos relacionados pulidos, sin reescribirlos
 - [x] Resumen, objetivos y contribuciones alineados con el trabajo completo (resumen con el agente, objetivo 7, cuarta contribución, estructura del documento)
-- [X] Revisión completa del documento en formato IEEE: figuras, tablas, referencias, compilación sin errores (ya compila sin errores ni advertencias de referencias: 29 páginas, con las figuras del agente en Claude Code y del simulador; falta la revisión de lectura completa)
+- [ ] Revisión completa del documento en formato IEEE: figuras, tablas, referencias, compilación sin errores (ya compila sin errores ni advertencias de referencias: 29 páginas, con las figuras del agente en Claude Code y del simulador; falta la revisión de lectura completa)
 
 **Documentación**
 - [x] `README.md`, `GuiaDeAmbiente.md` y `notebooks/EjecucionDeLosCuadernos.md` con cómo ejecutar el agente, el servidor MCP y el simulador (y `GuiaDelAgente.md` con el uso aceptable)
@@ -250,17 +250,4 @@ Validación del agente frente a escenarios normales, casos límite, entradas ine
 Preparación de la defensa individual, video demostrativo y entrega final.
 
 **Defensa**
-- [ ] Guía de defensa en `docx/`: respuestas a las tres preguntas garantizadas (por qué este dataset y qué limitaciones se asumieron; cómo se previno la fuga; qué significa el resultado frente al baseline de literatura)
-- [ ] Preguntas probables por cada parte del proyecto (datos, baselines, B4, evaluación, calibración, SHAP, agente, validación, ética), para que cada integrante pueda responder sobre todo
-- [ ] Ensayo de la defensa con los tres integrantes
-
-**Video**
-- [ ] Guion y orden de escenas: problema, datos, prevención de fuga, resultados principales, SHAP, agente en ejecución, simulador y límites
-- [ ] Grabación de la demostración en ejecución (consulta al agente, registros, simulador)
-- [ ] Video editado y enlazado desde el `README.md`
-
-**Entrega**
-- [ ] Prueba de clon limpio siguiendo solo el `README.md`
-- [ ] Historial con commits de los tres integrantes en la Etapa 3
-- [ ] PR `Stage3` → `master` con 1 aprobación, etiqueta `v3.0.0` y release
-- [ ] Entrega en TecDigital
+- [x] Guía de defensa (sección "Guía de defensa" del `README.md`): respuestas a las tres preguntas garantizadas (por qué este dataset y qué limitaciones se asumieron; cómo se previno la fuga; qué significa el resultado frente al baseline de literatura)
