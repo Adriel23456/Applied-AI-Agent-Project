@@ -56,6 +56,7 @@ Una solución de IA aplicada construida bajo la metodología de la investigació
 | Ver la ética del despliegue, los límites y el uso aceptable | [`docx/03Evidencia/08-11-26_EticaDelDespliegue.md`](docx/03Evidencia/08-11-26_EticaDelDespliegue.md) |
 | Ver el plan de trabajo y los pendientes por rama | [`docx/01SeguimientoDeTareas/PlanDeDesarrollo.md`](docx/01SeguimientoDeTareas/PlanDeDesarrollo.md) |
 | Ver la declaración de uso de IA | [`docx/03Evidencia/01UsoDeIA/`](docx/03Evidencia/01UsoDeIA/) (`Etapa1UsoDeIA.md`, `Etapa2UsoDeIA.md` y `Etapa3UsoDeIA.md`) |
+| Preparar la defensa: las tres preguntas garantizadas | [Guía de defensa](#guía-de-defensa) |
 | Conocer las reglas de ramas, commits y PR | [`docx/00ReglasGit/ReglasGit.md`](docx/00ReglasGit/ReglasGit.md) |
 | Ver las herramientas usadas, incluidas las de IA | [`docx/04Herramientas/`](docx/04Herramientas/) |
 
@@ -139,6 +140,73 @@ Detalle de los dos lugares: [`GuiaDeAmbiente.md`](GuiaDeAmbiente.md) y [`noteboo
 **Contrato de reproducibilidad.** Todo resultado reportado debe poder reproducirlo un tercero siguiendo esas guías, sin contactar al equipo. Las semillas (`SEED = 2026`) y las configuraciones están versionadas en `configs/`. Los datos crudos, las tablas intermedias y las credenciales nunca se versionan; solo las instrucciones para obtenerlos.
 
 **Uso aceptable.** El sistema sirve para analizar partidas terminadas, explorar estados hipotéticos y estudiar el comportamiento del modelo. No debe usarse para obtener ayuda durante una partida en curso donde las reglas lo prohíban ni para apostar. Sus estimaciones valen para partidas entre agentes automáticos del certamen de 2026, no para personas ni para otros mazos. Ver [`08-11-26_EticaDelDespliegue.md`](docx/03Evidencia/08-11-26_EticaDelDespliegue.md).
+
+---
+
+## Guía de defensa
+
+Respuestas cortas a las tres preguntas garantizadas de la defensa. Cada una dice primero la idea principal y después el detalle. Las cifras salen del artículo.
+
+### 1. ¿Por qué este conjunto de datos y qué limitaciones asumieron?
+
+**Respuesta corta.** Porque es el único corpus grande y público del Pokémon TCG que guarda, en cada paso de la partida, lo que ve cada jugador y quién ganó al final. Eso es justo lo que pide nuestra pregunta. La limitación principal es que son partidas entre programas, no entre personas.
+
+**Por qué lo elegimos:**
+- **Tiene lo que el problema necesita.** Cada repetición guarda el estado del juego paso a paso desde la vista de cada jugador y el ganador. Con eso armamos una fila por estado y una etiqueta por partida: 55 196 partidas y 7 286 386 estados.
+- **Separa lo visible de lo oculto.** La mano del rival y los premios vienen vacíos. Lo comprobamos en 139 672 observaciones y 1 281 678 ranuras de premio. Así el modelo solo puede usar lo que un jugador ve de verdad.
+- **Es grande, reciente y libre.** Son diez días de 2026 con licencia CC0. Nadie había publicado resultados sobre él, así que el trabajo aporta algo nuevo.
+- **Permite probar si el modelo generaliza.** Al tener fechas y mazos, pudimos medir el modelo en partidas nuevas (A), en días posteriores (B) y en mazos nuevos (C).
+
+**Limitaciones que asumimos:**
+- **Programas, no personas.** Los jugadores son agentes automáticos del certamen, y además los de mejor puntuación, porque Kaggle publica las repeticiones de los mejores. Los resultados no se pueden trasladar a personas.
+- **Solo diez días.** La forma de jugar cambia rápido: el conjunto de mazos del último día auditado es casi distinto del primero. Por eso medimos aparte los días posteriores (B).
+- **Pocos mazos dominan.** Los diez mazos más usados suman el 39.94 % de los datos. Para que el modelo no se los memorice, el escenario C prueba con mazos que nunca vio.
+- **Las filas de una misma partida se parecen mucho.** Una partida aporta unas 137 filas casi iguales. Esto obliga a separar los datos por partida (pregunta 2).
+
+### 2. ¿Cómo previnieron la fuga de información?
+
+**Respuesta corta.** Con tres reglas: el modelo solo usa lo que el jugador ve en ese momento, cada partida completa va a un solo subconjunto y hay pruebas automáticas que detienen todo si alguna regla se rompe.
+
+**Qué es la fuga aquí.** Hay fuga cuando el modelo aprende con información que no tendría en la vida real, como el futuro de la partida o las cartas ocultas del rival. Con fuga, el resultado se ve mejor de lo que es.
+
+**Lo que hicimos:**
+- **Separar por partida, no por fila.** Si se reparten las filas al azar, el 99.99 % de las partidas queda a la vez en entrenamiento y en prueba, y el modelo "reconoce" la partida. Por eso cada partida completa va a un solo subconjunto, y una prueba comprueba que no haya partidas compartidas.
+- **Nada del futuro.** Las características salen solo del estado en ese instante. Quitamos campos que existían en los datos pero revelan el futuro, como el orden del mazo restante.
+- **Nada oculto.** Solo se lee la observación del jugador que actúa: nunca la mano del rival ni el contenido de los premios. Una prueba confirma que cambiar las cartas ocultas no cambia las características.
+- **Nada que delate al jugador.** Los nombres y puntuaciones de los agentes no entran al modelo; solo se usan para revisar y agrupar.
+- **Separar por fecha y por mazo.** El escenario B corta por fecha, nunca al azar, y el escenario C prueba con mazos nuevos.
+- **Ajustar todo solo con entrenamiento.** Ninguna transformación ni búsqueda de hiperparámetros vio datos de prueba. La prueba se abrió una sola vez, al final.
+
+**Cómo lo comprobamos:**
+- **24 pruebas automáticas** que se ejecutan antes de entrenar.
+- **SHAP** antes de abrir la prueba. Si una sola característica explicara casi todo, sería señal de fuga. No pasó: la más importante concentra 0.113 (el límite era 0.5), y la mejor característica sola llega a un AUC de 0.690 (el límite era 0.85).
+- **Las variables que más pesan tienen sentido de juego:** premios, descartes y mazo, que son información pública del tablero.
+- **El agente mantiene las mismas reglas.** Nunca recibe la mano del rival ni los premios.
+
+### 3. ¿Qué significa su resultado frente al baseline de la literatura?
+
+**Respuesta corta.** Nuestro modelo llega a la banda de la literatura y la supera en la mitad y el final de la partida. Pero la comparación es solo orientativa, porque el juego y los datos son distintos.
+
+**El punto de referencia.** No existe un resultado publicado con nuestros datos. Por eso tomamos el trabajo más parecido: el certamen de *Hearthstone* (AAIA'17). Es otro juego de cartas con información oculta, también predice el ganador desde un estado de la partida y también mide con AUC. Su banda es de **0.78 a 0.80**.
+
+**Nuestro resultado (B4 en prueba):**
+
+| Escenario | AUC |
+|---|---|
+| A: partidas nuevas | 0.833 |
+| B: días posteriores | 0.789 |
+| C: mazos nuevos | 0.787 |
+
+- En A pasamos la banda. En B y C, que son las pruebas más duras, quedamos dentro de ella.
+- **Depende del momento de la partida.** Al inicio el AUC es de 0.68, porque todavía no ha pasado casi nada. B4 entra en la banda desde el turno 7 y llega a 0.937 en el final de A.
+- Supera a nuestras cuatro referencias (B0 a B3) en los tres escenarios.
+
+**Por qué no decimos "le ganamos a la literatura":**
+- **Juego distinto:** otras reglas, otras cartas y otros recursos.
+- **Jugadores distintos:** en *Hearthstone* los estados salieron de agentes que jugaban al azar; los nuestros son agentes competitivos.
+- **Datos y partición distintos:** otra proporción de victorias, otras características y otra forma de separar los datos.
+
+Lo que el resultado sí muestra es que un modelo clásico sobre datos tabulares, evaluado sin fuga y en condiciones más duras (días y mazos nuevos), alcanza el mismo orden de calidad que la referencia más cercana.
 
 ---
 
