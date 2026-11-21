@@ -54,24 +54,27 @@ Tres niveles. Sin `develop/**`, sin `release/**` y sin ramas personales.
 | `03DataCollectionAndEnvironmentSetup` | 2 | Adriel | Ingesta, tabla de estados, particiones, pruebas de fuga y entorno de Colab con Kaggle | #8 |
 | `04MainAIModelTrainingAndDevelopment` | 2 | Daniel (entrenamiento) y Adriel (ejecución e infraestructura) | B0 a B4, búsqueda de hiperparámetros, LightGBM, ablaciones, H2 y modelo final | #9 |
 | `05FinalModelChecks` | 2 | Sebastián (protocolo y cuaderno 06) y Adriel (ejecución) | Evaluación única en `test`, calibración, curvas, SHAP, errores y veredicto de H1 a H3 | #10 |
-| `06PendientesDelArticulo` | 2 | Adriel | Correcciones del artículo, secciones de resultados, discusión y conclusiones, y documentación final de la etapa | Pendiente |
-
-Las ramas de la Etapa 3 seguirán la numeración desde `07`.
+| `06PendientesDelArticulo` | 2 | Adriel | Correcciones del artículo, secciones de resultados, discusión y conclusiones, y documentación final de la etapa | #11 |
+| `Stage2` → `master` | 2 | Equipo | Integración de la Etapa 2 | #12 |
+| `07MultiAgentIntegration` | 3 | Adriel | Herramientas del modelo, agentes (planificador, ejecutor, verificador y redactor), registro, servidor MCP, orquestador y subagentes de Claude Code | #13 |
+| `08AgentValidationAndSimulator` | 3 | Adriel (validación y simulador) y los tres integrantes (validación humana) | Protocolo y batería de validación N1 y N2, análisis de fragilidad, simulador gráfico y `abrir_simulador` | #14 |
+| `09EthicsPaperAndDocumentation` | 3 | Adriel (redacción), Daniel y Sebastián (revisión) | Ética del despliegue, artículo final, documentación del repositorio, uso de IA y bitácora de la Etapa 3 | Pendiente |
+| `10DefenseAndShowcase` | 3 | Equipo | Guía de defensa, video, prueba de clon limpio y entrega de la Etapa 3 | Pendiente |
 
 ---
 
 ## Resumen del flujo
 
 ```
-05FinalModelChecks
+09EthicsPaperAndDocumentation
     │
     │  PR → sin aprobación
     ▼
-Stage2
+Stage3
     │
     │  PR → 1 aprobación
     ▼
-master  ← etiqueta v2.0.0
+master  ← etiqueta v3.0.0
 ```
 
 ---
@@ -165,14 +168,14 @@ Conventional Commits. El tipo y el alcance van en inglés, como dicta el estánd
 - **Ejes de revisión:** `axis-a`, `axis-b`, `axis-c`
 - **Datos y protocolo:** `colab`, `ingest`, `features`, `eda`, `splits`, `leakage`, `protocol`, `store`
 - **Modelado y evaluación:** `baselines`, `model`, `hpo`, `ablation`, `eval`, `xai`, `calib`, `export`
-- **Etapa 3:** `agent`
+- **Etapa 3:** `agent`, `validacion`, `simulador`, `plan`
 
 ### Reglas
 
 - Modo imperativo, minúsculas, sin punto final, 72 caracteres como máximo.
 - Un cambio lógico por commit.
 - Sin números de tarea en los commits.
-- **Nunca se versiona:** conjuntos de datos crudos, archivos Parquet, modelos entrenados (`*.joblib`), la carpeta `results/`, `.venv`, artefactos de compilación LaTeX, credenciales (`secrets.txt`, `kaggle.json`, `.env`, tokens).
+- **Nunca se versiona:** conjuntos de datos crudos, archivos Parquet, modelos entrenados (`*.joblib`), la carpeta `results/`, `.venv`, los archivos bajados por el agente (`artefactos_agente/`), los registros locales (`registros/`), artefactos de compilación LaTeX, credenciales (`secrets.txt`, `kaggle.json`, `.env`, tokens y claves de API).
 - Cada integrante sube su propio trabajo. La autoría se califica por el historial de commits.
 
 ### Ejemplos
@@ -293,7 +296,7 @@ Los artefactos de compilación LaTeX (`*.aux`, `*.bbl`, `*.fls`, etc.) tienen su
 
 **Dónde viven los datos y resultados.** Las tablas procesadas, las particiones, los modelos entrenados y todos los resultados (CSV, JSON, figuras) viven en el dataset privado de Kaggle `adrielchavessalazar/ptcg-wp-tablas`, nunca en Git. El repositorio guarda el código y las configuraciones para reconstruirlos.
 
-**Se versiona a propósito:** el código de `src/`, las pruebas, los archivos de `configs/` con semillas fijas, el `.bib`, el PDF del artículo, el cuaderno `06_evaluacion_final.ipynb` con sus salidas y todos los documentos Markdown.
+**Se versiona a propósito:** el código de `src/`, las pruebas, los archivos de `configs/` con semillas fijas, `.mcp.json` y `.claude/`, el `.bib`, el PDF del artículo, los cuadernos `06` a `10` con sus salidas, los registros copiados como evidencia en `docx/03Evidencia/` y todos los documentos Markdown.
 
 ---
 

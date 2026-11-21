@@ -221,3 +221,7 @@ secrets.txt
 
 *.joblib
 results/
+
+# Agente (Etapa 3): artefactos bajados de Kaggle y registros locales
+artefactos_agente/
+registros/

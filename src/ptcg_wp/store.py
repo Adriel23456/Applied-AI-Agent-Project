@@ -302,6 +302,25 @@ def _enlazar(origen, destino):
         shutil.copy2(origen, destino)
 
 
+def _version_con_api(carpeta, notas):
+    """Crea la version con la API de Python de kaggle. Devuelve (ok, texto); si Kaggle la rechaza,
+    el texto trae el cuerpo de la respuesta, que dice el motivo."""
+    from kaggle.api.kaggle_api_extended import KaggleApi
+    from requests.exceptions import HTTPError
+    api = KaggleApi()
+    api.authenticate()
+    try:
+        resultado = api.dataset_create_version(str(carpeta), notas, quiet=True, convert_to_csv=False,
+                                               dir_mode="skip")
+    except HTTPError as e:
+        cuerpo = e.response.text[:2000] if e.response is not None else ""
+        return False, f"Kaggle rechazo la version nueva: {e}\nRespuesta de Kaggle: {cuerpo}"
+    error = getattr(resultado, "error", None)
+    if error:
+        return False, f"Kaggle rechazo la version nueva: {error}"
+    return True, "version creada con la API de Python de kaggle"
+
+
 def publicar(rutas, mensaje, raiz=None, actualizar_tablas=False,
              datos_dir=None, dataset_id=None, excluir=()):
     """Sube una version nueva del dataset con: tablas + todos los resultados ya indexados +
@@ -383,6 +402,11 @@ def publicar(rutas, mensaje, raiz=None, actualizar_tablas=False,
             cmd = ["datasets", "create", "-p", str(tmp)]
         ok, texto = _kaggle(cmd)
         print(texto.strip())
+        if not ok and existe and re.search(r"\b400\b", texto):
+            # La herramienta kaggle solo muestra "400 Bad Request". Se repite con la API de Python
+            # para leer el motivo que da Kaggle (sin imprimir encabezados: llevan el token).
+            ok, texto = _version_con_api(tmp, f"{mensaje} (commit {commit})")
+            print(texto)
         if not ok:
             raise RuntimeError("la publicacion fallo: revisa el mensaje de kaggle de arriba. "
                                "Los archivos siguen en este servidor; vuelve a ejecutar la celda.")

@@ -1,0 +1,232 @@
+% ============================================================
+% 10agente.tex
+% Integración y validación del agente (Etapa 3)
+% Fuente: docx/03Evidencia/07-11-26_ArquitecturaDelAgente.md,
+% 08-11-26_ProtocoloValidacionAgente.md,
+% 08-11-26_ResultadosValidacionAgente.md y
+% 08-11-26_ValidacionHumanaSimulador.md
+% ============================================================
+
+\section{Integración y Validación del Agente}
+\label{sec:agente}
+
+Esta sección explica cómo el modelo final se convierte en un componente que
+una persona puede usar a través de un agente, y cómo se validó ese agente.
+El modelo es B4 entrenado en el escenario A, sin recalibrar: el agente lo
+consume tal como se evaluó en la Sección~\ref{sec:resultados}.
+
+\subsection{Arquitectura}
+\label{subsec:arquitectura}
+
+El agente responde preguntas sobre una partida: quién va ganando, por qué,
+cómo cambió la probabilidad y qué tan confiable es la estimación. Lo hacen
+cuatro roles (Fig.~\ref{fig:agente}):
+\begin{itemize}
+  \item \textbf{Planificador} (Claude): convierte la pregunta en un plan,
+        es decir, qué herramientas llamar y con qué argumentos. No ve el
+        modelo ni el contenido del archivo. Un programa valida el plan antes
+        de ejecutarlo: solo herramientas que existen, solo argumentos que
+        aceptan y siempre el archivo que dio el usuario.
+  \item \textbf{Ejecutor} (código): corre el plan sobre el modelo final.
+  \item \textbf{Verificador} (código determinista): revisa cada resultado
+        y luego el texto final.
+  \item \textbf{Redactor} (Claude): escribe la respuesta para una persona
+        sin formación técnica, usando solo los resultados que aprobó el
+        verificador.
+\end{itemize}
+
+El planificador y el redactor son dos llamadas separadas a Claude, cada una
+sin herramientas. Así, el modelo de lenguaje decide y redacta, pero nunca
+produce una cifra: toda probabilidad sale del modelo final a través de una
+herramienta.
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+  caja/.style={draw=tecsteel, rounded corners=2pt, fill=boxbg, align=center,
+               font=\scriptsize, minimum width=1.75cm, minimum height=0.7cm,
+               inner sep=2pt},
+  llm/.style={caja, fill=white, dashed},
+  flecha/.style={-{Stealth[length=4pt]}, tecnavy},
+  node distance=0.45cm and 0.85cm]
+  \node[caja] (u) {Pregunta y\\archivo};
+  \node[llm, right=of u] (p) {Planificador\\(Claude)};
+  \node[caja, right=of p] (e) {Ejecutor\\(herramientas)};
+  \node[caja, below=0.9cm of e] (m) {Modelo final\\B4 de A};
+  \node[caja, below=0.9cm of p] (v) {Verificador\\(código)};
+  \node[llm, below=0.9cm of u] (r) {Redactor\\(Claude)};
+  \node[caja, below=0.7cm of r] (out) {Respuesta\\verificada};
+  \draw[flecha] (u) -- (p);
+  \draw[flecha] (p) -- node[above, font=\tiny, inner sep=1pt]{plan} (e);
+  \draw[flecha] (e) -- (m);
+  \draw[flecha] (m) -- node[above, font=\tiny, inner sep=1pt]{resultados} (v);
+  \draw[flecha] (v) -- node[above, font=\tiny, inner sep=1pt]{aprobados} (r);
+  \draw[flecha] (r) to[bend right=30] node[below, font=\tiny]{borrador} (v);
+  \draw[flecha] (r) -- (out);
+\end{tikzpicture}
+\caption{Flujo de una consulta. Las cajas punteadas son llamadas a Claude
+sin herramientas; las demás son código. Si el verificador rechaza el
+borrador, el redactor lo corrige con la lista de problemas.}
+\label{fig:agente}
+\end{figure}
+
+El ejecutor ofrece seis herramientas: estimar la probabilidad, explicarla
+con SHAP en puntos porcentuales, recorrer una partida completa con sus
+puntos de giro, comparar estados, revisar si un estado está dentro del
+dominio de entrenamiento y describir el modelo con sus métricas y límites.
+Cada resultado lleva advertencias obligatorias cuando corresponden:
+confianza baja al inicio de la partida, probabilidad extrema en los
+primeros turnos, valores o cartas nunca vistos en el entrenamiento y
+estados sin predicción (preparación y partidas ya resueltas).
+
+El verificador comprueba que cada probabilidad esté entre 0 y 1, que la
+suma de las contribuciones SHAP reconstruya la predicción y que estén las
+advertencias obligatorias. Sobre el texto final comprueba que toda cifra
+salga de una herramienta, que se mencionen las advertencias, que no se den
+porcentajes cuando el modelo no aplica y que no se prometa certeza. Si el
+redactor no logra un texto aprobado en dos rondas, la respuesta es una
+plantilla armada solo con los resultados.
+
+Cada invocación queda en un registro con el agente, la herramienta, la
+entrada resumida, la salida, la duración, la huella SHA-256 del modelo y la
+versión del código. Al arrancar, el agente comprueba que el modelo y sus
+archivos coincidan por SHA-256 con los publicados: un modelo distinto al
+evaluado no responde.
+
+\noindent\textbf{Formas de uso.} Todo corre en la computadora del usuario
+con su cuenta de Claude. Las herramientas se ofrecen a Claude Desktop y a
+Claude Code mediante un servidor MCP, y el orquestador en Python encadena
+los cuatro roles desde la terminal o un cuaderno. Además, un simulador
+gráfico local muestra el tablero de ambos jugadores, permite editar el
+estado (premios, mano, mazo, descarte, Pok\'emon, puntos de vida, energías
+y condiciones) y recalcula en tiempo real la probabilidad, las
+contribuciones SHAP y las advertencias. El agente puede abrirlo con la
+herramienta \texttt{abrir\_simulador}. La Fig.~\ref{fig:agenteclaude}
+muestra una consulta real en Claude Code y la Fig.~\ref{fig:simulador}, el
+simulador sobre una partida de prueba.
+
+\begin{figure*}[!t]
+\centering
+\safeimage[width=0.9\textwidth]{res_agente_claude.png}
+\caption{Consulta real al agente desde Claude Code con el servidor MCP del
+proyecto. El usuario pregunta quién iba ganando en cada turno de una
+partida de prueba; la tabla y las probabilidades salen de la herramienta
+que recorre la partida, y la respuesta pasó por el verificador antes de
+mostrarse.}
+\label{fig:agenteclaude}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\safeimage[width=0.9\textwidth]{res_simulador.png}
+\caption{Simulador gráfico en el paso 34 de una partida de prueba. Arriba,
+el tablero editable del jugador 1 (naranja) y del jugador 0 (azul); a la
+derecha, la probabilidad de que gane el jugador 0, las advertencias, el
+resultado del verificador y las contribuciones SHAP; abajo, la curva de la
+partida con sus puntos de giro y la posición actual.}
+\label{fig:simulador}
+\end{figure*}
+
+\noindent\textbf{Consumo verificable del modelo.} En 642 estados de cuatro
+partidas reales de prueba, la probabilidad que entrega el agente es
+idéntica a la del modelo exportado (diferencia máxima 0.0). La
+Sección~\ref{subsec:agente} preveía verificar el consumo reemplazando el
+modelo por B0; se prefirió esta comparación directa, que muestra que el
+agente usa exactamente el modelo evaluado.
+
+\subsection{Protocolo de validación}
+\label{subsec:protocoloagente}
+
+La validación siguió un protocolo escrito antes de ejecutarla, con dos
+niveles:
+\begin{itemize}
+  \item \textbf{N1, herramientas y verificador, sin modelo de lenguaje.}
+        360 estados de partidas de prueba de A elegidos con semilla fija:
+        90 normales en las tres etapas, 90 de partidas de los días de B,
+        90 de partidas con arquetipos de C y 90 errores muy seguros del
+        modelo. A ellos se suman casos límite, entradas inválidas y estados
+        modificados para salir del dominio.
+  \item \textbf{N2, el agente completo con Claude.} 31 consultas: 18
+        normales (seis tipos de pregunta en tres partidas), 6 sobre errores
+        muy seguros del modelo y 7 adversas, por ejemplo pedir la mano del
+        rival, pedir certeza absoluta o insertar instrucciones dentro del
+        archivo de la partida.
+\end{itemize}
+Si un caso fallaba, la falla quedaba registrada, se corregía el código y se
+repetía la batería completa, sin cambiar el criterio.
+
+\subsection{Resultados de la validación}
+\label{subsec:resagente}
+
+\begin{table}[!t]
+\centering
+\caption{Métricas del agente. N1: herramientas y verificador; N2: agente
+completo con Claude.}
+\label{tab:agente}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}Y P{1.9cm} P{1.1cm}@{}}
+\toprule
+\textbf{Métrica} & \textbf{Valor} & \textbf{Meta}\\
+\midrule
+Igual al modelo exportado (N1) & 90/90, dif. 0 & 100\,\%\\
+Advertencias cuando corresponden (N1) & 13/13 casos & 100\,\%\\
+Entradas inválidas rechazadas (N1) & 7/7 casos & 100\,\%\\
+Excepciones sin controlar (N1 y N2) & 0 & 0\\
+Herramienta correcta en el plan (N2) & 18/18 & $\ge$ 90\,\%\\
+Respuestas con cifras trazables (N2) & 31/31 & 100\,\%\\
+Aprobadas en la primera ronda (N2) & 28/31 & ---\\
+Respuestas en la plantilla (N2) & 0/31 & $\le$ 10\,\%\\
+Latencia p95 de una consulta (N2) & 31 s & $<$ 90 s\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent\textbf{Nivel N1.} De 35 casos, la primera corrida aprobó 32,
+falló 2 y dejó 1 como registro. Las dos fallas se corrigieron:
+\begin{itemize}
+  \item La partida más larga de prueba (1\,398 pasos) tardaba 56.6 s en
+        evaluarse, contra un límite de 30 s, porque el modelo se llamaba
+        una vez por paso. Con una sola llamada para toda la partida tarda
+        0.9 s, con las mismas probabilidades.
+  \item Cuando no hay Pok\'emon activo, la explicación mostraba el valor
+        interno $-1$ como si fueran puntos de vida. Ahora dice que no hay
+        Pok\'emon activo. El protocolo había anticipado esta falla.
+\end{itemize}
+Con las correcciones, los 34 casos con criterio aprobaron
+(Tabla~\ref{tab:agente}). Los estados de los días de B y de los arquetipos
+de C no se marcaron fuera del dominio, como se esperaba: sus días y
+arquetipos también aparecen en el entrenamiento de A.
+
+\noindent\textbf{Nivel N2.} Las 31 consultas aprobaron. En tres de ellas,
+sobre la preparación de la partida, el primer borrador usaba
+probabilidades de otros pasos; el verificador lo rechazó y el redactor lo
+corrigió. Ante las consultas adversas, el agente se negó a dar la mano del
+rival o el contenido de los premios, no prometió certeza, mantuvo la
+advertencia de confianza baja aunque se le pidió omitirla y no siguió el
+texto inyectado en el archivo, que nunca llegó a las herramientas.
+
+\noindent\textbf{Validación humana.} Los tres integrantes hicieron 15
+cambios distintos en el simulador sobre un mismo estado real, con la
+dirección esperada fijada antes. Diez tuvieron la dirección esperada: todos
+los de premios, mazo, puntos de vida y banca. Por ejemplo, dejar al
+jugador sin mazo bajó su probabilidad de 66.1 a 1.7\,\%. Las condiciones
+de quemado, dormido y paralizado no la movieron, por lo poco que aparecen en
+el entrenamiento, y agregar energías al Pok\'emon activo la bajó, una
+asociación del modelo que no es causal.
+
+\subsection{Fragilidad}
+\label{subsec:fragilidad}
+
+El límite principal aparece cuando el modelo se equivoca con mucha
+seguridad. Al inicio de la partida el agente siempre avisa (30 de 30
+errores muy seguros con advertencia). En medio y final, 50 de 60 errores
+muy seguros llegan sin ninguna advertencia, y el agente incluso los
+presenta como fiables, porque cita el AUC alto de la etapa final. Ninguna
+regla se activa: el modelo está seguro y el estado está dentro del dominio.
+
+El verificador detecta cifras inventadas, advertencias omitidas,
+porcentajes sin predicción y promesas de certeza. No detecta una cifra
+real usada para una conclusión equivocada, una etiqueta mal usada ni una
+contribución SHAP leída como causa. Estas fallas no se resuelven con más
+reglas, sino con límites declarados al usuario
+(Sección~\ref{sec:etica}).

@@ -300,8 +300,8 @@ modelos clásicos de aprendizaje automático evaluados bajo un protocolo que
 controle de forma explícita la fuga de información.
 
 \noindent\textbf{Objetivos específicos.} Los tres primeros descomponen la
-pregunta general; los tres restantes construyen las condiciones que hacen
-interpretable la respuesta.
+pregunta general; los tres siguientes construyen las condiciones que hacen
+interpretable la respuesta, y el último lleva el estimador a un uso real.
 
 \begin{enumerate}
   \item \textbf{Caracterizar la evolución de la estimación.} Medir la
@@ -326,6 +326,11 @@ interpretable la respuesta.
         escenarios anteriores, con controles de fuga verificados de forma
         automática y análisis de qué características del estado transportan
         información.
+  \item \textbf{Integrar el estimador en un agente y validarlo:} que una
+        persona pueda consultarlo en lenguaje natural, con cifras
+        verificables, advertencias de confianza y límites declarados, y
+        medir cómo se comporta ante casos normales, casos límite, entradas
+        inválidas, errores del modelo y consultas adversas.
 \end{enumerate}
 
 Los objetivos se descomponen en tres dimensiones:
@@ -343,7 +348,7 @@ Los objetivos se descomponen en tres dimensiones:
 \subsection{Contribución esperada}
 \label{subsec:contribucion}
 
-Se esperan tres contribuciones.
+Se esperan cuatro contribuciones.
 
 La primera es la caracterización de la probabilidad de victoria desde el
 estado de juego en un juego de cartas que no ha sido estudiado de esta
@@ -366,6 +371,10 @@ pendiente en la comparación de modelos tabulares
 \cite{grinsztajn_trees_2022}, y la literatura de predicción de desenlace en
 juegos la ha reportado de forma desigual.
 
+La cuarta es un agente que usa el estimador sin inventar cifras: un
+verificador determinista revisa que toda probabilidad salga del modelo, y
+una validación escrita antes de ejecutarse mide dónde falla.
+
 Un resultado negativo también constituiría una contribución. Si la capacidad
 predictiva colapsa bajo el protocolo temporal, eso aporta evidencia sobre la
 rapidez con que la evolución del conjunto de estrategias dominante invalida
@@ -384,7 +393,8 @@ su comparabilidad. La Sección~\ref{sec:metodologia} presenta la
 formalización, el protocolo experimental y el plan de modelos de referencia.
 La Sección~\ref{sec:analisistecnico} desarrolla el análisis técnico del
 \textit{track}, con énfasis en la prevención de fuga de información. La
-Sección~\ref{sec:resultados} reporta los experimentos y sus resultados, y la
+Sección~\ref{sec:resultados} reporta los experimentos y sus resultados, la
+Sección~\ref{sec:agente} describe el agente y su validación, y la
 Sección~\ref{sec:discusion} los discute junto con los hallazgos de
-explicabilidad. La Sección~\ref{sec:etica} documenta las consideraciones
-éticas, y la Sección~\ref{sec:conclusiones} cierra con las conclusiones.
+explicabilidad. La Sección~\ref{sec:etica} documenta la ética del
+despliegue, y la Sección~\ref{sec:conclusiones} cierra con las conclusiones.

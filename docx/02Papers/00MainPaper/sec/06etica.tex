@@ -1,97 +1,122 @@
 % ============================================================
 % sec/06etica.tex
 %
-% Riesgos identificados y forma prevista de mitigarlos, en el
-% momento previo al entrenamiento.
+% Ética del despliegue: riesgos de usar el agente, datos
+% sensibles, mitigaciones verificables y límites declarados.
+% Fuente: docx/03Evidencia/08-11-26_EticaDelDespliegue.md
 % ============================================================
-\section{Consideraciones Éticas}
+\section{Ética del Despliegue}
 \label{sec:etica}
 
-\subsection{Naturaleza de los datos}
+Esta sección responde qué puede salir mal cuando alguien usa el sistema,
+qué datos toca, qué se hizo para reducir cada riesgo y qué límites quedan.
+Cada mitigación se puede comprobar en el código o en una prueba automática.
+
+\subsection{Datos sensibles}
 \label{subsec:sensibilidad}
 
-El corpus no contiene datos clínicos, biométricos ni conductuales sobre
-personas: sus registros son partidas simuladas entre agentes de software,
-publicadas bajo licencia abierta \cite{ptcg_dataset_2026}.
+El corpus no contiene datos de personas: son partidas entre agentes de
+software, publicadas bajo licencia CC0 \cite{ptcg_dataset_2026}. Hay tres
+salvedades:
+\begin{itemize}
+  \item \textbf{Nombres de agentes.} Son seudónimos que eligieron los
+        autores de los agentes del certamen. Nunca se guardan en las tablas:
+        se reemplazan por un código estable, no entran al modelo y no se
+        publican comparaciones entre competidores.
+  \item \textbf{Información oculta del juego.} El modelo y el agente nunca
+        usan la mano del rival ni el contenido de los premios, solo cuántas
+        cartas hay. Una prueba automática comprueba que cambiar las cartas
+        ocultas no cambia las características.
+  \item \textbf{Datos de uso.} Los registros quedan solo en la computadora
+        del usuario. Las preguntas y los resultados de las herramientas sí
+        viajan a los servidores de Claude para que este responda; por eso no
+        conviene incluir datos personales en las preguntas.
+\end{itemize}
 
-Cabe una salvedad. Cada partida lleva los nombres de agente de sus
-participantes, que son seudónimos elegidos por sus autores e identifican a
-competidores de un certamen público. Se tratan como metadatos y no como
-material de modelado: se emplean para auditoría y agrupación, quedan
-excluidos del vector de características, y no se publicará ningún
-ordenamiento ni comparación de competidores nombrados.
+\subsection{Riesgos del despliegue}
+\label{subsec:riesgosdespliegue}
 
-\subsection{Riesgo principal: la sobreafirmación}
-\label{subsec:sesgo}
+\begin{table}[!t]
+\centering
+\caption{Riesgos del despliegue y mitigación aplicada.}
+\label{tab:riesgosdespliegue}
+\footnotesize
+\begin{tabularx}{\columnwidth}{@{}P{2.3cm} Y@{}}
+\toprule
+\textbf{Riesgo} & \textbf{Mitigación aplicada}\\
+\midrule
+Confianza excesiva en la probabilidad & Verificador, advertencias
+obligatorias, lenguaje de estimación y límites en la ficha del modelo\\
+Ventaja indebida en competencias & Sin información oculta; uso local; uso
+aceptable declarado\\
+Sesgo hacia el meta de agentes automáticos & Revisión de dominio y
+métricas por escenario en la ficha del modelo\\
+Mal uso en apuestas & Uso aceptable declarado; sin servicio público\\
+Leer SHAP como causa & El simulador y el redactor presentan SHAP como
+asociación\\
+Instrucciones inyectadas en los datos & El planificador y el redactor
+nunca ven el contenido del archivo\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-El riesgo dominante de este trabajo no es el daño a un sujeto de datos, sino
-atribuir a sus resultados un alcance que no tienen.
+El riesgo más importante es la \textbf{confianza excesiva}. Una estimación
+de 90\,\% invita a leerla como certeza, y la validación mostró que, en
+medio y final de la partida, la mayoría de los errores muy seguros llegan
+sin advertencia (Sección~\ref{subsec:fragilidad}). Un modelo puede seguir
+ordenando bien las posiciones aunque sus probabilidades ya no sean
+ciertas \cite{guo_temporalshift_2021}; por eso el agente reporta la
+calidad por etapa y por escenario, no solo un número.
 
-El corpus corresponde a la franja alta de una clasificación de agentes
-automáticos, y su composición cambia de forma medible en diez días: el
-conjunto de mazos del último día auditado es esencialmente disjunto del del
-primero, y los diez mazos más frecuentes concentran el 39.94\,\% de las
-instancias. Un modelo ajustado sobre estos datos aprende un conjunto de
-estrategias estrecho y en movimiento.
+El segundo es el \textbf{sesgo de población}. El modelo aprendió cómo juegan
+los agentes de un certamen durante diez días; el conjunto de mazos del
+último día auditado es casi distinto del primero. Aplicado a personas, a
+otros mazos o a otra época, puede valorar mal posiciones que ellos juegan
+distinto. La revisión de dominio avisa cuando un valor o una carta nunca
+apareció en el entrenamiento, pero no detecta un cambio de estrategia con
+valores conocidos.
 
-De ahí se siguen tres lecturas erróneas que conviene nombrar. Extrapolar a
-jugadores humanos carecería de respaldo, pues ninguna partida humana aparece
-en el corpus. Extrapolar al juego completo tampoco lo tendría, porque un
-modelo que nunca vio un arquetipo de mazo carece de base para juzgar
-posiciones construidas en torno a él. Y tratar la salida como una propiedad
-estable de una posición carecería de respaldo a lo largo del tiempo, dado
-que la población cambia con rapidez.
+Los otros riesgos son de uso: consultar el sistema durante una partida en
+curso donde las reglas prohíban ayuda externa, o apostar con sus cifras.
+El sistema no puede impedirlos por sí mismo; por eso no hay un servicio
+público, todo corre en la computadora del usuario y el uso aceptable se
+declara en la documentación: analizar partidas terminadas, explorar
+estados hipotéticos y estudiar el comportamiento del modelo.
 
-\subsection{Interpretación de la probabilidad}
-\label{subsec:interpretacionprob}
-
-Una estimación de probabilidad de victoria invita a un mal uso específico:
-leer un número entre cero y uno como una posibilidad bien fundada cuando
-puede ser solo una puntuación bien ordenada. Un modelo puede seguir
-ordenando posiciones correctamente mucho después de que sus probabilidades
-declaradas hayan dejado de ser ciertas \cite{guo_temporalshift_2021}.
-
-Reportar la calidad de las probabilidades junto a la capacidad de ordenar es,
-por tanto, un compromiso ético además de metodológico: es lo que permite al
-lector saber cuál de las dos cosas está midiendo el número.
-
-\subsection{Límites de generalización declarados}
-\label{subsec:limitesgeneralizacion}
-
-Los resultados no deben extrapolarse a partidas entre personas, al juego en
-formato físico, a estrategias no representadas en la muestra, a agentes de
-otra franja de puntuación, a versiones del motor ausentes de los datos, ni a
-periodos posteriores más allá de lo que el escenario B permita evaluar.
-
-Dos precisiones adicionales. Un buen resultado bajo la partición agrupada no
-implica robustez temporal, afirmación que solo puede sostenerse si el
-desempeño se mantiene bajo el escenario cronológico. Y un buen valor global
-de capacidad de ordenar no implica que las probabilidades estén calibradas
-ni que el modelo se comporte igual en las etapas tempranas y tardías de la
-partida.
-
-\subsection{Mitigaciones previstas antes del entrenamiento}
+\subsection{Mitigaciones verificables}
 \label{subsec:mitigacionetica}
 
 \begin{itemize}
-  \item Toda cifra reportada lleva su alcance: los días auditados, la franja
-        de puntuación y las versiones del motor presentes.
-  \item Los tres escenarios de evaluación se reportan por separado, sin
-        promediar el primario con los de generalización.
-  \item Los identificadores de agente quedan fuera del vector de
-        características, y no se publican resultados por competidor.
-  \item Los intervalos de confianza se calculan sobre partidas, de modo que
-        la incertidumbre no se subestime contando observaciones
-        correlacionadas como evidencia independiente.
-  \item El resumen y las conclusiones declaran la población sobre la que se
-        ajustó el modelo, para que la limitación viaje con el resultado en
-        lugar de quedar confinada a esta sección.
+  \item \textbf{Verificador determinista:} rechazó 3 de 31 borradores y
+        aprobó las 31 respuestas finales; todas sus reglas tienen pruebas
+        automáticas.
+  \item \textbf{Advertencias obligatorias:} aparecieron en 13 de 13 casos
+        que las exigían.
+  \item \textbf{Revisión de dominio:} marcó 100 de 100 estados modificados
+        para salir del dominio.
+  \item \textbf{Sin información oculta:} prueba automática de las
+        características y negativa correcta del agente ante la mano del
+        rival y los premios, revisada por un integrante.
+  \item \textbf{Integridad y trazabilidad:} el agente solo arranca con el
+        modelo publicado (SHA-256) y registra cada invocación.
 \end{itemize}
 
-\subsection{Aspectos diferidos}
-\label{subsec:diferido}
+\subsection{Límites declarados}
+\label{subsec:limitesgeneralizacion}
 
-La ética del despliegue, los escenarios de uso indebido y los riesgos
-operativos de un agente que consuma este estimador, en particular el
-efecto de un evaluador sobreconfiado sobre sus decisiones, se abordan en la
-etapa final, cuando exista un agente.
+\begin{enumerate}
+  \item Los resultados valen para partidas entre agentes automáticos de un
+        certamen en diez días de 2026, no para personas, otros mazos u otras
+        épocas.
+  \item Al inicio de la partida el modelo distingue poco (AUC de 0.68 en
+        prueba); ninguna etapa da certeza.
+  \item En medio y final, la mayoría de los errores muy seguros no tienen
+        advertencia.
+  \item Con días posteriores o mazos nuevos el modelo pierde capacidad y
+        tiende a confiar de más.
+  \item La preparación y las partidas ya resueltas no tienen predicción.
+  \item Las condiciones especiales poco frecuentes casi no cambian la
+        estimación.
+  \item Las explicaciones SHAP son asociaciones, no causas.
+  \item El sistema estima quién va ganando; no recomienda jugadas.
+\end{enumerate}
