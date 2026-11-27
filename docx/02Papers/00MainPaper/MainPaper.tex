@@ -40,38 +40,41 @@ Cartago, Costa Rica \\
 \begin{abstract}
 El Pok\'emon Trading Card Game es un juego de cartas por turnos en el que
 cada jugador observa el tablero completo y su propia mano, pero no la mano
-del oponente ni el contenido de las cartas de premio; determinar quién lleva
-ventaja en un instante dado exige integrar premios restantes, puntos de
-vida, energías y estados alterados, y no resulta evidente para un observador
-no experto. Este trabajo formula esa determinación como aprendizaje
-supervisado, estimar, desde un único estado observable, la probabilidad de
-que el jugador que actúa termine venciendo, y la aborda sobre un corpus
+del oponente ni el contenido de las cartas de premio. Determinar quién lleva
+ventaja exige considerar los premios restantes, los puntos de vida, las
+energías y los estados alterados, lo que puede ser difícil para un observador
+sin experiencia. Este trabajo utiliza aprendizaje supervisado para estimar
+la probabilidad de victoria del jugador que actúa a partir de un estado
+observable. Para ello emplea un corpus
 público de repeticiones de partidas entre agentes automáticos. La dificultad
-central no es de modelado sino de evaluación: una partida produce del orden
-de un centenar de estados sucesivos que difieren en una sola acción y
-comparten la misma etiqueta final, de modo que repartirlos al azar entre
-entrenamiento y prueba haría que el modelo se evaluara sobre situaciones
-casi idénticas a las que ya vio. Se emplea en consecuencia una
+principal está en la evaluación. Una partida produce cientos de estados
+sucesivos que difieren en una sola acción y comparten el mismo resultado. Si
+estos estados se reparten al azar entre
+entrenamiento y prueba, el modelo se evaluaría sobre situaciones
+casi idénticas a las que ya vio. Por esa razón, se emplea una
 representación tabular con una fila por estado y 62 características
-restringidas a la información pública de ese instante, una escalera de
+restringidas a la información pública de ese instante, una comparación de
 modelos clásicos desde un predictor trivial hasta potenciación del
 gradiente, y particiones que mantienen cada partida completa dentro de un
-único subconjunto, bajo tres escenarios: partidas nuevas, arquetipos de mazo
-no vistos y periodos posteriores. Sobre 55\,196 partidas, el modelo de
+único subconjunto. Se evalúan tres escenarios que comprenden partidas nuevas,
+arquetipos de mazo no vistos y periodos posteriores. Sobre 55\,196 partidas, el modelo de
 potenciación del gradiente alcanza en prueba un AUC de 0.833 sobre partidas
 nuevas y de 0.789 y 0.787 bajo cambio temporal y arquetipos no vistos, y
 supera a todas las referencias con intervalos que excluyen el cero. La
-capacidad predictiva crece de 0.68 al inicio a 0.94 en la etapa final; la
-señal temprana no se distingue de la que aportan el orden de turno y la
-identidad de los Pok\'emon activos dentro de la población conocida, pero sí
-fuera de ella. Bajo cambio temporal, contra lo esperado, el ordenamiento se
-degrada más que la calibración. El análisis SHAP muestra que el modelo
-evalúa la posición por balance de recursos: premios, descartes y mazo.
+capacidad predictiva crece de 0.68 al inicio a 0.94 en la etapa final. En
+mazos conocidos, al comienzo de la partida el modelo no predice mejor que una
+referencia que solo considera quién juega primero y qué Pok\'emon están
+activos. En mazos no vistos durante el entrenamiento, sí aporta información
+adicional. Bajo cambio temporal, contra lo esperado, al modelo le cuesta más
+distinguir los estados favorables de los desfavorables que asignar
+probabilidades acordes con los resultados reales. El análisis SHAP muestra
+que el modelo evalúa la posición según el balance de recursos, como los
+premios, los descartes y el mazo.
 Finalmente, el modelo se integra en un agente con cuatro roles
 (planificador, ejecutor, verificador y redactor) en el que toda cifra
 sale del modelo y pasa por un verificador determinista. En una validación
 con 35 casos automáticos y 31 consultas al agente completo, todas las
-respuestas finales tuvieron cifras trazables; el límite principal es que
+respuestas finales tuvieron cifras trazables. El límite principal es que
 la mayoría de los errores muy seguros de las etapas media y final llegan
 al usuario sin advertencia.
 \end{abstract}

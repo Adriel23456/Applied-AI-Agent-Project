@@ -28,7 +28,7 @@ calibrar sus probabilidades, al contrario de lo reportado en otros
 dominios. Recalibrar con un día intermedio mejoró a B4, pero empeoró a B3,
 así que no es una solución general. SHAP mostró que el modelo decide por
 premios, descartes y mazo, sin señales de fuga, e identificó una
-característica que falta: los premios que entrega cada Pok\'emon.
+característica que falta, los premios que entrega cada Pok\'emon.
 
 El modelo final, B4 entrenado en el escenario A y sin calibrador, se integró
 en un agente con cuatro roles. Un modelo de lenguaje planifica y redacta,
@@ -37,7 +37,7 @@ respuesta antes de mostrarla. En la validación, las 31 respuestas finales
 tuvieron cifras trazables, el agente se negó a dar información oculta y no
 siguió instrucciones inyectadas en los datos. Un simulador gráfico permite
 a cualquier persona armar un estado y ver cómo cambia la probabilidad. El
-límite principal es del modelo: en las etapas media y final, la mayoría de
+límite principal está en el modelo. En las etapas media y final, la mayoría de
 sus errores muy seguros llegan sin advertencia, así que sus probabilidades
 deben leerse como estimaciones, nunca como certezas.
 

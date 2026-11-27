@@ -29,7 +29,7 @@ salvedades:
         ocultas no cambia las características.
   \item \textbf{Datos de uso.} Los registros quedan solo en la computadora
         del usuario. Las preguntas y los resultados de las herramientas sí
-        viajan a los servidores de Claude para que este responda; por eso no
+        viajan a los servidores de Claude para que este responda. Por eso no
         conviene incluir datos personales en las preguntas.
 \end{itemize}
 
@@ -65,11 +65,11 @@ de 90\,\% invita a leerla como certeza, y la validación mostró que, en
 medio y final de la partida, la mayoría de los errores muy seguros llegan
 sin advertencia (Sección~\ref{subsec:fragilidad}). Un modelo puede seguir
 ordenando bien las posiciones aunque sus probabilidades ya no sean
-ciertas \cite{guo_temporalshift_2021}; por eso el agente reporta la
+ciertas \cite{guo_temporalshift_2021}. Por eso el agente reporta la
 calidad por etapa y por escenario, no solo un número.
 
 El segundo es el \textbf{sesgo de población}. El modelo aprendió cómo juegan
-los agentes de un certamen durante diez días; el conjunto de mazos del
+los agentes de un certamen durante diez días. El conjunto de mazos del
 último día auditado es casi distinto del primero. Aplicado a personas, a
 otros mazos o a otra época, puede valorar mal posiciones que ellos juegan
 distinto. La revisión de dominio avisa cuando un valor o una carta nunca
@@ -78,7 +78,7 @@ valores conocidos.
 
 Los otros riesgos son de uso: consultar el sistema durante una partida en
 curso donde las reglas prohíban ayuda externa, o apostar con sus cifras.
-El sistema no puede impedirlos por sí mismo; por eso no hay un servicio
+El sistema no puede impedirlos por sí mismo. Por eso no hay un servicio
 público, todo corre en la computadora del usuario y el uso aceptable se
 declara en la documentación: analizar partidas terminadas, explorar
 estados hipotéticos y estudiar el comportamiento del modelo.
@@ -86,37 +86,18 @@ estados hipotéticos y estudiar el comportamiento del modelo.
 \subsection{Mitigaciones verificables}
 \label{subsec:mitigacionetica}
 
-\begin{itemize}
-  \item \textbf{Verificador determinista:} rechazó 3 de 31 borradores y
-        aprobó las 31 respuestas finales; todas sus reglas tienen pruebas
-        automáticas.
-  \item \textbf{Advertencias obligatorias:} aparecieron en 13 de 13 casos
-        que las exigían.
-  \item \textbf{Revisión de dominio:} marcó 100 de 100 estados modificados
-        para salir del dominio.
-  \item \textbf{Sin información oculta:} prueba automática de las
-        características y negativa correcta del agente ante la mano del
-        rival y los premios, revisada por un integrante.
-  \item \textbf{Integridad y trazabilidad:} el agente solo arranca con el
-        modelo publicado (SHA-256) y registra cada invocación.
-\end{itemize}
+El verificador revisa las cifras y advertencias antes de presentar una
+respuesta. La revisión de dominio busca valores y cartas ausentes del
+entrenamiento, y las pruebas comprueban que no se utilice información oculta.
+El agente verifica la integridad del modelo publicado mediante SHA-256 y
+registra sus invocaciones. Los resultados de la validación se presentan en
+la Sección~\ref{sec:agente}.
 
 \subsection{Límites declarados}
 \label{subsec:limitesgeneralizacion}
 
-\begin{enumerate}
-  \item Los resultados valen para partidas entre agentes automáticos de un
-        certamen en diez días de 2026, no para personas, otros mazos u otras
-        épocas.
-  \item Al inicio de la partida el modelo distingue poco (AUC de 0.68 en
-        prueba); ninguna etapa da certeza.
-  \item En medio y final, la mayoría de los errores muy seguros no tienen
-        advertencia.
-  \item Con días posteriores o mazos nuevos el modelo pierde capacidad y
-        tiende a confiar de más.
-  \item La preparación y las partidas ya resueltas no tienen predicción.
-  \item Las condiciones especiales poco frecuentes casi no cambian la
-        estimación.
-  \item Las explicaciones SHAP son asociaciones, no causas.
-  \item El sistema estima quién va ganando; no recomienda jugadas.
-\end{enumerate}
+Las limitaciones del conjunto de datos y de la validación se describen en
+la Sección~\ref{subsec:limitaciones}. El sistema no predice durante la
+preparación ni en partidas ya resueltas, y las condiciones especiales poco
+frecuentes apenas cambian la estimación. Las explicaciones SHAP describen
+asociaciones y el sistema estima quién va ganando sin recomendar jugadas.

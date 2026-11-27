@@ -17,10 +17,10 @@ unidad de observación y métrica son las más cercanas: el AAIA'17 Data Mining
 Challenge sobre \emph{Hearthstone} \cite{janusz_hearthstone_2017}.
 
 Se elige ese antecedente y no otro porque es el único que coincide
-simultáneamente en las tres condiciones que hacen posible una comparación
-siquiera parcial. Es un juego de cartas coleccionables con información
-oculta; su tarea es predecir el ganador desde un único estado intermedio; y
-su métrica es el área bajo la curva ROC, que es la métrica principal
+simultáneamente en las tres condiciones que hacen posible una comparación,por lo menos parcial. 
+Es un juego de cartas coleccionables con información
+oculta. Busca predecir el ganador desde un único estado intermedio y
+utiliza el área bajo la curva ROC, que es la métrica principal
 adoptada aquí.
 
 \begin{quote}
@@ -53,7 +53,7 @@ superior no probaría de forma automática un mejor desempeño.
 \subsection{Comparabilidad del protocolo}
 \label{subsec:comparabilidad}
 
-La comparación es \textbf{parcialmente comparable}. La
+La comparación es \textbf{parcial}. La
 Figura~\ref{fig:comparabilidad} resume qué coincide y qué no.
 
 \begin{figure}[!t]
@@ -89,8 +89,8 @@ Figura~\ref{fig:comparabilidad} resume qué coincide y qué no.
 \end{tikzpicture}
 
 \caption{Comparabilidad del punto de referencia externo. La coincidencia en
-tarea y métrica permite usar la cifra como orden de magnitud; las
-diferencias impiden tratarla como umbral a superar.}
+tarea y métrica permite usar la cifra como referencia aproximada. Las
+diferencias impiden tratarla como un umbral a superar.}
 
 \label{fig:comparabilidad}
 
@@ -101,11 +101,11 @@ diferencias impiden tratarla como umbral a superar.}
 \begin{itemize}
   \item \textbf{Juego distinto.} Los sistemas de recursos, las condiciones
         de victoria y la estructura del tablero difieren, de modo que el
-        contenido informativo de un estado no es la misma magnitud en ambos
+        contenido informativo de un estado no representa los mismo en ambos
         juegos.
   \item \textbf{Población de agentes distinta.} Los estados de referencia
-        provienen de agentes que eligen acciones al azar; los de este
-        trabajo, de agentes que compiten y son seleccionados por puntuación.
+        provienen de agentes que eligen acciones al azar. Los de este
+        trabajo provienen de agentes que compiten y son seleccionados por puntuación.
         El propio experimento de transferencia de esa competencia muestra
         que la diferencia importa, y cuesta aproximadamente $0.04$ de área
         bajo la curva \cite{janusz_hearthstone_2017}.
@@ -133,7 +133,7 @@ juego obliga a tratar con cautela las cifras reportadas
 \subsection{Criterio propio de éxito}
 \label{subsec:criteriopropio}
 
-Dado que la referencia externa no es un umbral legítimo, este trabajo
+Dado que la referencia externa no es un umbral fijo, este trabajo
 declara además un criterio interno, medido sobre los propios datos y bajo el
 propio protocolo:
 
@@ -147,5 +147,5 @@ solapen.
 Ese criterio es comparable de forma legítima, porque emplea el mismo
 conjunto de datos, el mismo protocolo y la misma métrica. Y protege el
 resultado en ambas direcciones: si el modelo supera la heurística, el
-criterio se cumple; si no la supera, el hallazgo queda declarado de antemano
+criterio se cumple. Si no la supera, el hallazgo queda declarado de antemano
 como tal y no como un fracaso de ejecución.

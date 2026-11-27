@@ -12,13 +12,13 @@
 
 Esta sección explica cómo el modelo final se convierte en un componente que
 una persona puede usar a través de un agente, y cómo se validó ese agente.
-El modelo es B4 entrenado en el escenario A, sin recalibrar: el agente lo
+El modelo es B4 entrenado en el escenario A, sin recalibrar. El agente lo
 consume tal como se evaluó en la Sección~\ref{sec:resultados}.
 
 \subsection{Arquitectura}
 \label{subsec:arquitectura}
 
-El agente responde preguntas sobre una partida: quién va ganando, por qué,
+El agente responde preguntas sobre una partida, como quién va ganando, por qué,
 cómo cambió la probabilidad y qué tan confiable es la estimación. Lo hacen
 cuatro roles (Fig.~\ref{fig:agente}):
 \begin{itemize}
@@ -37,7 +37,7 @@ cuatro roles (Fig.~\ref{fig:agente}):
 
 El planificador y el redactor son dos llamadas separadas a Claude, cada una
 sin herramientas. Así, el modelo de lenguaje decide y redacta, pero nunca
-produce una cifra: toda probabilidad sale del modelo final a través de una
+produce una cifra. Toda probabilidad sale del modelo final a través de una
 herramienta.
 
 \begin{figure}[!t]
@@ -65,12 +65,12 @@ herramienta.
   \draw[flecha] (r) -- (out);
 \end{tikzpicture}
 \caption{Flujo de una consulta. Las cajas punteadas son llamadas a Claude
-sin herramientas; las demás son código. Si el verificador rechaza el
+sin herramientas y las demás son código. Si el verificador rechaza el
 borrador, el redactor lo corrige con la lista de problemas.}
 \label{fig:agente}
 \end{figure}
 
-El ejecutor ofrece seis herramientas: estimar la probabilidad, explicarla
+El ejecutor ofrece seis herramientas para estimar la probabilidad, explicarla
 con SHAP en puntos porcentuales, recorrer una partida completa con sus
 puntos de giro, comparar estados, revisar si un estado está dentro del
 dominio de entrenamiento y describir el modelo con sus métricas y límites.
@@ -110,7 +110,7 @@ simulador sobre una partida de prueba.
 \safeimage[width=0.9\textwidth]{res_agente_claude.png}
 \caption{Consulta real al agente desde Claude Code con el servidor MCP del
 proyecto. El usuario pregunta quién iba ganando en cada turno de una
-partida de prueba; la tabla y las probabilidades salen de la herramienta
+partida de prueba. La tabla y las probabilidades salen de la herramienta
 que recorre la partida, y la respuesta pasó por el verificador antes de
 mostrarse.}
 \label{fig:agenteclaude}
@@ -131,7 +131,7 @@ partida con sus puntos de giro y la posición actual.}
 partidas reales de prueba, la probabilidad que entrega el agente es
 idéntica a la del modelo exportado (diferencia máxima 0.0). La
 Sección~\ref{subsec:agente} preveía verificar el consumo reemplazando el
-modelo por B0; se prefirió esta comparación directa, que muestra que el
+modelo por B0. Se prefirió esta comparación directa, que muestra que el
 agente usa exactamente el modelo evaluado.
 
 \subsection{Protocolo de validación}
@@ -194,12 +194,12 @@ falló 2 y dejó 1 como registro. Las dos fallas se corrigieron:
 \end{itemize}
 Con las correcciones, los 34 casos con criterio aprobaron
 (Tabla~\ref{tab:agente}). Los estados de los días de B y de los arquetipos
-de C no se marcaron fuera del dominio, como se esperaba: sus días y
+de C no se marcaron fuera del dominio, como se esperaba, porque sus días y
 arquetipos también aparecen en el entrenamiento de A.
 
 \noindent\textbf{Nivel N2.} Las 31 consultas aprobaron. En tres de ellas,
 sobre la preparación de la partida, el primer borrador usaba
-probabilidades de otros pasos; el verificador lo rechazó y el redactor lo
+probabilidades de otros pasos. El verificador lo rechazó y el redactor lo
 corrigió. Ante las consultas adversas, el agente se negó a dar la mano del
 rival o el contenido de los premios, no prometió certeza, mantuvo la
 advertencia de confianza baja aunque se le pidió omitirla y no siguió el
@@ -222,7 +222,7 @@ seguridad. Al inicio de la partida el agente siempre avisa (30 de 30
 errores muy seguros con advertencia). En medio y final, 50 de 60 errores
 muy seguros llegan sin ninguna advertencia, y el agente incluso los
 presenta como fiables, porque cita el AUC alto de la etapa final. Ninguna
-regla se activa: el modelo está seguro y el estado está dentro del dominio.
+regla se activa porque el modelo está seguro y el estado está dentro del dominio.
 
 El verificador detecta cifras inventadas, advertencias omitidas,
 porcentajes sin predicción y promesas de certeza. No detecta una cifra

@@ -15,7 +15,7 @@ turnos para dos jugadores. Cada uno construye antes de la partida un mazo de
 sesenta cartas, y durante el juego alterna turnos con su oponente hasta que
 se cumple una condición de victoria.
 
-Cuatro elementos bastan para situar el problema que este trabajo aborda.
+Para entender el problema, basta con considerar cuatro aspectos.
 
 \begin{itemize}
   \item \textbf{La partida} comienza con ambos jugadores repartiendo seis
@@ -23,8 +23,7 @@ Cuatro elementos bastan para situar el problema que este trabajo aborda.
         quien deje al oponente sin Pok\'emon en juego, o quien lo obligue a
         robar de un mazo vacío.
   \item \textbf{El turno} es la unidad de progreso. Dentro de un turno el
-        jugador activo roba una carta y ejecuta una secuencia de acciones:
-        colocar Pok\'emon en la banca, asignar energía, evolucionar, jugar
+        jugador activo roba una carta y ejecuta una secuencia de acciones. Puede colocar Pok\'emon en la banca, asignar energía, evolucionar, jugar
         cartas de apoyo y finalmente atacar.
   \item \textbf{El estado observable} es lo que un jugador ve en un instante
         dado. Incluye su propia mano, ambos tableros con sus puntos de vida
@@ -32,17 +31,14 @@ Cuatro elementos bastan para situar el problema que este trabajo aborda.
         de cartas que restan a cada lado. No incluye la mano del oponente,
         el contenido de las cartas de premio ni el orden de ninguno de los
         dos mazos.
-  \item \textbf{El desenlace} es binario y se conoce solo al terminar la
-        partida: el jugador venció o no venció.
+  \item \textbf{El desenlace} es binario y solo se conoce al final, cuando se determina si el jugador venció.
 \end{itemize}
 
 La Figura~\ref{fig:estado} representa esa asimetría entre lo visible y lo
 oculto, junto con la relación entre los estados sucesivos de una partida y
 su desenlace único. La Figura~\ref{fig:gameplay} muestra, a modo de
 ilustración, una partida de Pokémon TCG Pocket, la versión del juego para
-móviles. Sus reglas son simplificadas, con tres puntos para vencer y una banca
-de tres Pok\'emon; el corpus de este trabajo sigue las reglas estándar
-descritas arriba.
+móviles.
 
 \begin{figure}[!t]
 \centering
@@ -97,8 +93,7 @@ observables.}
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.3\textwidth]{img/PokemonTCG_PocketBattle.png}
-    \caption{Partida de Pokémon TCG Pocket, con reglas simplificadas respecto
-del juego estándar \cite{SweetGameBuddy2025}.}
+    \caption{Partida de Pokémon TCG Pocket\cite{SweetGameBuddy2025}.}
     \label{fig:gameplay}
 \end{figure}
 
@@ -106,26 +101,25 @@ del juego estándar \cite{SweetGameBuddy2025}.}
 \label{subsec:relevancia}
 
 Determinar quién lleva ventaja en un instante dado no es inmediato. La
-posición combina premios restantes, puntos de vida repartidos entre varios
-Pok\'emon, energías acumuladas, cartas en mano y estados alterados, y ningún
+posición combina muchos parámetros de la partida en juego, y ningún
 recurso domina a los demás de forma evidente. Un observador no experto no
 puede resolverlo de un vistazo, y un jugador experimentado lo hace mediante
-un juicio que no está escrito en ninguna parte.
+un juicio que no está explícito.
 
 Una función que convierta ese estado en un número tiene dos usos. Para un
-sistema que juega, sustituye una búsqueda intratable por una evaluación
-directa, y permite detener una simulación antes de tiempo sin renunciar a un
-juicio con sentido. Para quien analiza o retransmite partidas, ofrece el
+agente, el modelo estima las posibilidades de victoria a partir del estado
+actual, sin tener que simular todas las jugadas hasta el final. Para quien
+analiza o retransmite partidas, ofrece el
 marcador que el juego no tiene: Hodge \textit{et al.} señalan que numerosos
 juegos competitivos carecen de un indicador legible de ventaja, y que una
 estadística única que resuma el estado los vuelve más accesibles para
 audiencias no expertas \cite{hodge_winprediction_2021}.
 
-Conviene fijar desde el comienzo qué tipo de cantidad es la que se busca.
+Desde el comienzo, conviene aclarar qué representa la estimación del modelo.
 Brill \textit{et al.} señalan que la probabilidad de victoria no es una
 estadística contable ni una magnitud observable, sino que queda definida por
 un modelo estimado a partir de datos \cite{brill_winprob_2026}. El desenlace
-que se registra es binario; la probabilidad que se desea estimar nunca se
+que se registra es binario. La probabilidad que se desea estimar nunca se
 observa de forma directa. De ahí que evaluar el modelo no consista solo en
 comprobar si acertó el ganador, sino además en comprobar si el número que
 produce significa lo que dice.
@@ -135,7 +129,7 @@ produce significa lo que dice.
 
 La pregunta se ha vuelto abordable porque existe un corpus público de
 repeticiones completas de partidas entre agentes automáticos que compiten
-entre sí, publicado durante 2026 y con un volumen del orden de cientos de
+entre sí, publicado durante 2026 con cientos de
 miles de partidas \cite{ptcg_dataset_2026}. Este trabajo emplea una muestra
 temporal auditada de ese corpus, descrita en la
 Sección~\ref{sec:analisistecnico}.
@@ -143,8 +137,7 @@ Sección~\ref{sec:analisistecnico}.
 Su estructura, sin embargo, plantea un problema que no aparece en conjuntos
 de datos donde cada fila es independiente. Una partida completa produce del
 orden de un centenar de estados sucesivos, y dos estados consecutivos
-difieren en una sola acción atómica. Todos ellos comparten, además, la misma
-etiqueta: el desenlace se sortea una única vez por partida.
+difieren en una sola acción atómica. Todos ellos comparten, además, la misma etiqueta, determinada por el desenlace de la partida.
 
 La consecuencia es directa y la Figura~\ref{fig:particion} la representa. Si
 esos estados se reparten al azar entre entrenamiento y prueba, el modelo
@@ -204,23 +197,24 @@ todas las partidas a ambos lados de la división.
 \node[nota, anchor=west] at (1.1,-1.15) {prueba};
 
 \end{tikzpicture}
-\caption{Efecto de la regla de partición. Cada cuadrado es un estado; cada
-fila, una partida. A la izquierda, la asignación aleatoria reparte estados
+\caption{Efecto de la regla de partición. Cada cuadrado representa un estado y cada fila, una partida. A la izquierda, la asignación aleatoria reparte estados
 de la misma partida entre ambos subconjuntos. A la derecha, la asignación
 agrupada mantiene cada partida completa en un solo lado.}
 \label{fig:particion}
 \end{figure}
 
-Este riesgo no es una conjetura de diseño. Brill \textit{et al.} demuestran
-que, cuando varias observaciones comparten el mismo sorteo del desenlace, el
+Este riesgo ya se ha observado en la práctica. Brill \textit{et al.} demuestran
+que, cuando varias observaciones de una partida comparten la misma etiqueta
+de resultado, el
 sesgo y la varianza de los estimadores aumentan y el tamaño de muestra
 efectivo se reduce por debajo del número de filas
-\cite{brill_winprob_2026}. Karbalaie \textit{et al.} lo miden sobre datos de
-medidas repetidas: un mismo modelo pasa de 0.91 de acierto bajo validación
-estratificada a 0.66 bajo validación que respeta la agrupación, una
+\cite{brill_winprob_2026}. Karbalaie \textit{et al.} miden este efecto sobre
+datos de medidas repetidas y encuentran que el acierto de un mismo modelo
+pasa de 0.91 con validación estratificada a 0.66 con validación que respeta la agrupación, una
 diferencia producida enteramente por la regla de partición
-\cite{karbalaie_participantaware_2026}. El costo de ignorar la estructura no
-es un sesgo marginal, sino la diferencia entre un resultado y un artefacto.
+\cite{karbalaie_participantaware_2026}. Ignorar la estructura de las partidas
+puede cambiar por completo las conclusiones. El modelo podría parecer preciso
+solo porque se evalúa con estados muy parecidos a los que ya vio.
 
 Por esa razón, el control de la fuga de información se trata aquí como parte
 del problema de investigación y no como una precaución técnica que se
@@ -235,13 +229,12 @@ el Pok\'emon Trading Card Game a partir de las características observables
 del estado de la partida?
 \end{quote}
 
-La pregunta admite respuesta negativa. Quedaría refutada, o sustancialmente
-debilitada, si el modelo no superara a una heurística de dominio sobre
-partidas nuevas; si su capacidad predictiva no mejorara al avanzar la
-partida; o si esa capacidad se redujera al nivel del azar bajo cualquiera de
-los dos escenarios de generalización.
+La respuesta sería negativa si el modelo no superara una heurística de
+dominio en partidas nuevas, si su capacidad predictiva no mejorara al avanzar
+la partida o si se redujera al nivel del azar en alguno de los escenarios de
+generalización.
 
-Puede además responderse: el corpus está disponible y auditado, y su
+La pregunta puede responderse porque el corpus está disponible y auditado. Su
 tamaño permite entrenar y evaluar modelos clásicos con recursos de cómputo
 modestos.
 
@@ -269,7 +262,7 @@ ordenar posiciones.
 temprana, el modelo no supera de forma clara al azar, o si su desempeño no
 crece al avanzar la partida una vez controlada su duración. H2 se refuta si
 un modelo restringido al número de turno y a la identidad del mazo iguala al
-modelo que emplea el estado completo; en ese caso, la capacidad predictiva
+modelo que emplea el estado completo. En ese caso, la capacidad predictiva
 provendría del emparejamiento y no de la situación de juego. H3 se refuta si
 las medidas de calidad probabilística no se degradan más rápido que las de
 ordenamiento bajo la partición cronológica.
@@ -287,8 +280,7 @@ la capacidad de ordenar \cite{guo_temporalshift_2021}. Xenopoulos \textit{et
 al.} observan el mismo patrón en un juego competitivo, donde un modelo
 evaluado fuera de su población de origen pierde poco en pérdida logarítmica
 y bastante más en error de calibración \cite{xenopoulos_winprob_2022}. Que
-esa asimetría se sostenga en el Pok\'emon TCG es una pregunta empírica
-abierta.
+esa asimetría se sostenga en el Pok\'emon TCG es una pregunta abierta.
 
 \subsection{Objetivos}
 \label{subsec:objetivos}
@@ -300,7 +292,7 @@ modelos clásicos de aprendizaje automático evaluados bajo un protocolo que
 controle de forma explícita la fuga de información.
 
 \noindent\textbf{Objetivos específicos.} Los tres primeros descomponen la
-pregunta general; los tres siguientes construyen las condiciones que hacen
+pregunta general, los tres siguientes construyen las condiciones que hacen
 interpretable la respuesta, y el último lleva el estimador a un uso real.
 
 \begin{enumerate}
@@ -322,7 +314,7 @@ interpretable la respuesta, y el último lleva el estimador a un uso real.
         exploratorio, diccionario de datos, mecanismos de ausencia, valores
         atípicos, balance de clases y cobertura de cartas en el conjunto de
         entrenamiento.
-  \item \textbf{Comparar una escalera de modelos de referencia} bajo los tres
+  \item \textbf{Evaluar un conjunto de modelos de referencia} bajo los tres
         escenarios anteriores, con controles de fuga verificados de forma
         automática y análisis de qué características del estado transportan
         información.
@@ -350,9 +342,10 @@ Los objetivos se descomponen en tres dimensiones:
 
 Se esperan cuatro contribuciones.
 
-La primera es la caracterización de la probabilidad de victoria desde el
-estado de juego en un juego de cartas que no ha sido estudiado de esta
-forma. En particular, el perfil de capacidad predictiva por etapa de la
+La primera contribución consiste en estimar la probabilidad de victoria a 
+partir del estado actual de una partida de cartas, un enfoque que no se 
+había estudiado antes en este juego. En particular, el perfil de capacidad 
+predictiva por etapa de la
 partida, que existe para otros juegos pero no para este dominio, cuya
 estructura de recursos, cartas de premio, asignación de energía, banca y
 líneas de evolución, difiere de la de los juegos donde la tarea se ha
@@ -375,12 +368,11 @@ La cuarta es un agente que usa el estimador sin inventar cifras: un
 verificador determinista revisa que toda probabilidad salga del modelo, y
 una validación escrita antes de ejecutarse mide dónde falla.
 
-Un resultado negativo también constituiría una contribución. Si la capacidad
-predictiva colapsa bajo el protocolo temporal, eso aporta evidencia sobre la
-rapidez con que la evolución del conjunto de estrategias dominante invalida
-un evaluador de posiciones, que es la preocupación que Bertram \textit{et
-al.} plantean para repertorios de cartas en cambio permanente
-\cite{bertram_cardrepresentations_2024}.
+Incluso si el modelo no predice bien las partidas de periodos posteriores,
+el resultado sería útil. Mostraría que los cambios en las estrategias pueden
+reducir rápidamente la precisión del modelo, una preocupación que Bertram
+\textit{et al.} plantean para juegos de cartas cuyas estrategias cambian
+continuamente \cite{bertram_cardrepresentations_2024}.
 
 \subsection{Estructura del documento}
 \label{subsec:estructura}

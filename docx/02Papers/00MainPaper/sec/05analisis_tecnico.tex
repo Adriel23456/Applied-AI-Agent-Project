@@ -39,7 +39,7 @@ sobre los mismos diez días contiene 55\,196 partidas y 7\,540\,389 estados,
 de los que 7\,286\,386 son utilizables para modelar: la plataforma siguió
 agregando partidas a esos días tras la auditoría. Las cifras descriptivas de
 esta sección proceden de la auditoría salvo que se indique lo contrario.
-Toda afirmación está acotada a esa muestra y no caracteriza los días no
+Toda afirmación está limitada a esa muestra y no caracteriza los días no
 auditados.
 
 \subsubsection{Estructura y unidad de observación}
@@ -50,17 +50,16 @@ El recuento de turnos es mucho menor, mediana 13, percentil 95 de 27,
 máximo 1\,035, porque un solo turno se descompone en muchas acciones
 atómicas.
 
-Esa brecha determina cómo debe definirse una etapa de la partida. Fijar el
-juego temprano en los turnos uno a ocho sería arbitrario contra una
-distribución cuya mediana es 13, de modo que los cortes se derivan de la
-distribución empírica y se declaran antes de examinar el conjunto de prueba.
+Esta diferencia importa al definir las etapas de la partida. Como la
+mediana de duración es de 13 turnos, usamos los datos para fijar los cortes
+en vez de elegirlos de forma arbitraria. Los cortes se establecieron antes
+de revisar los resultados de prueba.
 
-La unidad de observación es el estado del jugador que actúa, y la decisión es
-medida antes que estilística. En un sondeo de 139\,672 estados, la
-observación correspondiente al jugador que no actúa resultó idéntica a su
-propio estado anterior en el 98.8\,\% de los casos. Tratar ambos lados de
-cada paso como filas separadas duplicaría casi todas las observaciones sin
-añadir información, y repesaría las partidas por su duración.
+Cada observación representa el estado del jugador al que le toca actuar. En
+una revisión de 139\,672 estados, el estado del jugador que no actuaba era
+igual al que tenía en su turno anterior en el 98.8\,\% de los casos.
+Incluir ambos estados como observaciones separadas habría repetido casi la
+misma información y dado más peso a las partidas largas.
 
 Siete millones de observaciones frente a cincuenta y cinco mil partidas es el
 hecho estructural del que depende todo lo que sigue.
@@ -78,12 +77,13 @@ tasa de victoria del jugador que mueve primero es 0.5287.
 Los diez días auditados no son intercambiables. Medida con la divergencia de
 Jensen-Shannon entre el primer y el último día, la distribución de mazos es
 esencialmente disjunta, 1.0000, y la de agentes casi tanto, 0.9723,
-mientras que la duración de las partidas apenas varía,0.1221.
+mientras que la duración de las partidas apenas varía, 0.1221.
 
-La diversidad no decae de forma suave: los mazos distintos por día van de
-1\,268 a 48 entre dos días concretos de la muestra, y los agentes distintos
-de 2\,309 a 79 en esos mismos días. La mediana de la puntuación de los
-agentes seleccionados sube de 628 el primer día a 1\,141 en un día tardío.
+La población cambió mucho durante la muestra. En el día con más variedad se
+observaron 1\,268 mazos distintos y 2\,309 agentes distintos. En otro día
+se observaron solo 48 mazos distintos y 79 agentes distintos. Además, la
+puntuación mediana de los agentes seleccionados pasó de 628 el primer día a
+1\,141 en un día posterior.
 
 Varias versiones del motor coexisten en la muestra y están ordenadas en el
 tiempo, lo que significa que el tiempo de calendario y la versión del motor
@@ -94,11 +94,11 @@ forma explícita
 \cite{hodge_winprediction_2021,xenopoulos_winprob_2022,saravanan_metadiscovery_2024};
 no poder hacerlo aquí es una limitación propia.
 
-Una consecuencia de esa variación amenaza a una característica concreta: en
+Esa variación afecta a una característica concreta. En
 la tabla materializada, el jugador que mueve primero ocupa la primera
 posición en la mesa en el 76.4\,\% de las partidas del 17 de junio y en el
 100\,\% de las del 22 de julio. Por eso la tasa de victoria de la primera
-posición sube de 0.507 a 0.559 a lo largo de la muestra: refleja la ventaja
+posición sube de 0.507 a 0.559 a lo largo de la muestra. Esto refleja la ventaja
 de mover primero y no una ventaja de la posición. En los días tardíos,
 posición y orden de turno son la misma variable, y de ahí la normalización
 de perspectiva descrita en la Sección~\ref{subsec:pipeline}.
@@ -109,7 +109,7 @@ de perspectiva descrita en la Sección~\ref{subsec:pipeline}.
 Un censo sobre 139\,672 estados encontró 34 campos presentes en la totalidad
 de las observaciones inspeccionadas: 11 globales, 13 por jugador y 10 por
 Pok\'emon. La tabla materializada conserva 64 características por estado,
-agrupadas en las familias de la Tabla~\ref{tab:diccionario}; el diccionario
+agrupadas en las familias de la Tabla~\ref{tab:diccionario}. El diccionario
 completo, con los rangos observados, acompaña al código.
 
 \begin{table*}[!t]
@@ -182,9 +182,9 @@ Derivados. Construcción análoga a la empleada por Hodge \textit{et al.}
 Contexto de mazo & categórico &
 Identificadores de carta de los dos Pok\'emon activos, sobre 362 cartas
 distintas &
-Cardinalidad elevada y riesgo alto de memorizar el conjunto de estrategias
-dominante. Fuera del modelo principal; solo en la comparación restringida
-de H2
+Hay muchos valores distintos, lo que aumenta el riesgo de que el modelo
+memorice las estrategias más comunes. Esta característica solo se usa en la
+comparación de H2, no en el modelo principal.
 \\
 \midrule
 
@@ -215,17 +215,15 @@ no adopta esa construcción. La pregunta planteada concierne a la información
 contenida en un estado aislado, y añadir variación temporal introduciría un
 vector de fuga adicional, verificar que el instante anterior sea
 estrictamente anterior, cuya comprobación excede el alcance de esta etapa.
-Queda declarada como extensión natural.
 
 \subsection{Calidad de los datos}
 \label{subsec:calidad}
 
 \subsubsection{Verificaciones realizadas}
 
-Las 52\,085 partidas auditadas se leyeron sin error. Una única firma de
-esquema cubre la totalidad de ellas, de modo que el corpus es
-estructuralmente homogéneo pese a las varias versiones del motor. Los
-índices de turno resultaron monótonos en todas las partidas inspeccionadas.
+Las 52\,085 partidas revisadas se leyeron sin errores y tenían la misma
+estructura, aunque se generaron con distintas versiones del motor. El número
+de turno avanzó en orden en todas las partidas.
 
 Tres comprobaciones independientes de duplicidad devolvieron cero: ningún
 identificador de partida repetido, ningún resumen criptográfico repetido
@@ -257,9 +255,9 @@ Pok\'emon activo, caso que trata la Sección~\ref{subsec:imputacion}.
 La política distingue dos mecanismos, porque tratarlos por igual sería un
 error. Emmanuel \textit{et al.} muestran que la eficacia relativa de los
 métodos de imputación se invierte según el conjunto evaluado
-\cite{emmanuel_missing_2021}: no existe una técnica universalmente superior,
-y la estrategia debe derivarse del mecanismo de ausencia y no de la
-costumbre.
+\cite{emmanuel_missing_2021}. No hay una técnica que siempre sea mejor. La
+forma de tratar los datos faltantes debe depender de por qué faltan, no de
+aplicar siempre el mismo método.
 
 \noindent\textbf{Ausencia estructural.} Un campo es nulo porque las reglas
 del juego determinan que no exista un valor en ese estado: no hay Pok\'emon
@@ -268,11 +266,10 @@ más frecuente es el campo de observación en curso, nulo en el 98.1\,\% de
 las observaciones inspeccionadas, y el segundo es la mano del oponente, nula
 en la totalidad de ellas.
 
-Estos casos no son valores estadísticamente ausentes y no se imputan. Se
-codifican con un indicador binario de presencia más un valor centinela
-explícito. Imputar una media aquí fabricaría un estado de juego que no puede
-ocurrir, y destruiría además la señal que el propio campo transporta: que no
-haya nada que observar es información sobre la situación.
+En estos casos, el campo no está vacío por falta de datos, sino porque ese
+elemento no existe en el estado. Se registra si está presente y se usa un
+valor especial cuando no lo está. Así se conserva la información de que no
+hay nada que observar.
 
 \noindent\textbf{Ausencia inesperada.} Un campo requerido falta porque una
 partida está malformada o porque el procesamiento es incompleto. El
@@ -304,13 +301,13 @@ larga, y esos cinco casos exigen respuestas distintas.
 
 El procedimiento es diagnóstico antes que correctivo. Los candidatos se
 marcan por dos vías separadas, que significan cosas distintas: distancia
-distribucional sobre las características de duración y recuento, y rangos
+en distriución sobre las características de duración y recuento, y rangos
 imposibles según las reglas del juego. Las partidas marcadas se inspeccionan
 caso por caso, y solo se eliminan los registros demostrablemente corruptos.
 
-Cualquier regla de exclusión se declara antes de examinar el conjunto de
-prueba. Una regla elegida después de observar su efecto sobre la puntuación
-de prueba constituiría fuga por decisión de diseño
+Los criterios para dejar datos o características fuera del análisis se fijan
+antes de revisar los resultados de prueba. Si se cambian después de ver esos
+resultados, la evaluación deja de ser imparcial
 \cite{kaufman_leakage_2011}.
 
 Cabe declarar un desacuerdo con la práctica de un corpus comparable: los
@@ -325,8 +322,9 @@ duración puede ser exactamente donde reside el comportamiento interesante.
 A nivel de partida el desenlace está cerca del equilibrio: 52.10\,\% frente
 a 47.70\,\%. Esa no es, sin embargo, la distribución que verá el modelo. La
 etiqueta se define desde la perspectiva del jugador que actúa, y cada
-partida aporta un número distinto de observaciones desde cada lado, de modo
-que la prevalencia sobre la tabla final es función de la tabularización.
+partida aporta un número distinto de observaciones desde cada lado. Por eso,
+la proporción de victorias y derrotas en los datos finales depende de cómo
+se construyó la tabla.
 Medida sobre la tabla materializada, es 0.517 en las filas utilizables,
 mayor que 0.5 porque el ganador suele acumular más acciones propias, y se
 mantiene entre 0.497 y 0.527 en cada subconjunto de los tres escenarios.
@@ -345,9 +343,9 @@ minoritaria \cite{vandenGoorbergh_imbalance_2022}. Conviene precisar el
 alcance de esa referencia: no evalúa la ponderación de clases, de modo que
 no puede invocarse para preferir esa técnica.
 
-\noindent\textbf{Si resulta apreciable, se comparan alternativas} dentro del
-pliegue de entrenamiento, y se reporta su efecto tanto sobre la capacidad de
-ordenar como sobre la calidad de las probabilidades, dado que el desbalance
+Se comparan alternativas dentro del pliegue de entrenamiento y se reporta
+su efecto tanto sobre la capacidad de ordenar como sobre la calidad de las
+probabilidades, dado que el desbalance
 afecta a ambas \cite{silvafilho_calibration_2023}. No se emplea
 sobremuestreo sintético sin justificación explícita, y en ningún caso fuera
 del pliegue de entrenamiento \cite{sasse_leakage_2025}.
@@ -423,18 +421,18 @@ Figura~\ref{fig:clasescampos}.
 \end{tikzpicture}
 \caption{Clasificación de los campos según la prueba de disponibilidad en el
 momento de la decisión. Solo la primera clase alimenta el vector de
-características; la segunda requiere verificación adicional antes de
+características. La segunda requiere verificación adicional antes de
 admitirse.}
 \label{fig:clasescampos}
 \end{figure}
 
 Dos exclusiones merecen justificación explícita. El campo que expone el mazo
 restante de cada jugador en orden está presente en la totalidad de las
-partidas y constituye información perfecta que ningún jugador posee en el
+partidas y contiene información que ningún jugador posee en el
 momento de decidir. Y los nombres de agente actúan como sustituto de la
 habilidad: la mediana de puntuación de los agentes seleccionados sube de 628
-a más de 1\,100 a lo largo de la muestra, de modo que un identificador de
-agente codifica parcialmente el desenlace.
+a más de 1\,100 a lo largo de la muestra. Así, el identificador del agente
+puede dar pistas sobre quién ganará la partida.
 
 \subsubsection{La información oculta ya está protegida}
 
@@ -482,7 +480,7 @@ Cero fugas en 139\,672 observaciones; 1\,281\,678 ranuras de premio todas
 nulas &
 Lectura restringida a la observación propia, con verificación
 automática\\[2pt]
-Preprocesamiento &
+\makecell[l]{Preprocesa-\\miento} &
 Riesgo de diseño, no propiedad del corpus &
 Transformaciones ajustadas dentro del pliegue de entrenamiento
 \cite{sasse_leakage_2025}\\[2pt]
@@ -494,9 +492,9 @@ El escenario B corta por fecha, nunca al azar
 \end{tabularx}
 \end{table}
 
-Acompañar cada vector con evidencia medida sobre este corpus, y no solo con
-la descripción del riesgo, es lo que distingue una prevención verificada de
-una precaución declarada.
+Para cada riesgo, presentamos los datos que muestran que puede ocurrir y la
+medida que usamos para prevenirlo. Así comprobamos que los controles
+responden a riesgos reales del corpus.
 
 \subsubsection{Verificación automática}
 
@@ -509,9 +507,6 @@ conjunto de entrenamiento, según el procedimiento de la
 Sección~\ref{subsec:protocolo}. Y cuarto, ninguna
 transformación puede haberse ajustado con datos de validación, calibración o
 prueba.
-
-Una política de prevención sin una prueba que la verifique constituye una
-intención y no una mitigación.
 
 \subsubsection{Medición de la inflación atribuible a la fuga}
 
@@ -528,8 +523,8 @@ en su dominio \cite{figueiredo_leakage_2024}.
 Se emplea únicamente B2 porque el punto que se demuestra no depende del
 modelo, y porque Karbalaie \textit{et al.} encuentran que los modelos
 lineales son los menos inflados por un protocolo defectuoso
-\cite{karbalaie_participantaware_2026}: si B2 muestra inflación, el valor
-obtenido es una cota inferior del efecto.
+\cite{karbalaie_participantaware_2026}. Por eso, el aumento observado en B2
+probablemente sea menor que el que producirían otros modelos más complejos.
 
 La partición aleatoria se emplea exclusivamente como demostración del sesgo.
 Ningún resultado del trabajo se reporta bajo ella.
@@ -537,14 +532,14 @@ Ningún resultado del trabajo se reporta bajo ella.
 \subsection{Representatividad}
 \label{subsec:representatividad}
 
-El corpus no es una muestra aleatoria del juego. Las repeticiones se
-seleccionan a diario ordenadas por puntuación de los agentes y se truncan a
-un volumen fijo \cite{ptcg_dataset_2026}, y de ahí se siguen tres
-consecuencias, las tres medidas.
+El corpus no es una muestra aleatoria del juego. Cada día se seleccionan las
+repeticiones según la puntuación de los agentes y se conserva una cantidad
+fija de partidas \cite{ptcg_dataset_2026}. Esto tiene tres consecuencias,
+que medimos a continuación.
 
-La población es de agentes automáticos y no de personas. Corresponde a la
-franja alta de la clasificación, con la puntuación mediana ascendiendo a lo
-largo de la muestra. Y está concentrada: los diez mazos más frecuentes suman
+La población es de agentes automáticos y no de personas. Incluye agentes con
+puntuaciones altas, y la mediana de sus puntuaciones aumenta durante la
+muestra. También está concentrada: los diez mazos más frecuentes suman
 el 39.94\,\% de las instancias y los cien más frecuentes el 74.76\,\%, con
 días individuales que descienden a 48 mazos distintos.
 
@@ -556,5 +551,5 @@ sus estados con agentes que actúan al azar
 \cite{janusz_hearthstone_2017}. Uno procede de la población más fuerte
 posible y el otro de la más débil, y ninguno es la población general.
 Cualquier afirmación de este trabajo es, en consecuencia, una afirmación
-sobre agentes automáticos competitivos de una franja de puntuación
-específica durante una muestra específica de diez días.
+sobre agentes automáticos competitivos con puntuaciones propias de este
+conjunto durante los diez días analizados.
